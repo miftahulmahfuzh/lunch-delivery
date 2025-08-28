@@ -16,17 +16,28 @@
         .btn-success { background: #28a745; }
         .btn-success:hover { background: #218838; }
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        .form-group > label { display: block; margin-bottom: 5px; font-weight: bold; } /* Use > to target only the direct child label */
         .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
         .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
         .nav a:hover { background: #343a40; }
-        .checkbox-list { list-style: none; padding: 0; margin: 10px 0; }
-        .checkbox-list li { padding: 8px; border-bottom: 1px solid #eee; display: flex; align-items: center; }
-        .checkbox-list li:hover { background: #f8f9fa; }
-        .checkbox-list li:last-child { border-bottom: none; }
-        .checkbox-list input[type="checkbox"] { margin-right: 8px; }
-        .checkbox-list label { cursor: pointer; flex: 1; }
+        
+        /* --- MODIFIED STYLES FOR CLICKABLE LIST --- */
+        .menu-item-list { list-style: none; padding: 0; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .menu-item-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .menu-item-list li:hover { background-color: #f8f9fa; }
+        .menu-item-list li:last-child { border-bottom: none; }
+        .menu-item-list li.selected {
+            background-color: #d4edda; /* Light green to indicate selection */
+            color: #155724;
+            font-weight: bold;
+        }
+        /* --- END OF MODIFIED STYLES --- */
+
         .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
         .current-menu-list { list-style: none; padding: 0; }
         .current-menu-list li { padding: 8px 12px; border-bottom: 1px solid #eee; }
@@ -59,20 +70,17 @@
                 
                 <div class="form-group">
                     <label>Select Menu Items for Today ({{len .items}} total available):</label>
-                    <ul class="checkbox-list">
+                    <!-- --- MODIFIED HTML STRUCTURE --- -->
+                    <ul class="menu-item-list">
                         {{range .items}}
-                        <li>
-                            <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
-                                {{if $.existing}}
-                                    {{$currentID := .ID}}
-                                    {{range $.existing.MenuItemIDs}}
-                                        {{if eq . $currentID}}checked{{end}}
-                                    {{end}}
-                                {{end}}>
-                            <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
+                        <li data-id="{{.ID}}">
+                            {{.Name}} - Rp {{.Price | divideBy100}}
+                            <!-- This input is hidden from the user but holds the value for the form -->
+                            <input type="hidden" name="menu_items" value="{{.ID}}" id="item-input-{{.ID}}" disabled>
                         </li>
                         {{end}}
                     </ul>
+                    <!-- --- END OF MODIFIED HTML --- -->
                 </div>
                 
                 <button type="submit" class="btn btn-success">Save Daily Menu</button>
@@ -95,5 +103,36 @@
         </div>
         {{end}}
     </div>
+
+    <!-- --- JAVASCRIPT TO HANDLE INTERACTIONS --- -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // This is a safe way to pass Go slice data to JavaScript
+            const existingIDs = new Set([{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}]);
+
+            const listItems = document.querySelectorAll('.menu-item-list li');
+
+            listItems.forEach(item => {
+                const itemID = parseInt(item.dataset.id, 10);
+                const hiddenInput = document.getElementById('item-input-' + itemID);
+
+                // On page load, set the initial state for already selected items
+                if (existingIDs.has(itemID)) {
+                    item.classList.add('selected');
+                    hiddenInput.disabled = false;
+                }
+
+                // Add a click listener to each list item
+                item.addEventListener('click', function() {
+                    // Toggle the visual 'selected' class
+                    this.classList.toggle('selected');
+                    
+                    // Enable/disable the hidden input based on whether the 'selected' class is present
+                    // A disabled input will not be sent with the form data
+                    hiddenInput.disabled = !this.classList.contains('selected');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
