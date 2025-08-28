@@ -56,7 +56,7 @@ lunch-delivery/
 - Stores all available menu items with fixed prices
 - Fields: id, name, price (in cents), active, created_at
 
-**companies** 
+**companies**
 - Corporate clients who order lunch for their employees
 - Fields: id, name, address, contact, active, created_at
 
@@ -188,7 +188,7 @@ Insert test data to explore the application:
 
 ```sql
 -- Sample menu items
-INSERT INTO menu_items (name, price) VALUES 
+INSERT INTO menu_items (name, price) VALUES
 ('Cah jagung muda', 1500),
 ('Cah labu', 1500),
 ('Cah toge', 1200),
@@ -199,13 +199,13 @@ INSERT INTO menu_items (name, price) VALUES
 ('Udang crispy cabe garam', 3000);
 
 -- Sample companies
-INSERT INTO companies (name, address, contact) VALUES 
+INSERT INTO companies (name, address, contact) VALUES
 ('Tech Corp', 'Jakarta Selatan', 'tech@corp.com'),
 ('Marketing Inc', 'Jakarta Pusat', 'hello@marketing.com'),
 ('Finance Ltd', 'Jakarta Barat', 'contact@finance.com');
 
 -- Sample employees (password: 'password')
-INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUES 
+INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUES
 (1, 'Jemmy', 'jemmy@techcorp.com', '+628123456789', '$2a$10$dummy.hash.for.testing'),
 (1, 'Hafidh', 'hafidh@techcorp.com', '+628234567890', '$2a$10$dummy.hash.for.testing'),
 (1, 'Jeri', 'jeri@techcorp.com', '+628345678901', '$2a$10$dummy.hash.for.testing');
@@ -258,7 +258,7 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - `GET /` - Redirect to login
 - `GET /login` - Login form
 - `POST /login` - Process login
-- `GET /signup` - Registration form  
+- `GET /signup` - Registration form
 - `POST /signup` - Process registration
 
 ### Protected Customer Routes (Authentication Required)
@@ -299,7 +299,7 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - **Price Management**: Prices stored in cents for accuracy, displayed in Rupiah
 - **Active Status**: Soft delete functionality for menu items
 
-### Company & Employee Management  
+### Company & Employee Management
 - **Company Profiles**: Name, address, contact information
 - **Employee Self-Service**: Registration with company association
 - **WhatsApp Integration**: Contact numbers for communication
@@ -367,7 +367,7 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 
 ### Monitoring
 - Database query performance monitoring
-- Application response time tracking  
+- Application response time tracking
 - Error rate monitoring
 - User activity analytics
 
@@ -384,8 +384,28 @@ This application was built with a focus on simplicity, reliability, and maintain
 
 ## License
 
-[Add your license information here]
+MIT License
+
+Copyright (c) 2025 Lunch Delivery System
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## Support
 
-For technical issues or feature requests, please [add contact information or issue tracking details].
+For technical issues or feature requests, please create an issue in this repo.
