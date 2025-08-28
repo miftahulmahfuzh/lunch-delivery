@@ -30,6 +30,8 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository) {
 	// Public routes
 	r.GET("/login", h.loginForm)
 	r.POST("/login", h.login)
+	r.GET("/signup", h.signupForm)
+	r.POST("/signup", h.signup)
 
 	// Protected customer routes
 	customer := r.Group("/")
