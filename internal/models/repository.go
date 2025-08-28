@@ -286,3 +286,15 @@ func (r *Repository) DeleteCompany(id int) error {
 	_, err := r.db.Exec(`UPDATE companies SET active = false WHERE id = $1`, id)
 	return err
 }
+
+// Add to internal/models/repository.go
+func (r *Repository) UpdateEmployee(id int, name, email, waContact string) error {
+	_, err := r.db.Exec(`UPDATE employees SET name = $1, email = $2, wa_contact = $3 WHERE id = $4`,
+		name, email, waContact, id)
+	return err
+}
+
+func (r *Repository) DeleteEmployee(id int) error {
+	_, err := r.db.Exec(`UPDATE employees SET active = false WHERE id = $1`, id)
+	return err
+}

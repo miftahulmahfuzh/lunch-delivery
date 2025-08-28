@@ -64,5 +64,7 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository) {
 		admin.POST("/orders/:id/unpaid", h.markOrderUnpaid)
 		admin.PUT("/companies/:id", h.updateCompany)
 		admin.DELETE("/companies/:id", h.deleteCompany)
+		admin.PUT("/employees/:id", h.updateEmployee)
+		admin.DELETE("/employees/:id", h.deleteEmployee)
 	}
 }
