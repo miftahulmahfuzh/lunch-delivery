@@ -3,6 +3,7 @@ package models
 
 import (
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -68,11 +69,11 @@ func (r *Repository) GetCompanyByID(id int) (*Company, error) {
 }
 
 // Employees
-func (r *Repository) CreateEmployee(companyID int, name, email, passwordHash string) (*Employee, error) {
+func (r *Repository) CreateEmployee(companyID int, name, email, waContact, passwordHash string) (*Employee, error) {
 	var employee Employee
 	err := r.db.Get(&employee,
-		`INSERT INTO employees (company_id, name, email, password_hash) VALUES ($1, $2, $3, $4) RETURNING *`,
-		companyID, name, email, passwordHash)
+		`INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+		companyID, name, email, waContact, passwordHash)
 	return &employee, err
 }
 
@@ -208,4 +209,49 @@ func (r *Repository) ReopenOrderSession(id int) error {
 	_, err := r.db.Exec(`UPDATE order_sessions SET status = $1, closed_at = NULL WHERE id = $2`,
 		StatusOpen, id)
 	return err
+}
+
+// For individual orders
+
+type IndividualOrderWithDetails struct {
+	IndividualOrder
+	EmployeeName  string `json:"employee_name" db:"employee_name"`
+	MenuItemNames string `json:"menu_item_names"`
+}
+
+func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualOrderWithDetails, error) {
+	var orders []IndividualOrderWithDetails
+	err := r.db.Select(&orders, `
+        SELECT io.*, e.name as employee_name 
+        FROM individual_orders io 
+        JOIN employees e ON io.employee_id = e.id 
+        WHERE io.session_id = $1 
+        ORDER BY e.name`,
+		sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get menu item names for each order
+	for i, order := range orders {
+		var itemIDs []int64
+		for _, id := range order.MenuItemIDs {
+			itemIDs = append(itemIDs, id)
+		}
+
+		if len(itemIDs) > 0 {
+			items, err := r.GetMenuItemsByIDs(itemIDs)
+			if err != nil {
+				continue
+			}
+
+			var names []string
+			for _, item := range items {
+				names = append(names, item.Name)
+			}
+			orders[i].MenuItemNames = strings.Join(names, ", ")
+		}
+	}
+
+	return orders, nil
 }

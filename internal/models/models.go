@@ -29,6 +29,7 @@ type Employee struct {
 	CompanyID    int       `json:"company_id" db:"company_id"`
 	Name         string    `json:"name" db:"name"`
 	Email        string    `json:"email" db:"email"`
+	WaContact    string    `json:"wa_contact" db:"wa_contact"`
 	PasswordHash string    `json:"-" db:"password_hash"`
 	Active       bool      `json:"active" db:"active"`
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`

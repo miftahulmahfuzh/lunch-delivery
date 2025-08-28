@@ -309,15 +309,27 @@ func (h *Handler) viewSessionOrders(c *gin.Context) {
 		return
 	}
 
-	orders, err := h.repo.GetOrdersBySession(id)
+	orders, err := h.repo.GetOrdersBySessionWithDetails(id)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
 	}
 
+	// Calculate summary
+	totalRevenue := 0
+	paidCount := 0
+	for _, order := range orders {
+		totalRevenue += order.TotalPrice
+		if order.Paid {
+			paidCount++
+		}
+	}
+
 	c.HTML(http.StatusOK, "session_orders.html", gin.H{
-		"orders":     orders,
-		"session_id": id,
+		"orders":       orders,
+		"session_id":   id,
+		"totalRevenue": totalRevenue,
+		"paidCount":    paidCount,
 	})
 }
 

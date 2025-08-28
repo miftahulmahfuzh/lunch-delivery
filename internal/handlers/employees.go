@@ -9,13 +9,15 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Update createEmployee in internal/handlers/employees.go
 func (h *Handler) createEmployee(c *gin.Context) {
 	companyIDStr := c.PostForm("company_id")
 	name := c.PostForm("name")
 	email := c.PostForm("email")
+	waContact := c.PostForm("wa_contact")
 	password := c.PostForm("password")
 
-	if companyIDStr == "" || name == "" || email == "" || password == "" {
+	if companyIDStr == "" || name == "" || email == "" || waContact == "" || password == "" {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "All fields required"})
 		return
 	}
@@ -32,7 +34,7 @@ func (h *Handler) createEmployee(c *gin.Context) {
 		return
 	}
 
-	_, err = h.repo.CreateEmployee(companyID, name, email, string(hashedPassword))
+	_, err = h.repo.CreateEmployee(companyID, name, email, waContact, string(hashedPassword))
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
