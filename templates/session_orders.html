@@ -31,7 +31,7 @@
     <div class="header">
         <h1>Lunch Delivery System</h1>
     </div>
-    
+
     <div class="container">
         <div class="nav">
             <a href="/admin/">Dashboard</a>
@@ -40,11 +40,11 @@
             <a href="/admin/daily-menu">Daily Menu</a>
             <a href="/admin/sessions">Order Sessions</a>
         </div>
-        
+
         <div class="card">
             <h2>Orders for Session #{{.session_id}}</h2>
             <a href="/admin/sessions" class="btn">← Back to Sessions</a>
-            
+
             {{if .orders}}
                 <table class="table">
                     <thead>
@@ -70,7 +70,9 @@
                                 {{end}}
                             </td>
                             <td>
-                                {{if not .Paid}}
+                                {{if .Paid}}
+                                    <button onclick="markUnpaid({{.ID}})" class="btn btn-danger">Mark Unpaid</button>
+                                {{else}}
                                     <button onclick="markPaid({{.ID}})" class="btn btn-success">Mark Paid</button>
                                 {{end}}
                             </td>
@@ -78,7 +80,7 @@
                         {{end}}
                     </tbody>
                 </table>
-                
+
                 <div class="card" style="margin-top: 20px; background: #e9ecef;">
                     <h4>Summary</h4>
                     <p>Total Orders: {{len .orders}}</p>
@@ -101,6 +103,20 @@
                     location.reload();
                 } else {
                     alert('Error marking as paid');
+                }
+            });
+        }
+    }
+
+    function markUnpaid(orderId) {
+        if (confirm('Mark this order as unpaid?')) {
+            fetch('/admin/orders/' + orderId + '/unpaid', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error marking as unpaid');
                 }
             });
         }

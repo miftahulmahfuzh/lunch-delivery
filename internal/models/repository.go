@@ -196,10 +196,10 @@ type OrderSessionWithCompany struct {
 func (r *Repository) GetOrderSessionsByDateWithCompany(date time.Time) ([]OrderSessionWithCompany, error) {
 	var sessions []OrderSessionWithCompany
 	err := r.db.Select(&sessions, `
-        SELECT os.*, c.name as company_name 
-        FROM order_sessions os 
-        JOIN companies c ON os.company_id = c.id 
-        WHERE os.date = $1 
+        SELECT os.*, c.name as company_name
+        FROM order_sessions os
+        JOIN companies c ON os.company_id = c.id
+        WHERE os.date = $1
         ORDER BY c.name`,
 		date.Format("2006-01-02"))
 	return sessions, err
@@ -222,10 +222,10 @@ type IndividualOrderWithDetails struct {
 func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualOrderWithDetails, error) {
 	var orders []IndividualOrderWithDetails
 	err := r.db.Select(&orders, `
-        SELECT io.*, e.name as employee_name 
-        FROM individual_orders io 
-        JOIN employees e ON io.employee_id = e.id 
-        WHERE io.session_id = $1 
+        SELECT io.*, e.name as employee_name
+        FROM individual_orders io
+        JOIN employees e ON io.employee_id = e.id
+        WHERE io.session_id = $1
         ORDER BY e.name`,
 		sessionID)
 	if err != nil {
@@ -254,4 +254,10 @@ func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualO
 	}
 
 	return orders, nil
+}
+
+// Add to internal/models/repository.go
+func (r *Repository) MarkOrderUnpaid(id int) error {
+	_, err := r.db.Exec(`UPDATE individual_orders SET paid = false WHERE id = $1`, id)
+	return err
 }

@@ -61,5 +61,6 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository) {
 		admin.POST("/sessions/:id/reopen", h.reopenOrderSession)
 		admin.GET("/sessions/:id/orders", h.viewSessionOrders)
 		admin.POST("/orders/:id/paid", h.markOrderPaid)
+		admin.POST("/orders/:id/unpaid", h.markOrderUnpaid)
 	}
 }
