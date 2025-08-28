@@ -274,3 +274,15 @@ func (r *Repository) GetOrderSessionWithCompany(id int) (*OrderSessionWithCompan
 	}
 	return &session, err
 }
+
+// Companies Page
+func (r *Repository) UpdateCompany(id int, name, address, contact string) error {
+	_, err := r.db.Exec(`UPDATE companies SET name = $1, address = $2, contact = $3 WHERE id = $4`,
+		name, address, contact, id)
+	return err
+}
+
+func (r *Repository) DeleteCompany(id int) error {
+	_, err := r.db.Exec(`UPDATE companies SET active = false WHERE id = $1`, id)
+	return err
+}

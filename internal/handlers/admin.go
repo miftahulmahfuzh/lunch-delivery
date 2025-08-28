@@ -379,3 +379,47 @@ func (h *Handler) markOrderUnpaid(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
+
+// Companies Page
+func (h *Handler) updateCompany(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	name := c.PostForm("name")
+	address := c.PostForm("address")
+	contact := c.PostForm("contact")
+
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Company name required"})
+		return
+	}
+
+	err = h.repo.UpdateCompany(id, name, address, contact)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) deleteCompany(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID"})
+		return
+	}
+
+	err = h.repo.DeleteCompany(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}

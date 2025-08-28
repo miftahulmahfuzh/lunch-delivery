@@ -1,0 +1,143 @@
+<!-- Package templates: templates/companies_list.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Companies - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: bold; }
+        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lunch Delivery System</h1>
+    </div>
+
+    <div class="container">
+        <div class="nav">
+            <a href="/admin/">Dashboard</a>
+            <a href="/admin/menu">Menu Items</a>
+            <a href="/admin/companies">Companies</a>
+            <a href="/admin/daily-menu">Daily Menu</a>
+            <a href="/admin/sessions">Order Sessions</a>
+        </div>
+
+        <div class="card">
+            <h2>Company Management</h2>
+
+            <form method="POST" action="/admin/companies">
+                <div class="form-group">
+                    <label>Company Name:</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>Address:</label>
+                    <textarea name="address" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Contact:</label>
+                    <input type="text" name="contact" placeholder="Email or phone">
+                </div>
+                <button type="submit" class="btn btn-success">Add Company</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h3>Companies ({{len .companies}} total)</h3>
+            {{if .companies}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Company Name</th>
+                            <th>Address</th>
+                            <th>Contact</th>
+                            <th>Employees</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .companies}}
+                        <tr>
+                            <td>{{.ID}}</td>
+                            <td>{{.Name}}</td>
+                            <td>{{.Address}}</td>
+                            <td>{{.Contact}}</td>
+                            <td><a href="/admin/companies/{{.ID}}/employees" class="btn">Manage Employees</a></td>
+                            <td>
+                                <button onclick="editCompany({{.ID}}, '{{.Name}}', '{{.Address}}', '{{.Contact}}')" class="btn">Edit</button>
+                                <button onclick="deleteCompany({{.ID}})" class="btn btn-danger">Delete</button>
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            {{else}}
+                <p>No companies found. Add one above.</p>
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+    function editCompany(id, name, address, contact) {
+        const newName = prompt('Edit company name:', name);
+        const newAddress = prompt('Edit address:', address);
+        const newContact = prompt('Edit contact:', contact);
+
+        if (newName) {
+            const formData = new FormData();
+            formData.append('name', newName);
+            formData.append('address', newAddress || '');
+            formData.append('contact', newContact || '');
+
+            fetch('/admin/companies/' + id, {
+                method: 'PUT',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error updating company');
+                }
+            });
+        }
+    }
+
+    function deleteCompany(id) {
+        if (confirm('Delete this company? This will affect all employees and orders.')) {
+            fetch('/admin/companies/' + id, {method: 'DELETE'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error deleting company');
+                }
+            });
+        }
+    }
+    </script>
+</body>
+</html>
