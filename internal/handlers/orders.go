@@ -11,8 +11,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Update orderForm handler in internal/handlers/orders.go
 func (h *Handler) orderForm(c *gin.Context) {
-	// Get user from cookie
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
 		c.Redirect(http.StatusFound, "/login")
@@ -37,6 +37,17 @@ func (h *Handler) orderForm(c *gin.Context) {
 	date, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "Invalid date format"})
+		return
+	}
+
+	// Get company info
+	company, err := h.repo.GetCompanyByID(companyID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+	if company == nil {
+		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Company not found"})
 		return
 	}
 
@@ -92,6 +103,7 @@ func (h *Handler) orderForm(c *gin.Context) {
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
 		"menu_items":     menuItems,
 		"session":        session,
+		"company":        company,
 		"existing_order": existingOrder,
 		"user_id":        userID,
 	})

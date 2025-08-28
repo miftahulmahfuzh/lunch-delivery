@@ -1,69 +1,135 @@
 <!-- templates/order_form.html -->
-{{define "content"}}
-<div class="container">
-    <div class="nav">
-        <a href="/my-orders">My Orders</a>
-        <a href="/logout">Logout</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Place Order - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin: 10px 0; }
+        .checkbox-item { padding: 10px; border: 1px solid #ddd; border-radius: 3px; background: #f9f9f9; cursor: pointer; }
+        .checkbox-item:hover { background: #e9ecef; }
+        .checkbox-item.selected { background: #d4edda; border-color: #28a745; }
+        .checkbox-item input[type="checkbox"] { margin-right: 10px; }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
+        .order-summary { background: #e9ecef; padding: 20px; border-radius: 5px; }
+        .form-group { margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lunch Delivery System</h1>
     </div>
 
-    <div class="card">
-        <h2>Order for {{.session.Date.Format "January 2, 2006"}}</h2>
+    <div class="container">
+        <div class="nav">
+            <a href="/my-orders">My Orders</a>
+            <a href="/logout">Logout</a>
+        </div>
 
-        {{if .existing_order}}
-            <div class="success">You already have an order for today. Submitting will update your existing order.</div>
-        {{end}}
+        <div class="card">
+            <h2>Order for {{.session.Date.Format "January 2, 2006"}}</h2>
+            <p><strong>Company:</strong> {{.company.Name}}</p>
 
-        <form method="POST" action="/order" id="orderForm">
-            <input type="hidden" name="session_id" value="{{.session.ID}}">
+            {{if .existing_order}}
+                <div class="success">You already have an order for today. Submitting will update your existing order.</div>
+            {{end}}
 
-            <div class="form-group">
-                <label>Select Your Menu Items:</label>
-                <div class="checkbox-group">
-                    {{range .menu_items}}
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
-                               data-price="{{.Price}}" onchange="calculateTotal()"
-                               {{if $.existing_order}}
-                                   {{range $.existing_order.MenuItemIDs}}
-                                       {{if eq . $.ID}}checked{{end}}
-                                   {{end}}
-                               {{end}}>
-                        <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
+            <form method="POST" action="/order" id="orderForm">
+                <input type="hidden" name="session_id" value="{{.session.ID}}">
+
+                <div class="form-group">
+                    <label>Select Your Menu Items:</label>
+                    <div class="checkbox-group">
+                        {{range .menu_items}}
+                        <div class="checkbox-item" onclick="toggleCheckbox({{.ID}})">
+                            <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
+                                   data-price="{{.Price}}" onchange="calculateTotal()"
+                                   {{if $.existing_order}}
+                                       {{$currentID := .ID}}
+                                       {{range $.existing_order.MenuItemIDs}}
+                                           {{if eq . $currentID}}checked{{end}}
+                                       {{end}}
+                                   {{end}}>
+                            <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
+                        </div>
+                        {{end}}
                     </div>
-                    {{end}}
                 </div>
-            </div>
 
-            <div class="card" style="background: #e9ecef;">
-                <h4>Order Summary</h4>
-                <div id="selectedItems"></div>
-                <div><strong>Total: Rp <span id="totalPrice">0</span></strong></div>
-            </div>
+                <div class="order-summary">
+                    <h4>Order Summary</h4>
+                    <div id="selectedItems"></div>
+                    <div style="margin-top: 10px;"><strong>Total: Rp <span id="totalPrice">0</span></strong></div>
+                </div>
 
-            <button type="submit" class="btn btn-success">{{if .existing_order}}Update Order{{else}}Submit Order{{end}}</button>
-        </form>
+                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; font-size: 18px;">
+                    {{if .existing_order}}Update Order{{else}}Submit Order{{end}}
+                </button>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-function calculateTotal() {
-    const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
-    let total = 0;
-    let selectedItems = [];
+    <script>
+    function toggleCheckbox(itemId) {
+        const checkbox = document.getElementById('item-' + itemId);
+        checkbox.checked = !checkbox.checked;
+        calculateTotal();
+        updateCheckboxStyles();
+    }
 
-    checkboxes.forEach(checkbox => {
-        const price = parseInt(checkbox.dataset.price);
-        total += price;
-        selectedItems.push(checkbox.nextElementSibling.textContent);
+    function calculateTotal() {
+        const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
+        let total = 0;
+        let selectedItems = [];
+
+        checkboxes.forEach(checkbox => {
+            const price = parseInt(checkbox.dataset.price);
+            total += price;
+            selectedItems.push(checkbox.nextElementSibling.textContent.trim());
+        });
+
+        document.getElementById('totalPrice').textContent = (total / 100).toFixed(0);
+        document.getElementById('selectedItems').innerHTML = selectedItems.length > 0 ?
+            '<ul style="margin: 10px 0;">' + selectedItems.map(item => '<li>' + item + '</li>').join('') + '</ul>' :
+            '<p>No items selected</p>';
+    }
+
+    function updateCheckboxStyles() {
+        document.querySelectorAll('.checkbox-item').forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            if (checkbox.checked) {
+                item.classList.add('selected');
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        calculateTotal();
+        updateCheckboxStyles();
+
+        // Prevent label clicks from double-toggling
+        document.querySelectorAll('.checkbox-item label').forEach(label => {
+            label.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
     });
-
-    document.getElementById('totalPrice').textContent = (total / 100).toFixed(0);
-    document.getElementById('selectedItems').innerHTML = selectedItems.length > 0 ?
-        '<ul>' + selectedItems.map(item => '<li>' + item + '</li>').join('') + '</ul>' :
-        '<p>No items selected</p>';
-}
-
-// Calculate total on page load
-document.addEventListener('DOMContentLoaded', calculateTotal);
-</script>
-{{end}}
+    </script>
+</body>
+</html>
