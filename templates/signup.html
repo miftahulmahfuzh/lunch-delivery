@@ -35,24 +35,26 @@
         <form method="POST" action="/signup">
             <div class="form-group">
                 <label>Full Name:</label>
-                <input type="text" name="name" required value="{{if .form}}{{.form.name}}{{end}}">
+                <input type="text" name="name" required value="{{with .form}}{{.name}}{{end}}">
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Email:</label>
-                    <input type="email" name="email" required value="{{if .form}}{{.form.email}}{{end}}">
+                    <input type="email" name="email" required value="{{with .form}}{{.email}}{{end}}">
                 </div>
                 <div class="form-group">
                     <label>WhatsApp Number:</label>
-                    <input type="text" name="wa_contact" placeholder="+628123456789" required value="{{if .form}}{{.form.wa_contact}}{{end}}">
+                    <input type="text" name="wa_contact" placeholder="+628123456789" required value="{{with .form}}{{.wa_contact}}{{end}}">
                 </div>
             </div>
             <div class="form-group">
                 <label>Company:</label>
                 <select name="company_id" required>
                     <option value="">Select Your Company</option>
+                    {{$selectedCompany := ""}}
+                    {{with .form}}{{$selectedCompany = .company_id}}{{end}}
                     {{range .companies}}
-                    <option value="{{.ID}}" {{if and $.form (eq .ID $.form.company_id)}}selected{{end}}>{{.Name}}</option>
+                    <option value="{{.ID}}" {{if eq (printf "%d" .ID) $selectedCompany}}selected{{end}}>{{.Name}}</option>
                     {{end}}
                 </select>
             </div>
