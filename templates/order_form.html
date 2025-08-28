@@ -18,14 +18,37 @@
         .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
         .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
         .nav a:hover { background: #343a40; }
-        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin: 10px 0; }
-        .checkbox-item { padding: 10px; border: 1px solid #ddd; border-radius: 3px; background: #f9f9f9; cursor: pointer; }
-        .checkbox-item:hover { background: #e9ecef; }
-        .checkbox-item.selected { background: #d4edda; border-color: #28a745; }
-        .checkbox-item input[type="checkbox"] { margin-right: 10px; }
         .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
         .order-summary { background: #e9ecef; padding: 20px; border-radius: 5px; }
         .form-group { margin-bottom: 15px; }
+
+        /* --- NEW STYLES FOR CLICKABLE LIST --- */
+        .menu-item-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden; /* Ensures child borders don't stick out of rounded corners */
+        }
+        .menu-item-list li {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            user-select: none; /* Prevents text selection on click */
+        }
+        .menu-item-list li:hover {
+            background-color: #f8f9fa;
+        }
+        .menu-item-list li.selected {
+            background-color: #d4edda; /* Light green to indicate selection */
+            color: #155724;
+            font-weight: bold;
+        }
+        .menu-item-list li:last-child {
+            border-bottom: none;
+        }
     </style>
 </head>
 <body>
@@ -52,21 +75,22 @@
 
                 <div class="form-group">
                     <label>Select Your Menu Items:</label>
-                    <div class="checkbox-group">
+                    <!-- --- UPDATED HTML STRUCTURE --- -->
+                    <ul class="menu-item-list">
                         {{range .menu_items}}
-                        <div class="checkbox-item" onclick="toggleCheckbox({{.ID}})">
+                        <li>
+                            {{.Name}} - Rp {{.Price | divideBy100}}
                             <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
-                                   data-price="{{.Price}}" onchange="calculateTotal()"
+                                   data-price="{{.Price}}" style="display: none;"
                                    {{if $.existing_order}}
                                        {{$currentID := .ID}}
                                        {{range $.existing_order.MenuItemIDs}}
                                            {{if eq . $currentID}}checked{{end}}
                                        {{end}}
                                    {{end}}>
-                            <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
-                        </div>
+                        </li>
                         {{end}}
-                    </div>
+                    </ul>
                 </div>
 
                 <div class="order-summary">
@@ -82,53 +106,55 @@
         </div>
     </div>
 
+    <!-- --- UPDATED JAVASCRIPT --- -->
     <script>
-    function toggleCheckbox(itemId) {
-        const checkbox = document.getElementById('item-' + itemId);
-        checkbox.checked = !checkbox.checked;
-        calculateTotal();
-        updateCheckboxStyles();
-    }
-
     function calculateTotal() {
         const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
         let total = 0;
-        let selectedItems = [];
+        let summaryHtml = '';
 
         checkboxes.forEach(checkbox => {
-            const price = parseInt(checkbox.dataset.price);
+            const price = parseInt(checkbox.dataset.price, 10);
             total += price;
-            selectedItems.push(checkbox.nextElementSibling.textContent.trim());
+            // Get the visible text from the parent list item
+            const itemText = checkbox.parentElement.textContent.trim();
+            summaryHtml += `<li>${itemText}</li>`;
         });
 
-        document.getElementById('totalPrice').textContent = (total / 100).toFixed(0);
-        document.getElementById('selectedItems').innerHTML = selectedItems.length > 0 ?
-            '<ul style="margin: 10px 0;">' + selectedItems.map(item => '<li>' + item + '</li>').join('') + '</ul>' :
+        // Format the total with commas for thousands
+        document.getElementById('totalPrice').textContent = (total / 100).toLocaleString('en-US');
+
+        document.getElementById('selectedItems').innerHTML = summaryHtml ?
+            '<ul style="margin: 10px 0; padding-left: 20px;">' + summaryHtml + '</ul>' :
             '<p>No items selected</p>';
     }
 
-    function updateCheckboxStyles() {
-        document.querySelectorAll('.checkbox-item').forEach(item => {
+    document.addEventListener('DOMContentLoaded', function() {
+        const listItems = document.querySelectorAll('.menu-item-list li');
+
+        listItems.forEach(item => {
             const checkbox = item.querySelector('input[type="checkbox"]');
+
+            // Set initial style for items that are already checked on page load
             if (checkbox.checked) {
                 item.classList.add('selected');
-            } else {
-                item.classList.remove('selected');
             }
-        });
-    }
 
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        calculateTotal();
-        updateCheckboxStyles();
+            // Add click listener to the entire list item
+            item.addEventListener('click', function() {
+                // Toggle the hidden checkbox's state
+                checkbox.checked = !checkbox.checked;
 
-        // Prevent label clicks from double-toggling
-        document.querySelectorAll('.checkbox-item label').forEach(label => {
-            label.addEventListener('click', function(e) {
-                e.stopPropagation();
+                // Toggle the visual style on the list item
+                this.classList.toggle('selected');
+
+                // Update the summary and total price
+                calculateTotal();
             });
         });
+
+        // Run once on page load to initialize the summary
+        calculateTotal();
     });
     </script>
 </body>
