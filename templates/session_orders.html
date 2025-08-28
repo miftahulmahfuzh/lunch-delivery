@@ -42,7 +42,8 @@
         </div>
 
         <div class="card">
-            <h2>Orders for Session #{{.session_id}}</h2>
+            <h2>{{.session.CompanyName}} - {{.session.Date.Format "January 2, 2006"}}</h2>
+            <p>Session Status: <span class="status status-{{.session.Status | lower}}">{{.session.Status}}</span></p>
             <a href="/admin/sessions" class="btn">← Back to Sessions</a>
 
             {{if .orders}}

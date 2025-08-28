@@ -261,3 +261,16 @@ func (r *Repository) MarkOrderUnpaid(id int) error {
 	_, err := r.db.Exec(`UPDATE individual_orders SET paid = false WHERE id = $1`, id)
 	return err
 }
+
+func (r *Repository) GetOrderSessionWithCompany(id int) (*OrderSessionWithCompany, error) {
+	var session OrderSessionWithCompany
+	err := r.db.Get(&session, `
+        SELECT os.*, c.name as company_name
+        FROM order_sessions os
+        JOIN companies c ON os.company_id = c.id
+        WHERE os.id = $1`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &session, err
+}

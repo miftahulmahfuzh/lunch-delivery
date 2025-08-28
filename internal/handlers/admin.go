@@ -301,11 +301,23 @@ func (h *Handler) reopenOrderSession(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
+// Update viewSessionOrders in internal/handlers/admin.go
 func (h *Handler) viewSessionOrders(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		c.HTML(http.StatusBadRequest, "error.html", gin.H{"error": "Invalid session ID"})
+		return
+	}
+
+	// Get session with company name
+	session, err := h.repo.GetOrderSessionWithCompany(id)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+	if session == nil {
+		c.HTML(http.StatusNotFound, "error.html", gin.H{"error": "Session not found"})
 		return
 	}
 
@@ -327,7 +339,7 @@ func (h *Handler) viewSessionOrders(c *gin.Context) {
 
 	c.HTML(http.StatusOK, "session_orders.html", gin.H{
 		"orders":       orders,
-		"session_id":   id,
+		"session":      session,
 		"totalRevenue": totalRevenue,
 		"paidCount":    paidCount,
 	})
