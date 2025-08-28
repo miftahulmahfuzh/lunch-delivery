@@ -222,8 +222,21 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 
 // Order Sessions
 func (h *Handler) orderSessionsList(c *gin.Context) {
-	today := time.Now()
-	sessions, err := h.repo.GetOrderSessionsByDateWithCompany(today)
+	// Get date from query parameter, default to today
+	dateStr := c.Query("date")
+	var targetDate time.Time
+	var err error
+
+	if dateStr != "" {
+		targetDate, err = time.Parse("2006-01-02", dateStr)
+		if err != nil {
+			targetDate = time.Now()
+		}
+	} else {
+		targetDate = time.Now()
+	}
+
+	sessions, err := h.repo.GetOrderSessionsByDateWithCompany(targetDate)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
@@ -236,9 +249,10 @@ func (h *Handler) orderSessionsList(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "order_sessions.html", gin.H{
-		"sessions":  sessions,
-		"companies": companies,
-		"date":      today.Format("2006-01-02"),
+		"sessions":     sessions,
+		"companies":    companies,
+		"date":         targetDate.Format("2006-01-02"),
+		"selectedDate": targetDate,
 	})
 }
 

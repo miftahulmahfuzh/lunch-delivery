@@ -49,13 +49,19 @@
         </div>
         
         <div class="card">
-            <h2>Create Order Session</h2>
+            <h2>Order Sessions Management</h2>
             
-            <form method="POST" action="/admin/sessions">
-                <div class="form-group">
-                    <label>Date:</label>
-                    <input type="date" name="date" value="{{.date}}" required>
+            <!-- Date Filter -->
+            <form method="GET" action="/admin/sessions" style="margin-bottom: 20px;">
+                <div class="form-group" style="display: inline-block; margin-right: 15px;">
+                    <label>View sessions for date:</label>
+                    <input type="date" name="date" value="{{.date}}" onchange="this.form.submit()">
                 </div>
+            </form>
+            
+            <h3>Create New Order Session for {{.selectedDate.Format "January 2, 2006"}}</h3>
+            <form method="POST" action="/admin/sessions">
+                <input type="hidden" name="date" value="{{.date}}">
                 <div class="form-group">
                     <label>Company:</label>
                     <select name="company_id" required>
@@ -70,12 +76,12 @@
         </div>
         
         <div class="card">
-            <h3>Today's Order Sessions ({{len .sessions}} sessions)</h3>
+            <h3>Order Sessions for {{.selectedDate.Format "January 2, 2006"}} ({{len .sessions}} sessions)</h3>
             {{if .sessions}}
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Company</th>
+                            <th>Company ID</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Actions</th>
@@ -94,14 +100,14 @@
                                 {{else}}
                                     <button onclick="reopenSession({{.ID}})" class="btn">Reopen</button>
                                 {{end}}
-
                             </td>
                         </tr>
                         {{end}}
                     </tbody>
                 </table>
             {{else}}
-                <p>No order sessions created for today.</p>
+                <p>No order sessions created for {{.selectedDate.Format "January 2, 2006"}}.</p>
+                <p>Use the form above to create order sessions for this date.</p>
             {{end}}
         </div>
     </div>
