@@ -1,62 +1,100 @@
-<!-- templates/admin_dashboard.html -->
-{{define "content"}}
-<div class="container">
-    <div class="nav">
-        <a href="/admin/">Dashboard</a>
-        <a href="/admin/menu">Menu Items</a>
-        <a href="/admin/companies">Companies</a>
-        <a href="/admin/daily-menu">Daily Menu</a>
-        <a href="/admin/sessions">Order Sessions</a>
+<!-- Package templates: templates/admin_dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: bold; }
+        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+        .status { padding: 5px 10px; border-radius: 3px; color: white; font-size: 12px; text-transform: uppercase; }
+        .status-open { background: #28a745; }
+        .status-closed_for_orders { background: #6c757d; }
+        .status-delivered { background: #007bff; }
+        .status-payment_pending { background: #ffc107; color: #212529; }
+        .status-completed { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lunch Delivery System</h1>
+    </div>
+    
+    <div class="container">
+        <div class="nav">
+            <a href="/admin/">Dashboard</a>
+            <a href="/admin/menu">Menu Items</a>
+            <a href="/admin/companies">Companies</a>
+            <a href="/admin/daily-menu">Daily Menu</a>
+            <a href="/admin/sessions">Order Sessions</a>
+        </div>
+        
+        <div class="card">
+            <h2>Admin Dashboard - {{.date}}</h2>
+            
+            <h3>Today's Order Sessions</h3>
+            {{if .sessions}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Company ID</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Orders</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .sessions}}
+                        <tr>
+                            <td>{{.CompanyID}}</td>
+                            <td><span class="status status-{{.Status | lower}}">{{.Status}}</span></td>
+                            <td>{{.CreatedAt.Format "15:04"}}</td>
+                            <td><a href="/admin/sessions/{{.ID}}/orders" class="btn">View Orders</a></td>
+                            <td>
+                                {{if eq .Status "OPEN"}}
+                                    <button onclick="closeSession({{.ID}})" class="btn btn-danger">Close Orders</button>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            {{else}}
+                <p>No order sessions for today.</p>
+                <p><a href="/admin/sessions" class="btn">Create Order Sessions</a></p>
+            {{end}}
+        </div>
     </div>
 
-    <div class="card">
-        <h2>Admin Dashboard - {{.date}}</h2>
-
-        <h3>Today's Order Sessions</h3>
-        {{if .sessions}}
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Company</th>
-                        <th>Status</th>
-                        <th>Orders</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{range .sessions}}
-                    <tr>
-                        <td>Company ID: {{.CompanyID}}</td>
-                        <td><span class="status status-{{.Status | lower}}">{{.Status}}</span></td>
-                        <td><a href="/admin/sessions/{{.ID}}/orders">View Orders</a></td>
-                        <td>
-                            {{if eq .Status "OPEN"}}
-                                <button onclick="closeSession({{.ID}})" class="btn btn-danger">Close Orders</button>
-                            {{end}}
-                        </td>
-                    </tr>
-                    {{end}}
-                </tbody>
-            </table>
-        {{else}}
-            <p>No order sessions for today. Create them in <a href="/admin/sessions">Order Sessions</a></p>
-        {{end}}
-    </div>
-</div>
-
-<script>
-function closeSession(sessionId) {
-    if (confirm('Close this order session?')) {
-        fetch('/admin/sessions/' + sessionId + '/close', {method: 'POST'})
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Error closing session');
-            }
-        });
+    <script>
+    function closeSession(sessionId) {
+        if (confirm('Close this order session?')) {
+            fetch('/admin/sessions/' + sessionId + '/close', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error closing session');
+                }
+            });
+        }
     }
-}
-</script>
-{{end}}
+    </script>
+</body>
+</html>
