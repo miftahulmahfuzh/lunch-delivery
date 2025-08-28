@@ -155,6 +155,7 @@ func (h *Handler) submitOrder(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/my-orders")
 }
 
+// Replace the empty myOrders handler in internal/handlers/orders.go
 func (h *Handler) myOrders(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
 	if err != nil {
@@ -168,8 +169,62 @@ func (h *Handler) myOrders(c *gin.Context) {
 		return
 	}
 
-	// This is simplified - in reality you'd want to get recent orders
+	// Get employee info
+	employee, err := h.repo.GetEmployeeByID(userID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+	if employee == nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Get company info
+	company, err := h.repo.GetCompanyByID(employee.CompanyID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get today's session for this company
+	today := time.Now()
+	todaySession, _ := h.repo.GetOrderSession(employee.CompanyID, today)
+
+	var todayOrder *models.IndividualOrder
+	var todayOrderItems []models.MenuItem
+
+	if todaySession != nil {
+		// Get user's order for today
+		orders, err := h.repo.GetOrdersBySession(todaySession.ID)
+		if err == nil {
+			for _, order := range orders {
+				if order.EmployeeID == userID {
+					todayOrder = &order
+					break
+				}
+			}
+		}
+
+		// Get menu items for today's order
+		if todayOrder != nil && len(todayOrder.MenuItemIDs) > 0 {
+			var itemIDs []int64
+			for _, id := range todayOrder.MenuItemIDs {
+				itemIDs = append(itemIDs, id)
+			}
+			todayOrderItems, _ = h.repo.GetMenuItemsByIDs(itemIDs)
+		}
+	}
+
+	// Get recent orders (last 7 days)
+	recentOrders, _ := h.repo.GetRecentOrdersByEmployee(userID, 7)
+
 	c.HTML(http.StatusOK, "my_orders.html", gin.H{
-		"user_id": userID,
+		"employee":        employee,
+		"company":         company,
+		"todaySession":    todaySession,
+		"todayOrder":      todayOrder,
+		"todayOrderItems": todayOrderItems,
+		"recentOrders":    recentOrders,
 	})
 }

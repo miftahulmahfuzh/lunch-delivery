@@ -1,0 +1,130 @@
+<!-- Package templates: templates/my_orders.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Orders - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: bold; }
+        .status { padding: 5px 10px; border-radius: 3px; color: white; font-size: 12px; text-transform: uppercase; }
+        .status-open { background: #28a745; }
+        .status-closed_for_orders { background: #6c757d; }
+        .status-delivered { background: #007bff; }
+        .status-payment_pending { background: #ffc107; color: #212529; }
+        .status-completed { background: #17a2b8; }
+        .paid { color: #28a745; font-weight: bold; }
+        .unpaid { color: #dc3545; font-weight: bold; }
+        .user-info { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lunch Delivery System</h1>
+    </div>
+
+    <div class="container">
+        <div class="nav">
+            <a href="/my-orders">My Orders</a>
+            <a href="/logout">Logout</a>
+        </div>
+
+        <div class="user-info">
+            <h3>Welcome, {{.employee.Name}}!</h3>
+            <p><strong>Company:</strong> {{.company.Name}}</p>
+            <p><strong>Email:</strong> {{.employee.Email}}</p>
+            <p><strong>WhatsApp:</strong> {{.employee.WaContact}}</p>
+        </div>
+
+        {{if .todaySession}}
+        <div class="card">
+            <h3>Today's Order - {{.todaySession.Date.Format "January 2, 2006"}}</h3>
+            <p>Status: <span class="status status-{{.todaySession.Status | lower}}">{{.todaySession.Status}}</span></p>
+
+            {{if .todayOrder}}
+                <h4>Your Order:</h4>
+                <ul>
+                    {{range .todayOrderItems}}
+                    <li>{{.Name}} - Rp {{.Price | divideBy100}}</li>
+                    {{end}}
+                </ul>
+                <p><strong>Total: Rp {{.todayOrder.TotalPrice | divideBy100}}</strong></p>
+                <p>Payment:
+                    {{if .todayOrder.Paid}}
+                        <span class="paid">PAID</span>
+                    {{else}}
+                        <span class="unpaid">UNPAID</span>
+                    {{end}}
+                </p>
+
+                {{if eq .todaySession.Status "OPEN"}}
+                    <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="btn">Edit Order</a>
+                {{end}}
+            {{else}}
+                {{if eq .todaySession.Status "OPEN"}}
+                    <p>You haven't placed an order yet.</p>
+                    <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="btn btn-success">Place Order Now</a>
+                {{else}}
+                    <p>Order session is closed. You missed the deadline.</p>
+                {{end}}
+            {{end}}
+        </div>
+        {{else}}
+        <div class="card">
+            <h3>Today's Order</h3>
+            <p>No order session available for your company today.</p>
+        </div>
+        {{end}}
+
+        <div class="card">
+            <h3>Recent Orders</h3>
+            {{if .recentOrders}}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Items</th>
+                            <th>Total</th>
+                            <th>Payment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .recentOrders}}
+                        <tr>
+                            <td>{{.Date.Format "2006-01-02"}}</td>
+                            <td>{{.MenuItemNames}}</td>
+                            <td>Rp {{.TotalPrice | divideBy100}}</td>
+                            <td>
+                                {{if .Paid}}
+                                    <span class="paid">PAID</span>
+                                {{else}}
+                                    <span class="unpaid">UNPAID</span>
+                                {{end}}
+                            </td>
+                        </tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            {{else}}
+                <p>No previous orders found.</p>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>

@@ -298,3 +298,37 @@ func (r *Repository) DeleteEmployee(id int) error {
 	_, err := r.db.Exec(`UPDATE employees SET active = false WHERE id = $1`, id)
 	return err
 }
+
+// Add to internal/models/repository.go
+func (r *Repository) GetEmployeeByID(id int) (*Employee, error) {
+	var employee Employee
+	err := r.db.Get(&employee, `SELECT * FROM employees WHERE id = $1 AND active = true`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &employee, err
+}
+
+type RecentOrder struct {
+	Date          time.Time `db:"date"`
+	TotalPrice    int       `db:"total_price"`
+	Paid          bool      `db:"paid"`
+	MenuItemNames string    `json:"menu_item_names"`
+}
+
+func (r *Repository) GetRecentOrdersByEmployee(employeeID, days int) ([]RecentOrder, error) {
+	var orders []RecentOrder
+	err := r.db.Select(&orders, `
+        SELECT os.date, io.total_price, io.paid, io.menu_item_ids
+        FROM individual_orders io
+        JOIN order_sessions os ON io.session_id = os.id
+        WHERE io.employee_id = $1 AND os.date >= CURRENT_DATE - INTERVAL '%d days'
+        ORDER BY os.date DESC`, employeeID, days)
+
+	// Get menu item names (simplified - you can optimize this)
+	for i := range orders {
+		orders[i].MenuItemNames = "Menu items loaded..." // Placeholder for now
+	}
+
+	return orders, err
+}
