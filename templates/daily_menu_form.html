@@ -1,59 +1,99 @@
-<!-- templates/daily_menu_form.html -->
-{{define "content"}}
-<div class="container">
-    <div class="nav">
-        <a href="/admin/">Dashboard</a>
-        <a href="/admin/menu">Menu Items</a>
-        <a href="/admin/companies">Companies</a>
-        <a href="/admin/daily-menu">Daily Menu</a>
-        <a href="/admin/sessions">Order Sessions</a>
+<!-- Package templates: templates/daily_menu_form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Menu - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+        .checkbox-list { list-style: none; padding: 0; margin: 10px 0; }
+        .checkbox-list li { padding: 8px; border-bottom: 1px solid #eee; display: flex; align-items: center; }
+        .checkbox-list li:hover { background: #f8f9fa; }
+        .checkbox-list li:last-child { border-bottom: none; }
+        .checkbox-list input[type="checkbox"] { margin-right: 8px; }
+        .checkbox-list label { cursor: pointer; flex: 1; }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
+        .current-menu-list { list-style: none; padding: 0; }
+        .current-menu-list li { padding: 8px 12px; border-bottom: 1px solid #eee; }
+        .current-menu-list li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lunch Delivery System</h1>
     </div>
-
-    <div class="card">
-        <h2>Daily Menu for {{.date}}</h2>
-
-        {{if .existing}}
-            <div class="success">Daily menu already exists for this date. Updating will replace it.</div>
-        {{end}}
-
-        <form method="POST" action="/admin/daily-menu">
-            <input type="hidden" name="date" value="{{.date}}">
-
-            <div class="form-group">
-                <label>Select Menu Items for Today:</label>
-                <div class="checkbox-group">
-                    {{range .items}}
-                    <div class="checkbox-item">
-                        <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
-                            {{if $.existing}}
-                                {{range $.existing.MenuItemIDs}}
-                                    {{if eq . $.ID}}checked{{end}}
-                                {{end}}
-                            {{end}}>
-                        <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
-                    </div>
-                    {{end}}
+    
+    <div class="container">
+        <div class="nav">
+            <a href="/admin/">Dashboard</a>
+            <a href="/admin/menu">Menu Items</a>
+            <a href="/admin/companies">Companies</a>
+            <a href="/admin/daily-menu">Daily Menu</a>
+            <a href="/admin/sessions">Order Sessions</a>
+        </div>
+        
+        <div class="card">
+            <h2>Daily Menu for {{.date}}</h2>
+            
+            {{if .existing}}
+                <div class="success">Daily menu already exists for this date. Submitting will update it.</div>
+            {{end}}
+            
+            <form method="POST" action="/admin/daily-menu">
+                <input type="hidden" name="date" value="{{.date}}">
+                
+                <div class="form-group">
+                    <label>Select Menu Items for Today ({{len .items}} total available):</label>
+                    <ul class="checkbox-list">
+                        {{range .items}}
+                        <li>
+                            <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
+                                {{if $.existing}}
+                                    {{$currentID := .ID}}
+                                    {{range $.existing.MenuItemIDs}}
+                                        {{if eq . $currentID}}checked{{end}}
+                                    {{end}}
+                                {{end}}>
+                            <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
+                        </li>
+                        {{end}}
+                    </ul>
                 </div>
-            </div>
-
-            <button type="submit" class="btn btn-success">Save Daily Menu</button>
-        </form>
-    </div>
-
-    {{if .existing}}
-    <div class="card">
-        <h3>Current Daily Menu</h3>
-        <div class="checkbox-group">
-            {{range .items}}
-                {{$currentID := .ID}}
-                {{range $.existing.MenuItemIDs}}
-                    {{if eq . $currentID}}
-                        <div class="checkbox-item">{{$.Name}} - Rp {{$.Price | divideBy100}}</div>
+                
+                <button type="submit" class="btn btn-success">Save Daily Menu</button>
+            </form>
+        </div>
+        
+        {{if .existing}}
+        <div class="card">
+            <h3>Current Daily Menu</h3>
+            <ul class="current-menu-list">
+                {{range .items}}
+                    {{$currentItem := .}}
+                    {{range $.existing.MenuItemIDs}}
+                        {{if eq . $currentItem.ID}}
+                            <li>{{$currentItem.Name}} - Rp {{$currentItem.Price | divideBy100}}</li>
+                        {{end}}
                     {{end}}
                 {{end}}
-            {{end}}
+            </ul>
         </div>
+        {{end}}
     </div>
-    {{end}}
-</div>
-{{end}}
+</body>
+</html>
