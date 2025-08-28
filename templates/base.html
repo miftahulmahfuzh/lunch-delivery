@@ -1,0 +1,52 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{.title}} - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; }
+        .header h1 { text-align: center; }
+        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 3px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; font-weight: bold; }
+        .error { color: #dc3545; background: #f8d7da; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
+        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
+        .nav { background: #495057; padding: 10px 0; }
+        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
+        .nav a:hover { background: #343a40; }
+        .checkbox-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 10px; margin: 10px 0; }
+        .checkbox-item { padding: 10px; border: 1px solid #ddd; border-radius: 3px; background: #f9f9f9; }
+        .checkbox-item input[type="checkbox"] { margin-right: 10px; }
+        .status { padding: 5px 10px; border-radius: 3px; color: white; font-size: 12px; text-transform: uppercase; }
+        .status-open { background: #28a745; }
+        .status-closed { background: #6c757d; }
+        .status-delivered { background: #007bff; }
+        .status-payment { background: #ffc107; color: #212529; }
+        .status-completed { background: #17a2b8; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>Lunch Delivery System</h1>
+        </div>
+    </div>
+
+    {{template "content" .}}
+</body>
+</html>

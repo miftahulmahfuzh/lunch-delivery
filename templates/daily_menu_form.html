@@ -1,0 +1,59 @@
+<!-- templates/daily_menu_form.html -->
+{{define "content"}}
+<div class="container">
+    <div class="nav">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/menu">Menu Items</a>
+        <a href="/admin/companies">Companies</a>
+        <a href="/admin/daily-menu">Daily Menu</a>
+        <a href="/admin/sessions">Order Sessions</a>
+    </div>
+
+    <div class="card">
+        <h2>Daily Menu for {{.date}}</h2>
+
+        {{if .existing}}
+            <div class="success">Daily menu already exists for this date. Updating will replace it.</div>
+        {{end}}
+
+        <form method="POST" action="/admin/daily-menu">
+            <input type="hidden" name="date" value="{{.date}}">
+
+            <div class="form-group">
+                <label>Select Menu Items for Today:</label>
+                <div class="checkbox-group">
+                    {{range .items}}
+                    <div class="checkbox-item">
+                        <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
+                            {{if $.existing}}
+                                {{range $.existing.MenuItemIDs}}
+                                    {{if eq . $.ID}}checked{{end}}
+                                {{end}}
+                            {{end}}>
+                        <label for="item-{{.ID}}">{{.Name}} - Rp {{.Price | divideBy100}}</label>
+                    </div>
+                    {{end}}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success">Save Daily Menu</button>
+        </form>
+    </div>
+
+    {{if .existing}}
+    <div class="card">
+        <h3>Current Daily Menu</h3>
+        <div class="checkbox-group">
+            {{range .items}}
+                {{$currentID := .ID}}
+                {{range $.existing.MenuItemIDs}}
+                    {{if eq . $currentID}}
+                        <div class="checkbox-item">{{$.Name}} - Rp {{$.Price | divideBy100}}</div>
+                    {{end}}
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+</div>
+{{end}}

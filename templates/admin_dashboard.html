@@ -1,0 +1,62 @@
+<!-- templates/admin_dashboard.html -->
+{{define "content"}}
+<div class="container">
+    <div class="nav">
+        <a href="/admin/">Dashboard</a>
+        <a href="/admin/menu">Menu Items</a>
+        <a href="/admin/companies">Companies</a>
+        <a href="/admin/daily-menu">Daily Menu</a>
+        <a href="/admin/sessions">Order Sessions</a>
+    </div>
+
+    <div class="card">
+        <h2>Admin Dashboard - {{.date}}</h2>
+
+        <h3>Today's Order Sessions</h3>
+        {{if .sessions}}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Company</th>
+                        <th>Status</th>
+                        <th>Orders</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .sessions}}
+                    <tr>
+                        <td>Company ID: {{.CompanyID}}</td>
+                        <td><span class="status status-{{.Status | lower}}">{{.Status}}</span></td>
+                        <td><a href="/admin/sessions/{{.ID}}/orders">View Orders</a></td>
+                        <td>
+                            {{if eq .Status "OPEN"}}
+                                <button onclick="closeSession({{.ID}})" class="btn btn-danger">Close Orders</button>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        {{else}}
+            <p>No order sessions for today. Create them in <a href="/admin/sessions">Order Sessions</a></p>
+        {{end}}
+    </div>
+</div>
+
+<script>
+function closeSession(sessionId) {
+    if (confirm('Close this order session?')) {
+        fetch('/admin/sessions/' + sessionId + '/close', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error closing session');
+            }
+        });
+    }
+}
+</script>
+{{end}}
