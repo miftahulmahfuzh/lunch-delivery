@@ -51,7 +51,7 @@
                 <table class="table">
                     <thead>
                         <tr>
-                            <th>Company ID</th>
+                            <th>Company</th>
                             <th>Status</th>
                             <th>Created</th>
                             <th>Orders</th>
@@ -61,13 +61,15 @@
                     <tbody>
                         {{range .sessions}}
                         <tr>
-                            <td>{{.CompanyID}}</td>
+                            <td>{{.CompanyName}}</td>
                             <td><span class="status status-{{.Status | lower}}">{{.Status}}</span></td>
                             <td>{{.CreatedAt.Format "15:04"}}</td>
                             <td><a href="/admin/sessions/{{.ID}}/orders" class="btn">View Orders</a></td>
                             <td>
                                 {{if eq .Status "OPEN"}}
                                     <button onclick="closeSession({{.ID}})" class="btn btn-danger">Close Orders</button>
+                                {{else}}
+                                    <button onclick="reopenSession({{.ID}})" class="btn">Reopen</button>
                                 {{end}}
                             </td>
                         </tr>
@@ -91,6 +93,20 @@
                     location.reload();
                 } else {
                     alert('Error closing session');
+                }
+            });
+        }
+    }
+
+    function reopenSession(sessionId) {
+        if (confirm('Reopen this order session?')) {
+            fetch('/admin/sessions/' + sessionId + '/reopen', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error reopening session');
                 }
             });
         }

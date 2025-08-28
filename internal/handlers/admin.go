@@ -12,7 +12,7 @@ import (
 
 func (h *Handler) adminDashboard(c *gin.Context) {
 	today := time.Now()
-	sessions, err := h.repo.GetOrderSessionsByDate(today)
+	sessions, err := h.repo.GetOrderSessionsByDateWithCompany(today)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
@@ -223,7 +223,7 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 // Order Sessions
 func (h *Handler) orderSessionsList(c *gin.Context) {
 	today := time.Now()
-	sessions, err := h.repo.GetOrderSessionsByDate(today)
+	sessions, err := h.repo.GetOrderSessionsByDateWithCompany(today)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
@@ -276,6 +276,23 @@ func (h *Handler) closeOrderSession(c *gin.Context) {
 	}
 
 	err = h.repo.CloseOrderSession(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) reopenOrderSession(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid session ID"})
+		return
+	}
+
+	err = h.repo.ReopenOrderSession(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

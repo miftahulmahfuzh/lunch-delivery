@@ -184,3 +184,28 @@ func (r *Repository) GetMenuItemsByIDs(ids []int64) ([]MenuItem, error) {
 	err = r.db.Select(&items, query, args...)
 	return items, err
 }
+
+// Add this to internal/models/repository.go
+
+type OrderSessionWithCompany struct {
+	OrderSession
+	CompanyName string `json:"company_name" db:"company_name"`
+}
+
+func (r *Repository) GetOrderSessionsByDateWithCompany(date time.Time) ([]OrderSessionWithCompany, error) {
+	var sessions []OrderSessionWithCompany
+	err := r.db.Select(&sessions, `
+        SELECT os.*, c.name as company_name 
+        FROM order_sessions os 
+        JOIN companies c ON os.company_id = c.id 
+        WHERE os.date = $1 
+        ORDER BY c.name`,
+		date.Format("2006-01-02"))
+	return sessions, err
+}
+
+func (r *Repository) ReopenOrderSession(id int) error {
+	_, err := r.db.Exec(`UPDATE order_sessions SET status = $1, closed_at = NULL WHERE id = $2`,
+		StatusOpen, id)
+	return err
+}
