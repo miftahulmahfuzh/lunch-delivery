@@ -70,6 +70,12 @@
                 <div class="success">You already have an order for today. Submitting will update your existing order.</div>
             {{end}}
 
+            {{if .show_reset_notification}}
+                <div class="alert" style="color: #856404; background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
+                    <strong>⚠️ Menu Updated!</strong> The admin has updated today's menu. Your previous nutritionist selection may no longer be optimal. Consider clicking "Nutritionist Selection" again for updated recommendations.
+                </div>
+            {{end}}
+
             <form method="POST" action="/order" id="orderForm">
                 <input type="hidden" name="session_id" value="{{.session.ID}}">
 
@@ -97,6 +103,20 @@
                     <h4>Order Summary</h4>
                     <div id="selectedItems"></div>
                     <div style="margin-top: 10px;"><strong>Total: Rp <span id="totalPrice">0</span></strong></div>
+                </div>
+
+                <!-- Nutritionist Selection Button -->
+                <button type="button" class="btn" id="nutritionistBtn" style="width: 100%; margin-top: 15px; font-size: 16px; background: #17a2b8; color: white;">
+                    🧠 Nutritionist Selection
+                </button>
+                <div id="nutritionistResult" style="display: none; margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 5px; border-left: 4px solid #28a745;">
+                    <h5 style="color: #155724; margin-bottom: 10px;">AI Nutritionist Recommendation:</h5>
+                    <p id="nutritionistReasoning" style="color: #155724; font-size: 14px; margin-bottom: 8px;"></p>
+                    <div id="nutritionistSummary" style="color: #155724; font-size: 13px;">
+                        <span><strong>Protein:</strong> <span id="proteinLevel"></span></span> |
+                        <span><strong>Vegetables:</strong> <span id="vegetableLevel"></span></span> |
+                        <span><strong>Rating:</strong> <span id="overallRating"></span></span>
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; font-size: 18px;">
@@ -131,6 +151,8 @@
 
     document.addEventListener('DOMContentLoaded', function() {
         const listItems = document.querySelectorAll('.menu-item-list li');
+        const nutritionistBtn = document.getElementById('nutritionistBtn');
+        const nutritionistResult = document.getElementById('nutritionistResult');
 
         listItems.forEach(item => {
             const checkbox = item.querySelector('input[type="checkbox"]');
@@ -152,6 +174,92 @@
                 calculateTotal();
             });
         });
+
+        // Nutritionist selection functionality
+        nutritionistBtn.addEventListener('click', function() {
+            const btn = this;
+            const originalText = btn.innerHTML;
+
+            // Show loading state
+            btn.innerHTML = '🔄 AI Thinking...';
+            btn.disabled = true;
+            btn.style.background = '#6c757d';
+
+            // Hide previous result
+            nutritionistResult.style.display = 'none';
+
+            // Get current URL parameters
+            const pathParts = window.location.pathname.split('/');
+            const company = pathParts[2]; // /order/{company}/{date}
+            const date = pathParts[3];
+
+            // Make API call
+            fetch(`/order/${company}/${date}/nutritionist-select`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Clear all selections first
+                    clearAllSelections();
+
+                    // Auto-select the AI-recommended items
+                    selectItemsByIndices(data.selected_indices);
+
+                    // Display the reasoning and summary
+                    displayNutritionistResult(data);
+
+                    // Update total
+                    calculateTotal();
+                } else {
+                    alert('Error: ' + (data.error || 'Nutritionist selection failed'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error occurred. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.background = '#17a2b8';
+            });
+        });
+
+        // Helper function to clear all selections
+        function clearAllSelections() {
+            listItems.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                checkbox.checked = false;
+                item.classList.remove('selected');
+            });
+        }
+
+        // Helper function to select items by indices
+        function selectItemsByIndices(indices) {
+            indices.forEach(index => {
+                if (index >= 0 && index < listItems.length) {
+                    const item = listItems[index];
+                    const checkbox = item.querySelector('input[type="checkbox"]');
+                    checkbox.checked = true;
+                    item.classList.add('selected');
+                }
+            });
+        }
+
+        // Helper function to display nutritionist result
+        function displayNutritionistResult(data) {
+            document.getElementById('nutritionistReasoning').textContent = data.reasoning;
+            document.getElementById('proteinLevel').textContent = data.nutritional_summary.protein || 'unknown';
+            document.getElementById('vegetableLevel').textContent = data.nutritional_summary.vegetables || 'unknown';
+            document.getElementById('overallRating').textContent = data.nutritional_summary.overall_rating || 'balanced';
+            
+            nutritionistResult.style.display = 'block';
+        }
 
         // Run once on page load to initialize the summary
         calculateTotal();

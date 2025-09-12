@@ -36,10 +36,11 @@ type Employee struct {
 }
 
 type DailyMenu struct {
-	ID          int           `json:"id" db:"id"`
-	Date        time.Time     `json:"date" db:"date"`
-	MenuItemIDs pq.Int64Array `json:"menu_item_ids" db:"menu_item_ids"`
-	CreatedAt   time.Time     `json:"created_at" db:"created_at"`
+	ID                int           `json:"id" db:"id"`
+	Date              time.Time     `json:"date" db:"date"`
+	MenuItemIDs       pq.Int64Array `json:"menu_item_ids" db:"menu_item_ids"`
+	NutritionistReset bool          `json:"nutritionist_reset" db:"nutritionist_reset"`
+	CreatedAt         time.Time     `json:"created_at" db:"created_at"`
 }
 
 type OrderSession struct {
@@ -59,6 +60,24 @@ type IndividualOrder struct {
 	TotalPrice  int           `json:"total_price" db:"total_price"`
 	Paid        bool          `json:"paid" db:"paid"`
 	CreatedAt   time.Time     `json:"created_at" db:"created_at"`
+}
+
+type NutritionistSelection struct {
+	ID                 int           `json:"id" db:"id"`
+	Date               time.Time     `json:"date" db:"date"`
+	MenuItemIDs        pq.Int64Array `json:"menu_item_ids" db:"menu_item_ids"`
+	SelectedIndices    pq.Int32Array `json:"selected_indices" db:"selected_indices"`
+	Reasoning          string        `json:"reasoning" db:"reasoning"`
+	NutritionalSummary string        `json:"nutritional_summary" db:"nutritional_summary"`
+	CreatedAt          time.Time     `json:"created_at" db:"created_at"`
+}
+
+type NutritionistUserSelection struct {
+	ID         int       `json:"id" db:"id"`
+	EmployeeID int       `json:"employee_id" db:"employee_id"`
+	Date       time.Time `json:"date" db:"date"`
+	OrderID    *int      `json:"order_id" db:"order_id"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 
 const (
