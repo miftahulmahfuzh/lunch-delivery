@@ -34,7 +34,31 @@ func (h *Handler) menuList(c *gin.Context) {
 	}
 
 	log.Printf("Found %d menu items", len(items))
-	c.HTML(http.StatusOK, "menu_list.html", gin.H{"items": items})
+
+	// Calculate statistics if we have items
+	templateData := gin.H{"items": items}
+	if len(items) > 0 {
+		var total int = 0
+		minPrice := items[0].Price
+		maxPrice := items[0].Price
+
+		for _, item := range items {
+			total += item.Price
+			if item.Price < minPrice {
+				minPrice = item.Price
+			}
+			if item.Price > maxPrice {
+				maxPrice = item.Price
+			}
+		}
+
+		averagePrice := total / len(items)
+		templateData["averagePrice"] = averagePrice
+		templateData["minPrice"] = minPrice
+		templateData["maxPrice"] = maxPrice
+	}
+
+	c.HTML(http.StatusOK, "menu_list.html", templateData)
 }
 
 func (h *Handler) createMenuItem(c *gin.Context) {
