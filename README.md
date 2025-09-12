@@ -13,6 +13,7 @@ This application manages a restaurant's lunch delivery service that operates on 
 - **Order Sessions**: Time-bound ordering windows for each company
 - **Individual Order Tracking**: Track each employee's order and payment status
 - **Real-time Order Management**: Close/reopen order sessions as needed
+- **🤖 AI Nutritionist**: AI-powered meal recommendations with nutritional analysis and intelligent caching
 
 ## Architecture
 
@@ -21,6 +22,7 @@ This application manages a restaurant's lunch delivery service that operates on 
 - **Database**: PostgreSQL with sqlx for query handling
 - **Frontend**: Server-side rendered HTML templates with vanilla CSS/JavaScript
 - **Authentication**: Cookie-based sessions with bcrypt password hashing
+- **AI Integration**: LLM-powered nutritionist service with smart caching
 
 ### Project Structure
 ```
@@ -38,6 +40,8 @@ lunch-delivery/
 │   │   ├── auth.go                # Authentication
 │   │   ├── orders.go              # Customer orders
 │   │   └── employees.go           # Employee management
+│   ├── services/
+│   │   └── nutritionist.go        # AI nutritionist service
 │   ├── middleware/
 │   │   └── auth.go                # Authentication middleware
 │   └── database/
@@ -76,6 +80,14 @@ lunch-delivery/
 **individual_orders**
 - Individual employee orders within sessions
 - Fields: id, session_id, employee_id, menu_item_ids (array), total_price, paid, created_at
+
+**nutritionist_selections**
+- AI-generated nutritional recommendations cached by date
+- Fields: id, date, menu_item_ids (array), selected_indices (array), reasoning, nutritional_summary (JSONB), created_at
+
+**nutritionist_user_selections**
+- Tracks users who have used AI nutritionist recommendations
+- Fields: id, employee_id, date, order_id, created_at
 
 ## Installation & Setup
 
@@ -159,6 +171,35 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO lunch_user;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO lunch_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO lunch_user;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO lunch_user;
+
+-- Add nutritionist feature tables
+CREATE TABLE nutritionist_selections (
+    id SERIAL PRIMARY KEY,
+    date DATE NOT NULL UNIQUE,
+    menu_item_ids BIGINT[] NOT NULL,
+    selected_indices INTEGER[] NOT NULL,
+    reasoning TEXT,
+    nutritional_summary JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_nutritionist_selections_date ON nutritionist_selections(date);
+
+-- Add reset flag to daily_menus table
+ALTER TABLE daily_menus ADD COLUMN nutritionist_reset BOOLEAN DEFAULT FALSE;
+
+-- Add tracking table for users who used nutritionist selection
+CREATE TABLE nutritionist_user_selections (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id),
+    date DATE NOT NULL,
+    order_id INTEGER REFERENCES individual_orders(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(employee_id, date)
+);
+
+CREATE INDEX idx_nutritionist_user_selections_date ON nutritionist_user_selections(date);
+CREATE INDEX idx_nutritionist_user_selections_employee ON nutritionist_user_selections(employee_id);
 ```
 
 ### Application Setup
@@ -249,8 +290,9 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 2. **View Dashboard**: See today's order session and recent order history
 3. **Place Order**: Click "Place Order Now" if session is open
 4. **Select Items**: Choose from today's available menu with real-time price calculation
-5. **Submit/Update**: Confirm order (can modify until session closes)
-6. **Track Status**: Monitor order and payment status on dashboard
+5. **🤖 AI Nutritionist**: Click "AI Nutritionist" button for intelligent meal recommendations based on nutritional balance
+6. **Submit/Update**: Confirm order (can modify until session closes)
+7. **Track Status**: Monitor order and payment status on dashboard
 
 ## API Endpoints
 
@@ -266,6 +308,7 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - `GET /my-orders` - Customer dashboard
 - `GET /order/:company/:date` - Order form for specific company/date
 - `POST /order` - Submit/update order
+- `POST /order/:company/:date/nutritionist-select` - Get AI nutritionist recommendations
 
 ### Admin Routes
 - `GET /admin/` - Admin dashboard
@@ -292,6 +335,68 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - `POST /admin/orders/:id/unpaid` - Mark order as unpaid
 
 ## Features Details
+
+### 🤖 AI Nutritionist Feature
+
+The AI Nutritionist is an intelligent meal recommendation system that leverages Large Language Models (LLMs) to provide personalized, nutritionally balanced meal suggestions from the daily menu.
+
+#### How It Works
+
+**Smart Recommendations:**
+- Analyzes the entire daily menu using advanced AI
+- Selects 2-4 items that provide optimal nutritional balance
+- Prioritizes protein sources, vegetables, whole grains, and balanced portions
+- Avoids excessive fried foods, sugar, and unbalanced combinations
+
+**Nutritional Analysis:**
+- **Protein Assessment**: Evaluates protein content (high/moderate/low)
+- **Vegetable Content**: Assesses vegetable intake (high/moderate/low/none)
+- **Carbohydrate Balance**: Analyzes carbohydrate levels (high/moderate/low)  
+- **Overall Rating**: Provides overall nutritional rating (excellent/good/balanced/adequate)
+
+**Intelligent Caching System:**
+- Caches AI recommendations by date to reduce API costs
+- Automatically invalidates cache when admin updates menu
+- Tracks user adoption for analytics and notifications
+- Supports admin-triggered cache resets via `nutritionist_reset` flag
+
+**User Experience:**
+- One-click "AI Nutritionist" button on order form
+- Real-time AI processing with loading indicators
+- Clear reasoning explanation for recommendations
+- Visual nutritional summary with color-coded ratings
+- Seamless integration with existing order flow
+
+#### Technical Implementation
+
+**Architecture:**
+- `internal/services/nutritionist.go`: Core AI service with LLM integration
+- Smart caching with PostgreSQL JSONB storage
+- Fallback parsing for robust AI response handling
+- User tracking for notification systems
+
+**Database Schema:**
+- `nutritionist_selections`: Stores AI recommendations with reasoning
+- `nutritionist_user_selections`: Tracks user adoption patterns
+- `daily_menus.nutritionist_reset`: Admin control for cache invalidation
+
+**AI Integration:**
+- LLM client with structured JSON response parsing
+- Robust error handling and fallback mechanisms
+- Configurable prompts for nutritional optimization
+- Index-based menu item selection for accuracy
+
+#### Admin Features
+
+**Cache Management:**
+- Reset nutritionist recommendations when menu changes
+- Automatic user notification system for menu updates
+- Analytics on user adoption of AI recommendations
+
+**Menu Integration:**
+- Seamless integration with existing daily menu system
+- Automatic cache invalidation on menu modifications
+- Support for menu item additions/removals
 
 ### Menu Management
 - **Master Menu**: Comprehensive list of all possible menu items with fixed prices
