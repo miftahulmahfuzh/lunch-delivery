@@ -80,10 +80,43 @@ type NutritionistUserSelection struct {
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 
+type StockEmptyItem struct {
+	ID         int       `json:"id" db:"id"`
+	MenuItemID int       `json:"menu_item_id" db:"menu_item_id"`
+	Date       time.Time `json:"date" db:"date"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+}
+
+type UserStockEmptyNotification struct {
+	ID                int       `json:"id" db:"id"`
+	IndividualOrderID int       `json:"individual_order_id" db:"individual_order_id"`
+	MenuItemID        int       `json:"menu_item_id" db:"menu_item_id"`
+	Date              time.Time `json:"date" db:"date"`
+	CreatedAt         time.Time `json:"created_at" db:"created_at"`
+}
+
+type UserNotification struct {
+	ID               int       `json:"id" db:"id"`
+	EmployeeID       int       `json:"employee_id" db:"employee_id"`
+	NotificationType string    `json:"notification_type" db:"notification_type"`
+	Title            string    `json:"title" db:"title"`
+	Message          string    `json:"message" db:"message"`
+	RedirectURL      *string   `json:"redirect_url" db:"redirect_url"`
+	IsRead           bool      `json:"is_read" db:"is_read"`
+	CreatedAt        time.Time `json:"created_at" db:"created_at"`
+}
+
 const (
 	StatusOpen           = "OPEN"
 	StatusClosedOrders   = "CLOSED_FOR_ORDERS"
 	StatusDelivered      = "DELIVERED"
 	StatusPaymentPending = "PAYMENT_PENDING"
 	StatusCompleted      = "COMPLETED"
+)
+
+const (
+	NotificationStockEmpty  = "STOCK_EMPTY"
+	NotificationPaid        = "PAID"
+	NotificationSessionClosed = "SESSION_CLOSED"
+	NotificationMenuUpdated = "MENU_UPDATED"
 )

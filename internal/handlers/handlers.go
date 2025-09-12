@@ -52,6 +52,10 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		customer.POST("/order", h.submitOrder)
 		customer.POST("/order/:company/:date/nutritionist-select", h.nutritionistSelect)
 		customer.GET("/my-orders", h.myOrders)
+		
+		// Notification routes
+		customer.POST("/notifications/:id/read", h.markNotificationRead)
+		customer.DELETE("/notifications/:id", h.deleteNotification)
 	}
 
 	// Admin routes
@@ -79,5 +83,10 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		admin.DELETE("/companies/:id", h.deleteCompany)
 		admin.PUT("/employees/:id", h.updateEmployee)
 		admin.DELETE("/employees/:id", h.deleteEmployee)
+		
+		// New routes for stock empty and employee details
+		admin.GET("/orders/:id/items", h.getOrderItems)
+		admin.POST("/orders/:id/mark-stock-empty", h.markItemsStockEmpty)
+		admin.GET("/employees/:id/details", h.getEmployeeDetails)
 	}
 }

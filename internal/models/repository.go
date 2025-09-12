@@ -393,3 +393,144 @@ func (r *Repository) GetDailyMenuResetFlag(date time.Time) (bool, error) {
 		date.Format("2006-01-02"))
 	return resetFlag, err
 }
+
+// Stock Empty and Notification methods
+func (r *Repository) GetOrderItemsByOrderID(orderID int) ([]MenuItem, error) {
+	var items []MenuItem
+	query := `
+		SELECT mi.* FROM menu_items mi
+		JOIN unnest((SELECT menu_item_ids FROM individual_orders WHERE id = $1)::int[]) item_id ON mi.id = item_id
+		ORDER BY mi.name
+	`
+	err := r.db.Select(&items, query, orderID)
+	return items, err
+}
+
+func (r *Repository) GetOrderByID(id int) (*IndividualOrder, error) {
+	var order IndividualOrder
+	err := r.db.Get(&order, `SELECT * FROM individual_orders WHERE id = $1`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &order, err
+}
+
+func (r *Repository) GetOrderSessionByID(id int) (*OrderSession, error) {
+	var session OrderSession
+	err := r.db.Get(&session, `SELECT * FROM order_sessions WHERE id = $1`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &session, err
+}
+
+type EmployeeWithCompany struct {
+	Employee
+	CompanyName string `json:"company_name" db:"company_name"`
+}
+
+func (r *Repository) GetEmployeeWithCompany(id int) (*EmployeeWithCompany, error) {
+	var employee EmployeeWithCompany
+	err := r.db.Get(&employee, `
+		SELECT e.*, c.name as company_name
+		FROM employees e
+		JOIN companies c ON e.company_id = c.id
+		WHERE e.id = $1 AND e.active = true`, id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &employee, err
+}
+
+func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID int) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Get the order to find employee ID
+	order, err := r.GetOrderByID(orderID)
+	if err != nil {
+		return err
+	}
+
+	// Mark items as stock empty for the day
+	for _, itemID := range itemIDs {
+		_, err = tx.Exec(`
+			INSERT INTO stock_empty_items (menu_item_id, date) 
+			VALUES ($1, $2) 
+			ON CONFLICT (menu_item_id, date) DO NOTHING`,
+			itemID, date.Format("2006-01-02"))
+		if err != nil {
+			return err
+		}
+
+		// Create user-specific stock empty notification
+		_, err = tx.Exec(`
+			INSERT INTO user_stock_empty_notifications (individual_order_id, menu_item_id, date) 
+			VALUES ($1, $2, $3) 
+			ON CONFLICT (individual_order_id, menu_item_id) DO NOTHING`,
+			orderID, itemID, date.Format("2006-01-02"))
+		if err != nil {
+			return err
+		}
+
+		// Get menu item name for notification
+		var itemName string
+		err = tx.Get(&itemName, `SELECT name FROM menu_items WHERE id = $1`, itemID)
+		if err != nil {
+			return err
+		}
+
+		// Create notification for the user
+		redirectURL := "/order/" + date.Format("2006-01-02")
+		_, err = tx.Exec(`
+			INSERT INTO user_notifications (employee_id, notification_type, title, message, redirect_url) 
+			VALUES ($1, $2, $3, $4, $5)`,
+			order.EmployeeID,
+			NotificationStockEmpty,
+			"Item Out of Stock",
+			"Unfortunately, "+itemName+" is out of stock. Please update your order with alternative items.",
+			&redirectURL)
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func (r *Repository) GetStockEmptyItemsByDate(date time.Time) ([]int, error) {
+	var itemIDs []int
+	err := r.db.Select(&itemIDs, `SELECT menu_item_id FROM stock_empty_items WHERE date = $1`, date.Format("2006-01-02"))
+	return itemIDs, err
+}
+
+func (r *Repository) GetUserNotifications(employeeID int, limit int) ([]UserNotification, error) {
+	var notifications []UserNotification
+	query := `SELECT * FROM user_notifications WHERE employee_id = $1 ORDER BY created_at DESC`
+	if limit > 0 {
+		query += ` LIMIT ` + string(rune(limit))
+	}
+	err := r.db.Select(&notifications, query, employeeID)
+	return notifications, err
+}
+
+func (r *Repository) MarkNotificationRead(id int) error {
+	_, err := r.db.Exec(`UPDATE user_notifications SET is_read = true WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) DeleteUserNotification(id int) error {
+	_, err := r.db.Exec(`DELETE FROM user_notifications WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) CreateUserNotification(employeeID int, notificationType, title, message string, redirectURL *string) error {
+	_, err := r.db.Exec(`
+		INSERT INTO user_notifications (employee_id, notification_type, title, message, redirect_url) 
+		VALUES ($1, $2, $3, $4, $5)`,
+		employeeID, notificationType, title, message, redirectURL)
+	return err
+}

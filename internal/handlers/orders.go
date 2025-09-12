@@ -120,6 +120,13 @@ func (h *Handler) orderForm(c *gin.Context) {
 		}
 	}
 
+	// Get stock empty items for today
+	stockEmptyItems, err := h.repo.GetStockEmptyItemsByDate(date)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get stock empty items")
+		stockEmptyItems = []int{} // Continue with empty list
+	}
+
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
 		"menu_items":            menuItems,
 		"session":               session,
@@ -127,6 +134,7 @@ func (h *Handler) orderForm(c *gin.Context) {
 		"existing_order":        existingOrder,
 		"user_id":               userID,
 		"show_reset_notification": showResetNotification,
+		"stock_empty_items":     stockEmptyItems,
 	})
 }
 
@@ -266,6 +274,9 @@ func (h *Handler) myOrders(c *gin.Context) {
 	// Get recent orders (last 7 days)
 	recentOrders, _ := h.repo.GetRecentOrdersByEmployee(userID, 7)
 
+	// Get user notifications
+	notifications, _ := h.repo.GetUserNotifications(userID, 10) // Get latest 10 notifications
+
 	c.HTML(http.StatusOK, "my_orders.html", gin.H{
 		"employee":        employee,
 		"company":         company,
@@ -273,6 +284,7 @@ func (h *Handler) myOrders(c *gin.Context) {
 		"todayOrder":      todayOrder,
 		"todayOrderItems": todayOrderItems,
 		"recentOrders":    recentOrders,
+		"notifications":   notifications,
 	})
 }
 
@@ -354,4 +366,103 @@ func (h *Handler) nutritionistSelect(c *gin.Context) {
 		"reasoning":         selection.Reasoning,
 		"nutritional_summary": selection.NutritionalSummary,
 	})
+}
+
+// Notification handlers
+func (h *Handler) markNotificationRead(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	idStr := c.Param("id")
+	notificationID, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
+		return
+	}
+
+	// Verify notification belongs to user (security check)
+	notifications, err := h.repo.GetUserNotifications(userID, 0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	found := false
+	for _, notification := range notifications {
+		if notification.ID == notificationID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Notification not found"})
+		return
+	}
+
+	err = h.repo.MarkNotificationRead(notificationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) deleteNotification(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	idStr := c.Param("id")
+	notificationID, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid notification ID"})
+		return
+	}
+
+	// Verify notification belongs to user (security check)
+	notifications, err := h.repo.GetUserNotifications(userID, 0)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	found := false
+	for _, notification := range notifications {
+		if notification.ID == notificationID {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Notification not found"})
+		return
+	}
+
+	err = h.repo.DeleteUserNotification(notificationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }

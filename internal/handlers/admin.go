@@ -2,12 +2,13 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
+	"github.com/rs/zerolog/log"
 )
 
 func (h *Handler) adminDashboard(c *gin.Context) {
@@ -235,10 +236,38 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 		itemIDs = append(itemIDs, id)
 	}
 
+	// Get employees with existing unpaid orders for this date to notify them
+	sessions, _ := h.repo.GetOrderSessionsByDate(date)
+	employeesToNotify := make(map[int]bool)
+	
+	for _, session := range sessions {
+		orders, _ := h.repo.GetOrdersBySession(session.ID)
+		for _, order := range orders {
+			if !order.Paid {
+				employeesToNotify[order.EmployeeID] = true
+			}
+		}
+	}
+
 	_, err = h.repo.CreateDailyMenu(date, itemIDs)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
+	}
+
+	// Create notifications for affected employees
+	redirectURL := "/order/" + date.Format("2006-01-02")
+	for employeeID := range employeesToNotify {
+		err = h.repo.CreateUserNotification(
+			employeeID,
+			models.NotificationMenuUpdated,
+			"Menu Updated",
+			"The daily menu has been updated for "+date.Format("January 2, 2006")+". Please review your order as it may be affected.",
+			&redirectURL,
+		)
+		if err != nil {
+			log.Warn().Err(err).Int("employee_id", employeeID).Msg("Failed to create menu update notification")
+		}
 	}
 
 	c.Redirect(http.StatusFound, "/admin/daily-menu")
@@ -313,10 +342,38 @@ func (h *Handler) closeOrderSession(c *gin.Context) {
 		return
 	}
 
+	// Get session details for notifications
+	session, err := h.repo.GetOrderSessionWithCompany(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get all orders for this session to notify employees
+	orders, err := h.repo.GetOrdersBySession(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	err = h.repo.CloseOrderSession(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Create notifications for all employees who placed orders
+	for _, order := range orders {
+		err = h.repo.CreateUserNotification(
+			order.EmployeeID,
+			models.NotificationSessionClosed,
+			"Order Session Closed",
+			"The lunch order session for "+session.CompanyName+" has been closed. Your order is now being processed.",
+			nil,
+		)
+		if err != nil {
+			log.Warn().Err(err).Int("employee_id", order.EmployeeID).Msg("Failed to create session closed notification")
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
@@ -391,10 +448,30 @@ func (h *Handler) markOrderPaid(c *gin.Context) {
 		return
 	}
 
+	// Get order details for notification
+	order, err := h.repo.GetOrderByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	err = h.repo.MarkOrderPaid(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Create notification for the employee
+	err = h.repo.CreateUserNotification(
+		order.EmployeeID,
+		models.NotificationPaid,
+		"Payment Confirmed",
+		"Your lunch order payment has been confirmed. Thank you!",
+		nil,
+	)
+	if err != nil {
+		// Log error but don't fail the request
+		log.Warn().Err(err).Msg("Failed to create payment notification")
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
@@ -460,4 +537,94 @@ func (h *Handler) deleteCompany(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+// New handlers for stock empty and employee details functionality
+func (h *Handler) getOrderItems(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	items, err := h.repo.GetOrderItemsByOrderID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"items":   items,
+	})
+}
+
+func (h *Handler) markItemsStockEmpty(c *gin.Context) {
+	idStr := c.Param("id")
+	orderID, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	var req struct {
+		ItemIDs []int `json:"item_ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if len(req.ItemIDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No items provided"})
+		return
+	}
+
+	// Get the order to find employee and date
+	order, err := h.repo.GetOrderByID(orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get order"})
+		return
+	}
+
+	session, err := h.repo.GetOrderSessionByID(order.SessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get session"})
+		return
+	}
+
+	// Mark items as stock empty and create notifications
+	err = h.repo.MarkItemsStockEmpty(req.ItemIDs, session.Date, orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) getEmployeeDetails(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid employee ID"})
+		return
+	}
+
+	employee, err := h.repo.GetEmployeeWithCompany(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if employee == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Employee not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":  true,
+		"employee": employee,
+	})
 }
