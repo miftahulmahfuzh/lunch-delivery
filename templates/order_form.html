@@ -253,7 +253,7 @@ function calculateTotal() {
                         <p class="font-medium text-gray-900 text-sm">${itemText}</p>
                     </div>
                     <div class="text-primary-600 font-semibold">
-                        Rp ${(price / 100).toLocaleString('en-US')}
+                        Rp ${price.toLocaleString('en-US')}
                     </div>
                 </div>
             `;
@@ -264,7 +264,7 @@ function calculateTotal() {
         document.getElementById('submitBtn').disabled = false;
     }
 
-    document.getElementById('totalPrice').textContent = (total / 100).toLocaleString('en-US');
+    document.getElementById('totalPrice').textContent = total.toLocaleString('en-US');
 }
 
 document.addEventListener('DOMContentLoaded', function() {

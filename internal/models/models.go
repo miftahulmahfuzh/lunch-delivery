@@ -10,7 +10,7 @@ import (
 type MenuItem struct {
 	ID        int       `json:"id" db:"id"`
 	Name      string    `json:"name" db:"name"`
-	Price     int       `json:"price" db:"price"` // in cents
+	Price     int       `json:"price" db:"price"` // in rupiah
 	Active    bool      `json:"active" db:"active"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }

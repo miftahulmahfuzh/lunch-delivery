@@ -41,7 +41,7 @@ func main() {
 	// Add template functions
 	funcMap := template.FuncMap{
 		"divideBy100": func(n int) int {
-			return n / 100
+			return n // Return price as-is since it's now stored in rupiah
 		},
 		"lower": strings.ToLower,
 	}

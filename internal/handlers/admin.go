@@ -76,7 +76,7 @@ func (h *Handler) createMenuItem(c *gin.Context) {
 		return
 	}
 
-	_, err = h.repo.CreateMenuItem(name, price*100) // Convert to cents
+	_, err = h.repo.CreateMenuItem(name, price) // Store rupiah directly
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
@@ -107,7 +107,7 @@ func (h *Handler) updateMenuItem(c *gin.Context) {
 		return
 	}
 
-	err = h.repo.UpdateMenuItem(id, name, price*100)
+	err = h.repo.UpdateMenuItem(id, name, price)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

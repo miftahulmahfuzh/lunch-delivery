@@ -194,7 +194,7 @@ Available menu items (with their indices):`
 func (s *NutritionistService) buildMenuDescription(menuItems []models.MenuItem) string {
 	var builder strings.Builder
 	for i, item := range menuItems {
-		builder.WriteString(fmt.Sprintf("\nIndex %d: %s (Rp %d)", i, item.Name, item.Price/100))
+		builder.WriteString(fmt.Sprintf("\nIndex %d: %s (Rp %d)", i, item.Name, item.Price))
 	}
 	return builder.String()
 }
