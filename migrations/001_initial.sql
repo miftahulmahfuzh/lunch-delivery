@@ -2,7 +2,7 @@
 CREATE TABLE menu_items (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    price INTEGER NOT NULL, -- stored in cents
+    price INTEGER NOT NULL, -- stored in rupiah
     active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
