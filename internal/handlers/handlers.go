@@ -32,6 +32,11 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		c.Redirect(http.StatusFound, "/login")
 	})
 
+	// Favicon route
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.File("static/images/favicon.svg")
+	})
+
 	// Public routes
 	r.GET("/login", h.loginForm)
 	r.POST("/login", h.login)

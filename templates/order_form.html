@@ -1,291 +1,402 @@
-<!-- templates/order_form.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Place Order - Lunch Delivery</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; line-height: 1.6; background: #f4f4f4; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .header { background: #333; color: white; padding: 1rem 0; margin-bottom: 20px; text-align: center; }
-        .card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; border: none; cursor: pointer; }
-        .btn:hover { background: #0056b3; }
-        .btn-success { background: #28a745; }
-        .btn-success:hover { background: #218838; }
-        .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
-        .nav a { color: white; text-decoration: none; padding: 10px 20px; display: inline-block; }
-        .nav a:hover { background: #343a40; }
-        .success { color: #155724; background: #d4edda; padding: 10px; border-radius: 3px; margin-bottom: 20px; }
-        .order-summary { background: #e9ecef; padding: 20px; border-radius: 5px; }
-        .form-group { margin-bottom: 15px; }
+{{define "content"}}
+<main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center space-x-6">
+                    <a href="/my-orders" class="flex items-center space-x-2 text-primary-600 font-medium hover:text-primary-700 transition-colors">
+                        <i class="fas fa-clipboard-list"></i>
+                        <span>My Orders</span>
+                    </a>
+                    <a href="/logout" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
 
-        /* --- NEW STYLES FOR CLICKABLE LIST --- */
-        .menu-item-list {
-            list-style: none;
-            padding: 0;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            overflow: hidden; /* Ensures child borders don't stick out of rounded corners */
-        }
-        .menu-item-list li {
-            padding: 12px 15px;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-            user-select: none; /* Prevents text selection on click */
-        }
-        .menu-item-list li:hover {
-            background-color: #f8f9fa;
-        }
-        .menu-item-list li.selected {
-            background-color: #d4edda; /* Light green to indicate selection */
-            color: #155724;
-            font-weight: bold;
-        }
-        .menu-item-list li:last-child {
-            border-bottom: none;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Lunch Delivery System</h1>
-    </div>
-
-    <div class="container">
-        <div class="nav">
-            <a href="/my-orders">My Orders</a>
-            <a href="/logout">Logout</a>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Page Header -->
+        <div class="text-center mb-10 animate-fade-in">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-xl mb-6">
+                <i class="fas fa-shopping-cart text-white text-3xl"></i>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-900 mb-3">Place Your Order</h1>
+            <div class="flex items-center justify-center space-x-8 text-lg text-gray-600">
+                <div class="flex items-center">
+                    <i class="fas fa-calendar-day text-primary-500 mr-2"></i>
+                    <span class="font-medium">{{.session.Date.Format "January 2, 2006"}}</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-building text-accent-500 mr-2"></i>
+                    <span class="font-medium">{{.company.Name}}</span>
+                </div>
+            </div>
         </div>
 
-        <div class="card">
-            <h2>Order for {{.session.Date.Format "January 2, 2006"}}</h2>
-            <p><strong>Company:</strong> {{.company.Name}}</p>
-
-            {{if .existing_order}}
-                <div class="success">You already have an order for today. Submitting will update your existing order.</div>
-            {{end}}
-
-            {{if .show_reset_notification}}
-                <div class="alert" style="color: #856404; background: #fff3cd; padding: 15px; border-radius: 5px; margin-bottom: 15px; border: 1px solid #ffeaa7;">
-                    <strong>⚠️ Menu Updated!</strong> The admin has updated today's menu. Your previous nutritionist selection may no longer be optimal. Consider clicking "Nutritionist Selection" again for updated recommendations.
+        <!-- Status Alerts -->
+        {{if .existing_order}}
+        <div class="mb-8 animate-slide-up">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-500 text-lg mt-0.5"></i>
                 </div>
-            {{end}}
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Order Exists</h3>
+                    <p class="mt-1 text-sm text-blue-700">You already have an order for today. Submitting will update your existing order.</p>
+                </div>
+            </div>
+        </div>
+        {{end}}
 
-            <form method="POST" action="/order" id="orderForm">
-                <input type="hidden" name="session_id" value="{{.session.ID}}">
+        {{if .show_reset_notification}}
+        <div class="mb-8 animate-slide-up">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-amber-500 text-lg mt-0.5"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-amber-800">Menu Updated!</h3>
+                    <p class="mt-1 text-sm text-amber-700">The admin has updated today's menu. Your previous nutritionist selection may no longer be optimal. Consider using "AI Nutritionist" again for updated recommendations.</p>
+                </div>
+            </div>
+        </div>
+        {{end}}
 
-                <div class="form-group">
-                    <label>Select Your Menu Items:</label>
-                    <div style="margin-bottom: 10px;">
-                        <button type="button" class="btn" id="selectAllBtn" style="background: #28a745; margin-right: 10px;">Select All</button>
-                        <button type="button" class="btn" id="unselectAllBtn" style="background: #dc3545;">Unselect All</button>
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+            <!-- Menu Selection -->
+            <div class="xl:col-span-2">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
+                        <h2 class="text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-utensils mr-3"></i>
+                            Today's Menu
+                        </h2>
+                        <p class="text-primary-100 text-sm mt-1">Select your favorite dishes</p>
                     </div>
-                    <!-- --- UPDATED HTML STRUCTURE --- -->
-                    <ul class="menu-item-list">
-                        {{range .menu_items}}
-                        <li>
-                            {{.Name}} - Rp {{.Price | divideBy100}}
-                            <input type="checkbox" name="menu_items" value="{{.ID}}" id="item-{{.ID}}"
-                                   data-price="{{.Price}}" style="display: none;"
-                                   {{if $.existing_order}}
-                                       {{$currentID := .ID}}
-                                       {{range $.existing_order.MenuItemIDs}}
-                                           {{if eq . $currentID}}checked{{end}}
-                                       {{end}}
-                                   {{end}}>
+
+                    <form method="POST" action="/order" id="orderForm" class="p-6">
+                        <input type="hidden" name="session_id" value="{{.session.ID}}">
+
+                        <!-- Action Buttons -->
+                        <div class="mb-6 flex flex-wrap gap-3">
+                            <button type="button" id="selectAllBtn" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i class="fas fa-check-double mr-2"></i>
+                                Select All
+                            </button>
+                            <button type="button" id="unselectAllBtn" class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                Clear All
+                            </button>
+                            <button type="button" id="nutritionistBtn" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                <i class="fas fa-brain mr-2"></i>
+                                AI Nutritionist
+                            </button>
+                        </div>
+
+                        <!-- Menu Items Grid -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                            {{range $index, $item := .menu_items}}
+                            <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg" data-index="{{$index}}">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1 pr-3">
+                                        <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors leading-tight">{{$item.Name}}</h3>
+                                        <div class="flex items-center mt-2">
+                                            <span class="text-2xl font-bold text-primary-600">Rp {{$item.Price | divideBy100}}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <div class="w-7 h-7 border-2 border-gray-300 rounded-full flex items-center justify-center group-hover:border-primary-400 transition-colors checkbox-indicator">
+                                            <i class="fas fa-check text-primary-600 text-sm hidden"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" name="menu_items" value="{{$item.ID}}" id="item-{{$item.ID}}" 
+                                       data-price="{{$item.Price}}" class="hidden menu-checkbox"
+                                       {{if $.existing_order}}
+                                           {{$currentID := $item.ID}}
+                                           {{range $.existing_order.MenuItemIDs}}
+                                               {{if eq . $currentID}}checked{{end}}
+                                           {{end}}
+                                       {{end}}>
+                            </div>
+                            {{end}}
+                        </div>
+
+                        <!-- AI Nutritionist Result -->
+                        <div id="nutritionistResult" class="hidden mb-8 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 animate-slide-up">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-brain text-white"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4 flex-1">
+                                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                                        AI Nutritionist Recommendation
+                                        <span class="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full font-medium">Smart Selection</span>
+                                    </h3>
+                                    <p id="nutritionistReasoning" class="text-gray-700 mb-3 leading-relaxed"></p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                        <div class="bg-white/60 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Protein</div>
+                                            <div id="proteinLevel" class="font-semibold text-gray-900 mt-1"></div>
+                                        </div>
+                                        <div class="bg-white/60 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Vegetables</div>
+                                            <div id="vegetableLevel" class="font-semibold text-gray-900 mt-1"></div>
+                                        </div>
+                                        <div class="bg-white/60 rounded-lg p-3">
+                                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Rating</div>
+                                            <div id="overallRating" class="font-semibold text-gray-900 mt-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none" id="submitBtn">
+                                <i class="fas fa-paper-plane mr-3"></i>
+                                {{if .existing_order}}Update My Order{{else}}Place Order{{end}}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Order Summary Sidebar -->
+            <div class="xl:col-span-1">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 sticky top-8">
+                    <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
+                        <h3 class="text-lg font-semibold text-white flex items-center">
+                            <i class="fas fa-receipt mr-3"></i>
+                            Order Summary
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div id="selectedItems" class="mb-6">
+                            <div class="text-center text-gray-500 py-8">
+                                <i class="fas fa-utensils text-3xl mb-3 text-gray-300"></i>
+                                <p>No items selected</p>
+                                <p class="text-sm">Choose your favorite dishes</p>
+                            </div>
+                        </div>
+                        
+                        <div class="border-t border-gray-200 pt-4">
+                            <div class="flex items-center justify-between text-xl font-bold">
+                                <span class="text-gray-900">Total:</span>
+                                <span class="text-primary-600">Rp <span id="totalPrice">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Tips Card -->
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6 mt-6">
+                    <h4 class="font-semibold text-blue-900 mb-3 flex items-center">
+                        <i class="fas fa-lightbulb text-blue-500 mr-2"></i>
+                        Order Tips
+                    </h4>
+                    <ul class="space-y-2 text-sm text-blue-800">
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
+                            <span>Use AI Nutritionist for balanced meals</span>
                         </li>
-                        {{end}}
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
+                            <span>Orders can be updated until deadline</span>
+                        </li>
+                        <li class="flex items-start">
+                            <i class="fas fa-check text-blue-500 mr-2 mt-0.5 text-xs"></i>
+                            <span>Mix proteins and vegetables for health</span>
+                        </li>
                     </ul>
                 </div>
-
-                <div class="order-summary">
-                    <h4>Order Summary</h4>
-                    <div id="selectedItems"></div>
-                    <div style="margin-top: 10px;"><strong>Total: Rp <span id="totalPrice">0</span></strong></div>
-                </div>
-
-                <!-- Nutritionist Selection Button -->
-                <button type="button" class="btn" id="nutritionistBtn" style="width: 100%; margin-top: 15px; font-size: 16px; background: #17a2b8; color: white;">
-                    🧠 Nutritionist Selection
-                </button>
-                <div id="nutritionistResult" style="display: none; margin-top: 15px; padding: 15px; background: #e8f5e8; border-radius: 5px; border-left: 4px solid #28a745;">
-                    <h5 style="color: #155724; margin-bottom: 10px;">AI Nutritionist Recommendation:</h5>
-                    <p id="nutritionistReasoning" style="color: #155724; font-size: 14px; margin-bottom: 8px;"></p>
-                    <div id="nutritionistSummary" style="color: #155724; font-size: 13px;">
-                        <span><strong>Protein:</strong> <span id="proteinLevel"></span></span> |
-                        <span><strong>Vegetables:</strong> <span id="vegetableLevel"></span></span> |
-                        <span><strong>Rating:</strong> <span id="overallRating"></span></span>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn btn-success" style="width: 100%; margin-top: 20px; font-size: 18px;">
-                    {{if .existing_order}}Update Order{{else}}Submit Order{{end}}
-                </button>
-            </form>
+            </div>
         </div>
     </div>
+</main>
 
-    <!-- --- UPDATED JAVASCRIPT --- -->
-    <script>
-    function calculateTotal() {
-        const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
-        let total = 0;
-        let summaryHtml = '';
+<script>
+function calculateTotal() {
+    const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
+    let total = 0;
+    let summaryHtml = '';
 
-        checkboxes.forEach(checkbox => {
+    if (checkboxes.length === 0) {
+        document.getElementById('selectedItems').innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <i class="fas fa-utensils text-3xl mb-3 text-gray-300"></i>
+                <p>No items selected</p>
+                <p class="text-sm">Choose your favorite dishes</p>
+            </div>
+        `;
+        document.getElementById('submitBtn').disabled = true;
+    } else {
+        let itemsHtml = '<div class="space-y-3">';
+        
+        checkboxes.forEach((checkbox, index) => {
             const price = parseInt(checkbox.dataset.price, 10);
             total += price;
-            // Get the visible text from the parent list item
-            const itemText = checkbox.parentElement.textContent.trim();
-            summaryHtml += `<li>${itemText}</li>`;
+            const itemText = checkbox.parentElement.querySelector('h3').textContent.trim();
+            
+            itemsHtml += `
+                <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
+                    <div class="flex-1">
+                        <p class="font-medium text-gray-900 text-sm">${itemText}</p>
+                    </div>
+                    <div class="text-primary-600 font-semibold">
+                        Rp ${(price / 100).toLocaleString('en-US')}
+                    </div>
+                </div>
+            `;
         });
-
-        // Format the total with commas for thousands
-        document.getElementById('totalPrice').textContent = (total / 100).toLocaleString('en-US');
-
-        document.getElementById('selectedItems').innerHTML = summaryHtml ?
-            '<ul style="margin: 10px 0; padding-left: 20px;">' + summaryHtml + '</ul>' :
-            '<p>No items selected</p>';
+        
+        itemsHtml += '</div>';
+        document.getElementById('selectedItems').innerHTML = itemsHtml;
+        document.getElementById('submitBtn').disabled = false;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const listItems = document.querySelectorAll('.menu-item-list li');
-        const nutritionistBtn = document.getElementById('nutritionistBtn');
-        const nutritionistResult = document.getElementById('nutritionistResult');
-        const selectAllBtn = document.getElementById('selectAllBtn');
-        const unselectAllBtn = document.getElementById('unselectAllBtn');
+    document.getElementById('totalPrice').textContent = (total / 100).toLocaleString('en-US');
+}
 
-        listItems.forEach(item => {
-            const checkbox = item.querySelector('input[type="checkbox"]');
+document.addEventListener('DOMContentLoaded', function() {
+    const menuItems = document.querySelectorAll('.menu-item');
+    const nutritionistBtn = document.getElementById('nutritionistBtn');
+    const nutritionistResult = document.getElementById('nutritionistResult');
+    const selectAllBtn = document.getElementById('selectAllBtn');
+    const unselectAllBtn = document.getElementById('unselectAllBtn');
 
-            // Set initial style for items that are already checked on page load
-            if (checkbox.checked) {
-                item.classList.add('selected');
-            }
+    menuItems.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const checkboxIndicator = item.querySelector('.checkbox-indicator i');
 
-            // Add click listener to the entire list item
-            item.addEventListener('click', function() {
-                // Toggle the hidden checkbox's state
-                checkbox.checked = !checkbox.checked;
-
-                // Toggle the visual style on the list item
-                this.classList.toggle('selected');
-
-                // Update the summary and total price
-                calculateTotal();
-            });
-        });
-
-        // Select All button functionality
-        selectAllBtn.addEventListener('click', function() {
-            listItems.forEach(item => {
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                checkbox.checked = true;
-                item.classList.add('selected');
-            });
-            calculateTotal();
-        });
-
-        // Unselect All button functionality
-        unselectAllBtn.addEventListener('click', function() {
-            clearAllSelections();
-            calculateTotal();
-        });
-
-        // Nutritionist selection functionality
-        nutritionistBtn.addEventListener('click', function() {
-            const btn = this;
-            const originalText = btn.innerHTML;
-
-            // Show loading state
-            btn.innerHTML = '🔄 AI Thinking...';
-            btn.disabled = true;
-            btn.style.background = '#6c757d';
-
-            // Hide previous result
-            nutritionistResult.style.display = 'none';
-
-            // Get current URL parameters
-            const pathParts = window.location.pathname.split('/');
-            const company = pathParts[2]; // /order/{company}/{date}
-            const date = pathParts[3];
-
-            // Make API call
-            fetch(`/order/${company}/${date}/nutritionist-select`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Clear all selections first
-                    clearAllSelections();
-
-                    // Auto-select the AI-recommended items
-                    selectItemsByIndices(data.selected_indices);
-
-                    // Display the reasoning and summary
-                    displayNutritionistResult(data);
-
-                    // Update total
-                    calculateTotal();
-                } else {
-                    alert('Error: ' + (data.error || 'Nutritionist selection failed'));
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error occurred. Please try again.');
-            })
-            .finally(() => {
-                // Reset button state
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-                btn.style.background = '#17a2b8';
-            });
-        });
-
-        // Helper function to clear all selections
-        function clearAllSelections() {
-            listItems.forEach(item => {
-                const checkbox = item.querySelector('input[type="checkbox"]');
-                checkbox.checked = false;
-                item.classList.remove('selected');
-            });
+        if (checkbox.checked) {
+            item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
+            item.classList.remove('bg-gray-50');
+            checkboxIndicator.classList.remove('hidden');
         }
 
-        // Helper function to select items by indices
-        function selectItemsByIndices(indices) {
-            indices.forEach(index => {
-                if (index >= 0 && index < listItems.length) {
-                    const item = listItems[index];
-                    const checkbox = item.querySelector('input[type="checkbox"]');
-                    checkbox.checked = true;
-                    item.classList.add('selected');
-                }
-            });
-        }
-
-        // Helper function to display nutritionist result
-        function displayNutritionistResult(data) {
-            document.getElementById('nutritionistReasoning').textContent = data.reasoning;
-            document.getElementById('proteinLevel').textContent = data.nutritional_summary.protein || 'unknown';
-            document.getElementById('vegetableLevel').textContent = data.nutritional_summary.vegetables || 'unknown';
-            document.getElementById('overallRating').textContent = data.nutritional_summary.overall_rating || 'balanced';
+        item.addEventListener('click', function() {
+            checkbox.checked = !checkbox.checked;
+            this.classList.toggle('selected');
             
-            nutritionistResult.style.display = 'block';
-        }
+            if (this.classList.contains('selected')) {
+                this.classList.add('bg-primary-100', 'border-primary-300');
+                this.classList.remove('bg-gray-50');
+                checkboxIndicator.classList.remove('hidden');
+            } else {
+                this.classList.remove('bg-primary-100', 'border-primary-300');
+                this.classList.add('bg-gray-50');
+                checkboxIndicator.classList.add('hidden');
+            }
+            calculateTotal();
+        });
+    });
 
-        // Run once on page load to initialize the summary
+    selectAllBtn.addEventListener('click', function() {
+        menuItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+            
+            checkbox.checked = true;
+            item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
+            item.classList.remove('bg-gray-50');
+            checkboxIndicator.classList.remove('hidden');
+        });
         calculateTotal();
     });
-    </script>
-</body>
-</html>
+
+    unselectAllBtn.addEventListener('click', function() {
+        clearAllSelections();
+        calculateTotal();
+    });
+
+    nutritionistBtn.addEventListener('click', function() {
+        const btn = this;
+        const originalHtml = btn.innerHTML;
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>AI Thinking...';
+        btn.disabled = true;
+        btn.classList.add('opacity-75');
+
+        nutritionistResult.classList.add('hidden');
+
+        const pathParts = window.location.pathname.split('/');
+        const company = pathParts[2];
+        const date = pathParts[3];
+
+        fetch(`/order/${company}/${date}/nutritionist-select`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                clearAllSelections();
+                selectItemsByIndices(data.selected_indices);
+                displayNutritionistResult(data);
+                calculateTotal();
+            } else {
+                alert('Error: ' + (data.error || 'Nutritionist selection failed'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error occurred. Please try again.');
+        })
+        .finally(() => {
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+            btn.classList.remove('opacity-75');
+        });
+    });
+
+    function clearAllSelections() {
+        menuItems.forEach(item => {
+            const checkbox = item.querySelector('input[type="checkbox"]');
+            const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+            
+            checkbox.checked = false;
+            item.classList.remove('selected', 'bg-primary-100', 'border-primary-300');
+            item.classList.add('bg-gray-50');
+            checkboxIndicator.classList.add('hidden');
+        });
+    }
+
+    function selectItemsByIndices(indices) {
+        indices.forEach(index => {
+            if (index >= 0 && index < menuItems.length) {
+                const item = menuItems[index];
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+                
+                checkbox.checked = true;
+                item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
+                item.classList.remove('bg-gray-50');
+                checkboxIndicator.classList.remove('hidden');
+            }
+        });
+    }
+
+    function displayNutritionistResult(data) {
+        document.getElementById('nutritionistReasoning').textContent = data.reasoning;
+        document.getElementById('proteinLevel').textContent = data.nutritional_summary.protein || 'Unknown';
+        document.getElementById('vegetableLevel').textContent = data.nutritional_summary.vegetables || 'Unknown';
+        document.getElementById('overallRating').textContent = data.nutritional_summary.overall_rating || 'Balanced';
+        
+        nutritionistResult.classList.remove('hidden');
+    }
+
+    calculateTotal();
+});
+</script>
+{{end}}
