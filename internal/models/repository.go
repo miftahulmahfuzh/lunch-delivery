@@ -3,6 +3,7 @@ package models
 
 import (
 	"database/sql"
+	"fmt"
 	"strings"
 	"time"
 
@@ -483,8 +484,15 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 			return err
 		}
 
+		// Get the employee's company ID for the redirect URL
+		var companyID int
+		err = tx.Get(&companyID, `SELECT company_id FROM employees WHERE id = $1`, order.EmployeeID)
+		if err != nil {
+			return err
+		}
+
 		// Create notification for the user
-		redirectURL := "/order/" + date.Format("2006-01-02")
+		redirectURL := fmt.Sprintf("/order/%d/%s", companyID, date.Format("2006-01-02"))
 		_, err = tx.Exec(`
 			INSERT INTO user_notifications (employee_id, notification_type, title, message, redirect_url) 
 			VALUES ($1, $2, $3, $4, $5)`,
@@ -496,6 +504,44 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 		if err != nil {
 			return err
 		}
+	}
+
+	return tx.Commit()
+}
+
+// Global stock management methods
+func (r *Repository) MarkGlobalStockEmpty(itemID int, date time.Time) error {
+	_, err := r.db.Exec(`
+		INSERT INTO stock_empty_items (menu_item_id, date) 
+		VALUES ($1, $2) 
+		ON CONFLICT (menu_item_id, date) DO NOTHING`,
+		itemID, date.Format("2006-01-02"))
+	return err
+}
+
+func (r *Repository) UnmarkGlobalStockEmpty(itemID int, date time.Time) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Remove from global stock empty table
+	_, err = tx.Exec(`
+		DELETE FROM stock_empty_items 
+		WHERE menu_item_id = $1 AND date = $2`,
+		itemID, date.Format("2006-01-02"))
+	if err != nil {
+		return err
+	}
+
+	// Also remove all user-specific notifications for this item on this date
+	_, err = tx.Exec(`
+		DELETE FROM user_stock_empty_notifications usn
+		WHERE usn.menu_item_id = $1 AND usn.date = $2`,
+		itemID, date.Format("2006-01-02"))
+	if err != nil {
+		return err
 	}
 
 	return tx.Commit()
@@ -533,4 +579,55 @@ func (r *Repository) CreateUserNotification(employeeID int, notificationType, ti
 		VALUES ($1, $2, $3, $4, $5)`,
 		employeeID, notificationType, title, message, redirectURL)
 	return err
+}
+
+func (r *Repository) GetStockEmptyItemsForOrder(orderID int) ([]int, error) {
+	var itemIDs []int
+	err := r.db.Select(&itemIDs, `
+		SELECT DISTINCT menu_item_id 
+		FROM user_stock_empty_notifications 
+		WHERE individual_order_id = $1`, orderID)
+	return itemIDs, err
+}
+
+func (r *Repository) UnmarkItemStockEmpty(itemID int, date time.Time, orderID int) error {
+	tx, err := r.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Remove the user-specific stock empty notification
+	_, err = tx.Exec(`
+		DELETE FROM user_stock_empty_notifications 
+		WHERE individual_order_id = $1 AND menu_item_id = $2`,
+		orderID, itemID)
+	if err != nil {
+		return err
+	}
+
+	// Check if there are other orders with this item marked as stock empty for today
+	var count int
+	err = tx.Get(&count, `
+		SELECT COUNT(*) FROM user_stock_empty_notifications usn
+		JOIN individual_orders io ON usn.individual_order_id = io.id
+		JOIN order_sessions os ON io.session_id = os.id
+		WHERE usn.menu_item_id = $1 AND os.date = $2`,
+		itemID, date.Format("2006-01-02"))
+	if err != nil {
+		return err
+	}
+
+	// If no other orders have this item marked as stock empty, remove from global stock empty
+	if count == 0 {
+		_, err = tx.Exec(`
+			DELETE FROM stock_empty_items 
+			WHERE menu_item_id = $1 AND date = $2`,
+			itemID, date.Format("2006-01-02"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

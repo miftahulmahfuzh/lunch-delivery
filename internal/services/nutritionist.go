@@ -47,7 +47,20 @@ func NewNutritionistService(cfg *config.Config, repo *models.Repository) (*Nutri
 }
 
 func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date time.Time, menuItems []models.MenuItem) (*NutritionistResponse, error) {
-	// 1. Check if admin has set reset flag
+	// 1. Get stock empty items for today to filter them out
+	stockEmptyItemIDs, err := s.repo.GetStockEmptyItemsByDate(date)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get stock empty items, continuing without filtering")
+		stockEmptyItemIDs = []int{}
+	}
+
+	// 2. Filter out stock empty items from menu
+	availableMenuItems := s.filterAvailableItems(menuItems, stockEmptyItemIDs)
+	if len(availableMenuItems) == 0 {
+		return nil, fmt.Errorf("no menu items available - all items are out of stock")
+	}
+
+	// 3. Check if admin has set reset flag
 	resetFlag, err := s.repo.GetDailyMenuResetFlag(date)
 	if err == nil && resetFlag {
 		log.Info().Msg("Reset flag detected - invalidating cache and clearing flag")
@@ -55,29 +68,30 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 		s.repo.SetDailyMenuResetFlag(date, false) // Clear the flag
 	}
 
-	// 2. Check cache first by date
+	// 4. Check cache first by date
 	cached, err := s.repo.GetNutritionistSelectionByDate(date)
 	if err == nil && cached != nil {
-		// Cache hit - validate menu items match
-		if s.menuItemsMatch(cached.MenuItemIDs, menuItems) {
+		// Cache hit - validate menu items match and no stock empty conflicts
+		if s.menuItemsMatch(cached.MenuItemIDs, availableMenuItems) && !s.hasStockEmptyConflicts(cached, stockEmptyItemIDs, menuItems) {
 			log.Info().Msg("Cache hit - returning cached nutritionist selection")
 			return s.convertCachedToResponse(cached), nil
 		}
-		// Menu changed, invalidate cache
-		log.Info().Msg("Menu items changed - invalidating cache")
+		// Menu changed or stock conflicts, invalidate cache
+		log.Info().Msg("Menu items changed or stock conflicts detected - invalidating cache")
 		s.repo.DeleteNutritionistSelection(date)
 	}
 
-	log.Info().Msg("Cache miss - calling LLM for nutritionist selection")
+	log.Info().Msg("Cache miss or conflicts - calling LLM for nutritionist selection")
 	
-	// 3. Cache miss or menu changed - call LLM
-	response, err := s.callLLMForSelection(ctx, menuItems)
+	// 5. Cache miss, menu changed, or stock conflicts - call LLM with available items
+	response, err := s.callLLMForSelection(ctx, availableMenuItems)
 	if err != nil {
 		return nil, fmt.Errorf("LLM call failed: %w", err)
 	}
 
-	// 4. Save to cache for future requests
-	if err := s.saveToCacheIfValid(date, menuItems, response); err != nil {
+	// 6. Map the response indices back to original menu items and save to cache
+	mappedResponse := s.mapIndicesToOriginalMenu(response, availableMenuItems, menuItems)
+	if err := s.saveToCacheIfValid(date, menuItems, mappedResponse); err != nil {
 		log.Error().Err(err).Msg("Failed to save to cache")
 		// Don't fail the request if caching fails
 	}
@@ -93,6 +107,86 @@ func (s *NutritionistService) TrackUserSelection(employeeID int, date time.Time,
 // Method to get users who need notification after menu reset
 func (s *NutritionistService) GetUsersNeedingNotification(date time.Time) ([]models.NutritionistUserSelection, error) {
 	return s.repo.GetNutritionistUsersByDateAndUnpaid(date)
+}
+
+// Filter out stock empty items from the menu
+func (s *NutritionistService) filterAvailableItems(menuItems []models.MenuItem, stockEmptyItemIDs []int) []models.MenuItem {
+	if len(stockEmptyItemIDs) == 0 {
+		return menuItems
+	}
+
+	// Create a set of stock empty IDs for quick lookup
+	stockEmptySet := make(map[int]bool)
+	for _, id := range stockEmptyItemIDs {
+		stockEmptySet[id] = true
+	}
+
+	var availableItems []models.MenuItem
+	for _, item := range menuItems {
+		if !stockEmptySet[item.ID] {
+			availableItems = append(availableItems, item)
+		}
+	}
+
+	return availableItems
+}
+
+// Check if cached selection has conflicts with current stock empty items
+func (s *NutritionistService) hasStockEmptyConflicts(cached *models.NutritionistSelection, stockEmptyItemIDs []int, originalMenuItems []models.MenuItem) bool {
+	if len(stockEmptyItemIDs) == 0 {
+		return false
+	}
+
+	// Create a map of menu item ID to index
+	idToIndex := make(map[int]int)
+	for i, item := range originalMenuItems {
+		idToIndex[item.ID] = i
+	}
+
+	// Create set of stock empty IDs
+	stockEmptySet := make(map[int]bool)
+	for _, id := range stockEmptyItemIDs {
+		stockEmptySet[id] = true
+	}
+
+	// Check if any selected indices correspond to stock empty items
+	for _, selectedIndex := range cached.SelectedIndices {
+		if int(selectedIndex) < len(originalMenuItems) {
+			itemID := originalMenuItems[selectedIndex].ID
+			if stockEmptySet[itemID] {
+				log.Info().Int("item_id", itemID).Int("index", int(selectedIndex)).Msg("Found stock empty conflict in cache")
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// Map indices from available items back to original menu items
+func (s *NutritionistService) mapIndicesToOriginalMenu(response *NutritionistResponse, availableItems []models.MenuItem, originalItems []models.MenuItem) *NutritionistResponse {
+	// Create a map from available item ID to original menu index
+	availableIDToOriginalIndex := make(map[int]int)
+	for originalIndex, originalItem := range originalItems {
+		availableIDToOriginalIndex[originalItem.ID] = originalIndex
+	}
+
+	// Map the selected indices
+	var mappedIndices []int
+	for _, availableIndex := range response.SelectedIndices {
+		if availableIndex < len(availableItems) {
+			availableItem := availableItems[availableIndex]
+			if originalIndex, exists := availableIDToOriginalIndex[availableItem.ID]; exists {
+				mappedIndices = append(mappedIndices, originalIndex)
+			}
+		}
+	}
+
+	return &NutritionistResponse{
+		SelectedIndices:    mappedIndices,
+		Reasoning:          response.Reasoning,
+		NutritionalSummary: response.NutritionalSummary,
+	}
 }
 
 func (s *NutritionistService) menuItemsMatch(cachedIDs []int64, menuItems []models.MenuItem) bool {

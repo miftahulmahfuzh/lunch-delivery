@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -255,9 +256,16 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 		return
 	}
 
-	// Create notifications for affected employees
-	redirectURL := "/order/" + date.Format("2006-01-02")
+	// Create notifications for affected employees with correct company-specific URLs
 	for employeeID := range employeesToNotify {
+		// Get employee's company ID
+		employee, err := h.repo.GetEmployeeByID(employeeID)
+		if err != nil {
+			log.Warn().Err(err).Int("employee_id", employeeID).Msg("Failed to get employee for notification")
+			continue
+		}
+		
+		redirectURL := fmt.Sprintf("/order/%d/%s", employee.CompanyID, date.Format("2006-01-02"))
 		err = h.repo.CreateUserNotification(
 			employeeID,
 			models.NotificationMenuUpdated,
@@ -554,9 +562,36 @@ func (h *Handler) getOrderItems(c *gin.Context) {
 		return
 	}
 
+	// Get stock empty items for this specific order
+	stockEmptyItemIDs, err := h.repo.GetStockEmptyItemsForOrder(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Create a map for faster lookup
+	stockEmptyMap := make(map[int]bool)
+	for _, itemID := range stockEmptyItemIDs {
+		stockEmptyMap[itemID] = true
+	}
+
+	// Add stock empty status to each item
+	type ItemWithStatus struct {
+		models.MenuItem
+		IsStockEmpty bool `json:"is_stock_empty"`
+	}
+
+	var itemsWithStatus []ItemWithStatus
+	for _, item := range items {
+		itemsWithStatus = append(itemsWithStatus, ItemWithStatus{
+			MenuItem:     item,
+			IsStockEmpty: stockEmptyMap[item.ID],
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"items":   items,
+		"items":   itemsWithStatus,
 	})
 }
 
@@ -604,6 +639,53 @@ func (h *Handler) markItemsStockEmpty(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true})
 }
 
+func (h *Handler) unmarkItemsStockEmpty(c *gin.Context) {
+	idStr := c.Param("id")
+	orderID, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	var req struct {
+		ItemIDs []int `json:"item_ids"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	if len(req.ItemIDs) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No items provided"})
+		return
+	}
+
+	// Get the order to find session and date
+	order, err := h.repo.GetOrderByID(orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get order"})
+		return
+	}
+
+	session, err := h.repo.GetOrderSessionByID(order.SessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get session"})
+		return
+	}
+
+	// Unmark items as stock empty
+	for _, itemID := range req.ItemIDs {
+		err = h.repo.UnmarkItemStockEmpty(itemID, session.Date, orderID)
+		if err != nil {
+			log.Warn().Err(err).Int("item_id", itemID).Msg("Failed to unmark item as stock empty")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unmark some items"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
 func (h *Handler) getEmployeeDetails(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -627,4 +709,77 @@ func (h *Handler) getEmployeeDetails(c *gin.Context) {
 		"success":  true,
 		"employee": employee,
 	})
+}
+
+// Global stock management handlers
+func (h *Handler) getStockStatus(c *gin.Context) {
+	dateStr := c.Param("date")
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+		return
+	}
+
+	stockEmptyItems, err := h.repo.GetStockEmptyItemsByDate(date)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":          true,
+		"stock_empty_items": stockEmptyItems,
+	})
+}
+
+func (h *Handler) markGlobalStockEmpty(c *gin.Context) {
+	var req struct {
+		ItemID int    `json:"item_id"`
+		Date   string `json:"date"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+		return
+	}
+
+	// Mark item as globally stock empty (without specific order context)
+	err = h.repo.MarkGlobalStockEmpty(req.ItemID, date)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) unmarkGlobalStockEmpty(c *gin.Context) {
+	var req struct {
+		ItemID int    `json:"item_id"`
+		Date   string `json:"date"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	date, err := time.Parse("2006-01-02", req.Date)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+		return
+	}
+
+	// Unmark item as globally stock empty
+	err = h.repo.UnmarkGlobalStockEmpty(req.ItemID, date)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }

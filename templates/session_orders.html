@@ -185,9 +185,9 @@
                                     <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors" data-order-id="{{.ID}}">
                                         <td class="py-4 px-4">
                                             <div class="flex items-center">
-                                                <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                                                <button onclick="showEmployeeDetails({{.EmployeeID}})" class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3 hover:bg-primary-200 transition-colors cursor-pointer">
                                                     <i class="fas fa-user text-primary-600 text-sm"></i>
-                                                </div>
+                                                </button>
                                                 <button onclick="showEmployeeDetails({{.EmployeeID}})" class="font-medium text-gray-900 hover:text-primary-600 transition-colors cursor-pointer text-left">{{.EmployeeName}}</button>
                                             </div>
                                         </td>
@@ -244,12 +244,12 @@
                                                 </div>
                                                 <div class="flex items-center justify-between border-t border-gray-200 pt-3">
                                                     <div class="text-sm text-gray-600">
-                                                        Select items that are out of stock to notify this user and prevent future orders
+                                                        Check items to mark as out of stock, uncheck to make available again
                                                     </div>
-                                                    <button onclick="markSelectedItemsStockEmpty({{.ID}})" 
+                                                    <button onclick="updateStockStatus({{.ID}})" 
                                                             class="inline-flex items-center px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium text-sm">
-                                                        <i class="fas fa-exclamation-triangle mr-2"></i>
-                                                        Mark Selected as Stock Empty
+                                                        <i class="fas fa-sync mr-2"></i>
+                                                        Update Stock Status
                                                     </button>
                                                 </div>
                                             </div>
@@ -327,8 +327,8 @@
     </footer>
 
     <!-- Employee Details Modal -->
-    <div id="employeeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+    <div id="employeeModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50" onclick="handleModalBackdropClick(event)">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4" onclick="event.stopPropagation()">
             <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-6 rounded-t-xl">
                 <div class="flex items-center justify-between">
                     <h3 class="text-xl font-semibold text-white flex items-center">
@@ -414,18 +414,36 @@
         });
     }
 
+    // Store initial stock status for each order
+    window.initialStockStatus = window.initialStockStatus || {};
+    
     function displayOrderItems(orderId, items) {
         const container = document.getElementById('order-items-' + orderId);
         let itemsHtml = '';
         
+        // Store initial stock status
+        window.initialStockStatus[orderId] = {};
+        
         items.forEach(item => {
+            const isStockEmpty = item.is_stock_empty;
+            window.initialStockStatus[orderId][item.id] = isStockEmpty;
+            
+            const checkboxClass = isStockEmpty ? 'text-amber-600' : 'text-primary-600';
+            const bgClass = isStockEmpty ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-200';
+            const textClass = isStockEmpty ? 'text-amber-800' : 'text-gray-900';
+            
             itemsHtml += `
-                <div class="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div class="${bgClass} rounded-lg p-3 border" id="item-container-${orderId}-${item.id}">
                     <div class="flex items-center">
                         <input type="checkbox" id="item-${orderId}-${item.id}" value="${item.id}" 
-                               class="mr-3 w-4 h-4 text-primary-600 border-gray-300 rounded">
+                               class="mr-3 w-4 h-4 ${checkboxClass} border-gray-300 rounded"
+                               ${isStockEmpty ? 'checked' : ''}
+                               onchange="updateItemDisplay(${orderId}, ${item.id}, this.checked)">
                         <label for="item-${orderId}-${item.id}" class="flex-1 cursor-pointer">
-                            <div class="font-medium text-gray-900">${item.name}</div>
+                            <div class="font-medium ${textClass} flex items-center" id="item-name-${orderId}-${item.id}">
+                                ${item.name}
+                                <span id="stock-badge-${orderId}-${item.id}" class="ml-2 px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full ${isStockEmpty ? '' : 'hidden'}">Stock Empty</span>
+                            </div>
                             <div class="text-sm text-gray-600">Rp ${item.price.toLocaleString('en-US')}</div>
                         </label>
                     </div>
@@ -436,30 +454,92 @@
         container.innerHTML = itemsHtml;
     }
 
-    function markSelectedItemsStockEmpty(orderId) {
-        const checkboxes = document.querySelectorAll(`#order-items-${orderId} input[type="checkbox"]:checked`);
-        const itemIds = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    function updateItemDisplay(orderId, itemId, isChecked) {
+        const container = document.getElementById(`item-container-${orderId}-${itemId}`);
+        const nameElement = document.getElementById(`item-name-${orderId}-${itemId}`);
+        const badge = document.getElementById(`stock-badge-${orderId}-${itemId}`);
+        const checkbox = document.getElementById(`item-${orderId}-${itemId}`);
         
-        if (itemIds.length === 0) {
-            showModal('Warning', 'Please select at least one item to mark as stock empty.', 'warning');
+        if (isChecked) {
+            // Mark as stock empty
+            container.className = 'bg-amber-50 border-amber-200 rounded-lg p-3 border';
+            nameElement.className = 'font-medium text-amber-800 flex items-center';
+            checkbox.className = 'mr-3 w-4 h-4 text-amber-600 border-gray-300 rounded';
+            badge.classList.remove('hidden');
+        } else {
+            // Mark as available
+            container.className = 'bg-gray-50 border-gray-200 rounded-lg p-3 border';
+            nameElement.className = 'font-medium text-gray-900 flex items-center';
+            checkbox.className = 'mr-3 w-4 h-4 text-primary-600 border-gray-300 rounded';
+            badge.classList.add('hidden');
+        }
+    }
+
+    function updateStockStatus(orderId) {
+        if (!window.initialStockStatus[orderId]) {
+            showModal('Error', 'Initial stock status not loaded. Please refresh the page.', 'error');
             return;
         }
         
-        if (confirm(`Mark ${itemIds.length} item(s) as stock empty? This will notify the user and prevent future orders of these items.`)) {
-            fetch('/admin/orders/' + orderId + '/mark-stock-empty', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ item_ids: itemIds })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showModal('Success', 'Items marked as stock empty and user has been notified.', 'success');
-                    setTimeout(() => location.reload(), 1000);
+        const checkboxes = document.querySelectorAll(`#order-items-${orderId} input[type="checkbox"]`);
+        const itemsToMark = [];
+        const itemsToUnmark = [];
+        
+        checkboxes.forEach(checkbox => {
+            const itemId = parseInt(checkbox.value);
+            const wasStockEmpty = window.initialStockStatus[orderId][itemId];
+            const isNowChecked = checkbox.checked;
+            
+            if (isNowChecked && !wasStockEmpty) {
+                itemsToMark.push(itemId);
+            } else if (!isNowChecked && wasStockEmpty) {
+                itemsToUnmark.push(itemId);
+            }
+        });
+        
+        if (itemsToMark.length === 0 && itemsToUnmark.length === 0) {
+            showModal('Info', 'No changes to stock status detected.', 'info');
+            return;
+        }
+        
+        let promises = [];
+        let messages = [];
+        
+        if (itemsToMark.length > 0) {
+            promises.push(
+                fetch('/admin/orders/' + orderId + '/mark-stock-empty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_ids: itemsToMark })
+                }).then(response => response.json())
+            );
+            messages.push(`${itemsToMark.length} item(s) marked as stock empty`);
+        }
+        
+        if (itemsToUnmark.length > 0) {
+            promises.push(
+                fetch('/admin/orders/' + orderId + '/unmark-stock-empty', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_ids: itemsToUnmark })
+                }).then(response => response.json())
+            );
+            messages.push(`${itemsToUnmark.length} item(s) unmarked as stock empty`);
+        }
+        
+        if (confirm(`Update stock status? ${messages.join(' and ')}.`)) {
+            Promise.all(promises)
+            .then(results => {
+                const allSuccessful = results.every(result => result.success);
+                if (allSuccessful) {
+                    showModal('Success', 'Stock status updated successfully.', 'success');
+                    // Update the initial status to reflect new state
+                    checkboxes.forEach(checkbox => {
+                        const itemId = parseInt(checkbox.value);
+                        window.initialStockStatus[orderId][itemId] = checkbox.checked;
+                    });
                 } else {
-                    showModal('Error', data.error || 'Failed to mark items as stock empty.', 'error');
+                    showModal('Error', 'Some updates failed. Please try again.', 'error');
                 }
             })
             .catch(error => {
@@ -532,6 +612,13 @@
         document.getElementById('employeeModal').classList.add('hidden');
     }
 
+    function handleModalBackdropClick(event) {
+        // Only close if clicking the backdrop itself, not the modal content
+        if (event.target === event.currentTarget) {
+            closeEmployeeModal();
+        }
+    }
+
     // Modal utility function for notifications
     function showModal(title, message, type = 'info') {
         let iconClass, bgColor;
@@ -587,6 +674,25 @@
             }, 3000);
         }
     }
+
+    // Periodic stock status synchronization
+    function refreshDisplayedOrderStockStatus() {
+        // Find all currently displayed order details
+        const visibleDetailRows = document.querySelectorAll('.order-details-row:not(.hidden)');
+        
+        visibleDetailRows.forEach(row => {
+            const orderId = row.id.replace('details-', '');
+            if (orderId && !isNaN(orderId)) {
+                // Refresh the order items to get updated stock status
+                loadOrderItems(parseInt(orderId));
+            }
+        });
+    }
+
+    // Set up periodic refresh every 30 seconds to sync with other admin pages
+    document.addEventListener('DOMContentLoaded', function() {
+        setInterval(refreshDisplayedOrderStockStatus, 30000);
+    });
     </script>
 </body>
 </html>
