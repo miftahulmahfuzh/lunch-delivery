@@ -86,6 +86,7 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		
 		// New routes for stock empty and employee details
 		admin.GET("/orders/:id/items", h.getOrderItems)
+		admin.GET("/orders/:id/empty-stock-items", h.getEmptyStockItemsForOrder)
 		admin.POST("/orders/:id/mark-stock-empty", h.markItemsStockEmpty)
 		admin.POST("/orders/:id/unmark-stock-empty", h.unmarkItemsStockEmpty)
 		admin.GET("/employees/:id/details", h.getEmployeeDetails)

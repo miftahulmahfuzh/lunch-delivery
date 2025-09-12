@@ -181,12 +181,41 @@
                                         {{end}}
                                     </div>
                                     
+                                    <!-- Stock Empty Items (if any) -->
+                                    {{if .stockEmptyItems}}
+                                    <div class="mt-6 p-4 bg-red-50 rounded-xl border border-red-200">
+                                        <h4 class="text-sm font-semibold text-red-800 mb-3 flex items-center">
+                                            <i class="fas fa-exclamation-triangle text-red-600 mr-2"></i>
+                                            Items Out of Stock
+                                        </h4>
+                                        <div class="space-y-2">
+                                            {{range .stockEmptyItems}}
+                                            <div class="flex items-center justify-between text-sm">
+                                                <span class="text-red-700 line-through">{{.Name}}</span>
+                                                <span class="text-red-600 line-through">Rp {{.Price | divideBy100}}</span>
+                                            </div>
+                                            {{end}}
+                                        </div>
+                                        <p class="text-xs text-red-600 mt-2">These items have been removed from your order due to stock shortage.</p>
+                                    </div>
+                                    {{end}}
+                                    
                                     <!-- Total -->
                                     <div class="mt-6 p-4 bg-primary-50 rounded-xl border border-primary-200">
                                         <div class="flex items-center justify-between">
                                             <span class="text-lg font-semibold text-gray-900">Total Amount</span>
-                                            <span class="text-2xl font-bold text-primary-600">Rp {{.todayOrder.TotalPrice | divideBy100}}</span>
+                                            <span class="text-2xl font-bold text-primary-600">Rp {{if .stockEmptyItems}}{{.adjustedTotalPrice | divideBy100}}{{else}}{{.todayOrder.TotalPrice | divideBy100}}{{end}}</span>
                                         </div>
+                                        {{if .stockEmptyItems}}
+                                        <div class="flex items-center justify-between text-sm mt-2">
+                                            <span class="text-gray-600">Original Total:</span>
+                                            <span class="text-gray-500 line-through">Rp {{.todayOrder.TotalPrice | divideBy100}}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="text-red-600">Stock Reduction:</span>
+                                            <span class="text-red-600">-Rp {{.stockReductionAmount | divideBy100}}</span>
+                                        </div>
+                                        {{end}}
                                     </div>
                                 </div>
 

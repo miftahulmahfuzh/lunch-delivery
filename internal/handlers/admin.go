@@ -710,3 +710,58 @@ func (h *Handler) getEmployeeDetails(c *gin.Context) {
 		"employee": employee,
 	})
 }
+
+func (h *Handler) getEmptyStockItemsForOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	orderID, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid order ID"})
+		return
+	}
+
+	// Get the order to find employee and session details
+	order, err := h.repo.GetOrderByID(orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get order"})
+		return
+	}
+
+	session, err := h.repo.GetOrderSessionByID(order.SessionID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get session"})
+		return
+	}
+
+	// Get empty stock items for this specific user on this date
+	stockEmptyItemIDs, err := h.repo.GetStockEmptyItemsForUser(order.EmployeeID, session.Date)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	if len(stockEmptyItemIDs) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"items":   []interface{}{},
+		})
+		return
+	}
+
+	// Convert int slice to int64 slice for GetMenuItemsByIDs
+	var itemIDs []int64
+	for _, id := range stockEmptyItemIDs {
+		itemIDs = append(itemIDs, int64(id))
+	}
+
+	// Get the menu item details
+	items, err := h.repo.GetMenuItemsByIDs(itemIDs)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"items":   items,
+	})
+}

@@ -264,6 +264,9 @@ func (h *Handler) myOrders(c *gin.Context) {
 
 	var todayOrder *models.IndividualOrder
 	var todayOrderItems []models.MenuItem
+	var stockEmptyItems []models.MenuItem
+	var adjustedTotalPrice int
+	var stockReductionAmount int
 
 	if todaySession != nil {
 		// Get user's order for today
@@ -283,7 +286,27 @@ func (h *Handler) myOrders(c *gin.Context) {
 			for _, id := range todayOrder.MenuItemIDs {
 				itemIDs = append(itemIDs, id)
 			}
-			todayOrderItems, _ = h.repo.GetMenuItemsByIDs(itemIDs)
+			allOrderItems, _ := h.repo.GetMenuItemsByIDs(itemIDs)
+			
+			// Get stock empty items for this user today
+			stockEmptyItemIDs, _ := h.repo.GetStockEmptyItemsForUser(userID, today)
+			stockEmptyMap := make(map[int]bool)
+			for _, itemID := range stockEmptyItemIDs {
+				stockEmptyMap[itemID] = true
+			}
+			
+			// Filter out stock empty items from display and calculate adjusted totals
+			adjustedTotalPrice = todayOrder.TotalPrice
+			stockReductionAmount = 0
+			for _, item := range allOrderItems {
+				if stockEmptyMap[item.ID] {
+					stockEmptyItems = append(stockEmptyItems, item)
+					adjustedTotalPrice -= item.Price
+					stockReductionAmount += item.Price
+				} else {
+					todayOrderItems = append(todayOrderItems, item)
+				}
+			}
 		}
 	}
 
@@ -312,15 +335,18 @@ func (h *Handler) myOrders(c *gin.Context) {
 	notifications, _ := h.repo.GetUserNotifications(userID, 10) // Get latest 10 notifications
 
 	c.HTML(http.StatusOK, "my_orders.html", gin.H{
-		"employee":        employee,
-		"company":         company,
-		"todaySession":    todaySession,
-		"todayOrder":      todayOrder,
-		"todayOrderItems": todayOrderItems,
-		"recentOrders":    recentOrders,
-		"notifications":   notifications,
-		"startDate":       startDateStr,
-		"endDate":         endDateStr,
+		"employee":             employee,
+		"company":              company,
+		"todaySession":         todaySession,
+		"todayOrder":           todayOrder,
+		"todayOrderItems":      todayOrderItems,
+		"stockEmptyItems":      stockEmptyItems,
+		"adjustedTotalPrice":   adjustedTotalPrice,
+		"stockReductionAmount": stockReductionAmount,
+		"recentOrders":         recentOrders,
+		"notifications":        notifications,
+		"startDate":            startDateStr,
+		"endDate":              endDateStr,
 	})
 }
 

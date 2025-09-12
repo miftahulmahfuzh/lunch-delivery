@@ -253,6 +253,27 @@
                                                     </button>
                                                 </div>
                                             </div>
+
+                                            <!-- Empty Stock Items Section -->
+                                            <div class="bg-red-50 rounded-lg p-4 border border-red-200 mt-4" id="empty-stock-section-{{.ID}}">
+                                                <h4 class="font-semibold text-red-900 mb-3 flex items-center">
+                                                    <i class="fas fa-exclamation-triangle mr-2 text-red-500"></i>
+                                                    Empty Stock Items - Uncheck to make available again
+                                                </h4>
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-4" id="empty-stock-items-{{.ID}}">
+                                                    <!-- Items will be populated by JavaScript -->
+                                                </div>
+                                                <div class="flex items-center justify-between border-t border-red-300 pt-3">
+                                                    <div class="text-sm text-red-600">
+                                                        Uncheck items to remove empty stock status and make them available
+                                                    </div>
+                                                    <button onclick="updateEmptyStockStatus({{.ID}})" 
+                                                            class="inline-flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm">
+                                                        <i class="fas fa-undo mr-2"></i>
+                                                        Update Empty Stock Status
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                     {{end}}
@@ -390,8 +411,9 @@
         const itemsContainer = document.getElementById('order-items-' + orderId);
         
         if (detailsRow.classList.contains('hidden')) {
-            // Load order items
+            // Load order items and empty stock items
             loadOrderItems(orderId);
+            loadEmptyStockItems(orderId);
             detailsRow.classList.remove('hidden');
         } else {
             detailsRow.classList.add('hidden');
@@ -540,6 +562,121 @@
                     });
                 } else {
                     showModal('Error', 'Some updates failed. Please try again.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showModal('Network Error', 'Please check your connection and try again.', 'error');
+            });
+        }
+    }
+
+    function loadEmptyStockItems(orderId) {
+        fetch('/admin/orders/' + orderId + '/empty-stock-items')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayEmptyStockItems(orderId, data.items);
+            } else {
+                console.warn('Failed to load empty stock items:', data.error);
+                hideEmptyStockSection(orderId);
+            }
+        })
+        .catch(error => {
+            console.error('Error loading empty stock items:', error);
+            hideEmptyStockSection(orderId);
+        });
+    }
+
+    function displayEmptyStockItems(orderId, items) {
+        const container = document.getElementById('empty-stock-items-' + orderId);
+        const section = document.getElementById('empty-stock-section-' + orderId);
+        
+        if (!items || items.length === 0) {
+            section.classList.add('hidden');
+            return;
+        }
+        
+        section.classList.remove('hidden');
+        let itemsHtml = '';
+        
+        items.forEach(item => {
+            itemsHtml += `
+                <div class="bg-white rounded-lg p-3 border border-red-300" id="empty-item-container-${orderId}-${item.id}">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="empty-item-${orderId}-${item.id}" value="${item.id}" 
+                               class="mr-3 w-4 h-4 text-red-600 border-gray-300 rounded" checked
+                               onchange="updateEmptyItemDisplay(${orderId}, ${item.id}, this.checked)">
+                        <label for="empty-item-${orderId}-${item.id}" class="flex-1 cursor-pointer">
+                            <div class="font-medium text-red-800 flex items-center" id="empty-item-name-${orderId}-${item.id}">
+                                ${item.name}
+                                <span class="ml-2 px-2 py-1 bg-red-100 text-red-700 text-xs rounded-full">Stock Empty</span>
+                            </div>
+                            <div class="text-sm text-gray-600">Rp ${item.price.toLocaleString('en-US')}</div>
+                        </label>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML = itemsHtml;
+    }
+
+    function hideEmptyStockSection(orderId) {
+        const section = document.getElementById('empty-stock-section-' + orderId);
+        section.classList.add('hidden');
+    }
+
+    function updateEmptyItemDisplay(orderId, itemId, isChecked) {
+        const container = document.getElementById(`empty-item-container-${orderId}-${itemId}`);
+        const nameElement = document.getElementById(`empty-item-name-${orderId}-${itemId}`);
+        const checkbox = document.getElementById(`empty-item-${orderId}-${itemId}`);
+        
+        if (!isChecked) {
+            // Mark as available (unchecked means we want to make it available)
+            container.className = 'bg-green-50 border-green-200 rounded-lg p-3 border';
+            nameElement.innerHTML = nameElement.innerHTML.replace('bg-red-100 text-red-700', 'bg-green-100 text-green-700').replace('Stock Empty', 'Will be Available');
+            checkbox.className = 'mr-3 w-4 h-4 text-green-600 border-gray-300 rounded';
+        } else {
+            // Keep as empty stock
+            container.className = 'bg-white rounded-lg p-3 border border-red-300';
+            nameElement.innerHTML = nameElement.innerHTML.replace('bg-green-100 text-green-700', 'bg-red-100 text-red-700').replace('Will be Available', 'Stock Empty');
+            checkbox.className = 'mr-3 w-4 h-4 text-red-600 border-gray-300 rounded';
+        }
+    }
+
+    function updateEmptyStockStatus(orderId) {
+        const checkboxes = document.querySelectorAll(`#empty-stock-items-${orderId} input[type="checkbox"]`);
+        const itemsToUnmark = [];
+        
+        checkboxes.forEach(checkbox => {
+            const itemId = parseInt(checkbox.value);
+            
+            if (!checkbox.checked) {
+                // Unchecked items should be unmarked as stock empty
+                itemsToUnmark.push(itemId);
+            }
+        });
+        
+        if (itemsToUnmark.length === 0) {
+            showModal('Info', 'No changes to empty stock status detected.', 'info');
+            return;
+        }
+        
+        if (confirm(`Remove empty stock status for ${itemsToUnmark.length} item(s)? This will make them available for ordering again.`)) {
+            fetch('/admin/orders/' + orderId + '/unmark-stock-empty', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ item_ids: itemsToUnmark })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showModal('Success', 'Empty stock status updated successfully.', 'success');
+                    // Reload the empty stock items to refresh the display
+                    loadEmptyStockItems(orderId);
+                } else {
+                    showModal('Error', 'Failed to update empty stock status. Please try again.', 'error');
                 }
             })
             .catch(error => {
