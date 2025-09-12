@@ -319,21 +319,57 @@ type RecentOrder struct {
 	MenuItemNames string    `json:"menu_item_names"`
 }
 
-func (r *Repository) GetRecentOrdersByEmployee(employeeID, days int) ([]RecentOrder, error) {
-	var orders []RecentOrder
-	err := r.db.Select(&orders, `
+func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDate time.Time) ([]RecentOrder, error) {
+	type OrderRow struct {
+		Date        time.Time      `db:"date"`
+		TotalPrice  int            `db:"total_price"`
+		Paid        bool           `db:"paid"`
+		MenuItemIDs pq.Int64Array  `db:"menu_item_ids"`
+	}
+	
+	var orderRows []OrderRow
+	err := r.db.Select(&orderRows, `
         SELECT os.date, io.total_price, io.paid, io.menu_item_ids
         FROM individual_orders io
         JOIN order_sessions os ON io.session_id = os.id
-        WHERE io.employee_id = $1 AND os.date >= CURRENT_DATE - INTERVAL '%d days'
-        ORDER BY os.date DESC`, employeeID, days)
-
-	// Get menu item names (simplified - you can optimize this)
-	for i := range orders {
-		orders[i].MenuItemNames = "Menu items loaded..." // Placeholder for now
+        WHERE io.employee_id = $1 AND os.date >= $2 AND os.date <= $3
+        ORDER BY os.date DESC`, employeeID, startDate, endDate)
+	
+	if err != nil {
+		return nil, err
 	}
-
-	return orders, err
+	
+	var orders []RecentOrder
+	
+	// Get menu item names for each order
+	for _, row := range orderRows {
+		var menuItemNames []string
+		
+		if len(row.MenuItemIDs) > 0 {
+			// Convert pq.Int64Array to []int64
+			var itemIDs []int64
+			for _, id := range row.MenuItemIDs {
+				itemIDs = append(itemIDs, id)
+			}
+			
+			items, err := r.GetMenuItemsByIDs(itemIDs)
+			if err == nil {
+				for _, item := range items {
+					menuItemNames = append(menuItemNames, item.Name)
+				}
+			}
+		}
+		
+		order := RecentOrder{
+			Date:          row.Date,
+			TotalPrice:    row.TotalPrice,
+			Paid:          row.Paid,
+			MenuItemNames: strings.Join(menuItemNames, ", "),
+		}
+		orders = append(orders, order)
+	}
+	
+	return orders, nil
 }
 
 // Nutritionist Selections

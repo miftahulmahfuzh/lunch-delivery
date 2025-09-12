@@ -12,6 +12,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Helper functions for date calculations
+func getStartOfWeek(date time.Time) time.Time {
+	day := date.Weekday()
+	diff := date.AddDate(0, 0, -int(day)+1) // Monday as start of week
+	if day == time.Sunday {
+		diff = date.AddDate(0, 0, -6) // If Sunday, go back to Monday
+	}
+	return time.Date(diff.Year(), diff.Month(), diff.Day(), 0, 0, 0, 0, diff.Location())
+}
+
+func getEndOfWeek(date time.Time) time.Time {
+	startOfWeek := getStartOfWeek(date)
+	return startOfWeek.AddDate(0, 0, 6) // Sunday as end of week
+}
+
 // Update orderForm handler in internal/handlers/orders.go
 func (h *Handler) orderForm(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")
@@ -128,6 +143,7 @@ func (h *Handler) orderForm(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
+		"title":                 "Place Your Order",
 		"menu_items":            menuItems,
 		"session":               session,
 		"company":               company,
@@ -271,8 +287,26 @@ func (h *Handler) myOrders(c *gin.Context) {
 		}
 	}
 
-	// Get recent orders (last 7 days)
-	recentOrders, _ := h.repo.GetRecentOrdersByEmployee(userID, 7)
+	// Get recent orders based on date range
+	var recentOrders []models.RecentOrder
+	startDateStr := c.Query("start_date")
+	endDateStr := c.Query("end_date")
+	
+	if startDateStr != "" && endDateStr != "" {
+		// Parse dates from query parameters
+		startDate, err1 := time.Parse("2006-01-02", startDateStr)
+		endDate, err2 := time.Parse("2006-01-02", endDateStr)
+		
+		if err1 == nil && err2 == nil {
+			recentOrders, _ = h.repo.GetRecentOrdersByEmployee(userID, startDate, endDate)
+		}
+	} else {
+		// Default to "this week" if no parameters provided
+		today := time.Now()
+		startOfWeek := getStartOfWeek(today)
+		endOfWeek := getEndOfWeek(today)
+		recentOrders, _ = h.repo.GetRecentOrdersByEmployee(userID, startOfWeek, endOfWeek)
+	}
 
 	// Get user notifications
 	notifications, _ := h.repo.GetUserNotifications(userID, 10) // Get latest 10 notifications
@@ -285,6 +319,8 @@ func (h *Handler) myOrders(c *gin.Context) {
 		"todayOrderItems": todayOrderItems,
 		"recentOrders":    recentOrders,
 		"notifications":   notifications,
+		"startDate":       startDateStr,
+		"endDate":         endDateStr,
 	})
 }
 

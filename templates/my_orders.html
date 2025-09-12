@@ -370,6 +370,42 @@
                         <p class="text-accent-100 text-sm mt-1">Your recent lunch orders</p>
                     </div>
 
+                    <!-- Date Range Filter -->
+                    <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                        <div class="flex flex-wrap items-center gap-4">
+                            <!-- Range Shortcuts -->
+                            <div class="flex-shrink-0">
+                                <label class="text-sm font-medium text-gray-700 mb-2 block">Quick Range:</label>
+                                <select id="rangeShortcut" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
+                                    <option value="this_week">This Week</option>
+                                    <option value="last_week">Last Week</option>
+                                    <option value="last_2_weeks">Last 2 Weeks</option>
+                                    <option value="this_month">This Month</option>
+                                    <option value="last_month">Last Month</option>
+                                    <option value="custom">Custom Range</option>
+                                </select>
+                            </div>
+
+                            <!-- Date Range Inputs -->
+                            <div class="flex items-center gap-4">
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-2 block">Start Date:</label>
+                                    <input type="date" id="startDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
+                                </div>
+                                <div>
+                                    <label class="text-sm font-medium text-gray-700 mb-2 block">End Date:</label>
+                                    <input type="date" id="endDate" class="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-accent-500 focus:border-accent-500">
+                                </div>
+                                <div class="flex items-end">
+                                    <button id="filterButton" class="px-4 py-2 bg-accent-600 text-white rounded-lg hover:bg-accent-700 transition-colors font-medium text-sm flex items-center">
+                                        <i class="fas fa-search mr-2"></i>
+                                        Filter
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="p-6">
                         {{if .recentOrders}}
                             <div class="overflow-x-auto">
@@ -573,6 +609,141 @@
             }, 300);
         }, 3000);
     }
+
+    // Date Range Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const rangeShortcut = document.getElementById('rangeShortcut');
+        const startDate = document.getElementById('startDate');
+        const endDate = document.getElementById('endDate');
+        const filterButton = document.getElementById('filterButton');
+
+        // Helper function to format date to YYYY-MM-DD
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        // Helper function to get start of week (Monday)
+        function getStartOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            return new Date(d.setDate(diff));
+        }
+
+        // Helper function to get end of week (Sunday)
+        function getEndOfWeek(date) {
+            const d = new Date(date);
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? 0 : 7);
+            return new Date(d.setDate(diff));
+        }
+
+        // Helper function to get start of month
+        function getStartOfMonth(date) {
+            return new Date(date.getFullYear(), date.getMonth(), 1);
+        }
+
+        // Helper function to get end of month
+        function getEndOfMonth(date) {
+            return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        }
+
+        // Set date range based on shortcut selection
+        function setDateRange(range) {
+            const today = new Date();
+            let start, end;
+
+            switch(range) {
+                case 'this_week':
+                    start = getStartOfWeek(today);
+                    end = getEndOfWeek(today);
+                    break;
+                case 'last_week':
+                    const lastWeek = new Date(today);
+                    lastWeek.setDate(today.getDate() - 7);
+                    start = getStartOfWeek(lastWeek);
+                    end = getEndOfWeek(lastWeek);
+                    break;
+                case 'last_2_weeks':
+                    start = new Date(today);
+                    start.setDate(today.getDate() - 14);
+                    end = today;
+                    break;
+                case 'this_month':
+                    start = getStartOfMonth(today);
+                    end = getEndOfMonth(today);
+                    break;
+                case 'last_month':
+                    const lastMonth = new Date(today);
+                    lastMonth.setMonth(today.getMonth() - 1);
+                    start = getStartOfMonth(lastMonth);
+                    end = getEndOfMonth(lastMonth);
+                    break;
+                case 'custom':
+                    // Don't auto-set dates for custom range
+                    return;
+            }
+
+            startDate.value = formatDate(start);
+            endDate.value = formatDate(end);
+        }
+
+        // Initialize with server-provided values or default to "this week"
+        const serverStartDate = '{{.startDate}}';
+        const serverEndDate = '{{.endDate}}';
+        
+        if (serverStartDate && serverEndDate) {
+            startDate.value = serverStartDate;
+            endDate.value = serverEndDate;
+            rangeShortcut.value = 'custom'; // Default to custom if server provided dates
+        } else {
+            setDateRange('this_week');
+            rangeShortcut.value = 'this_week';
+        }
+
+        // Handle shortcut change
+        rangeShortcut.addEventListener('change', function() {
+            setDateRange(this.value);
+        });
+
+        // Handle manual date changes (switch to custom when user modifies dates)
+        startDate.addEventListener('change', function() {
+            rangeShortcut.value = 'custom';
+        });
+        endDate.addEventListener('change', function() {
+            rangeShortcut.value = 'custom';
+        });
+
+        // Handle filter button click
+        filterButton.addEventListener('click', function() {
+            const start = startDate.value;
+            const end = endDate.value;
+            
+            if (!start || !end) {
+                showToast('Please select both start and end dates', 'error');
+                return;
+            }
+
+            if (start > end) {
+                showToast('Start date must be before end date', 'error');
+                return;
+            }
+
+            // Reload page with date parameters
+            const url = new URL(window.location);
+            url.searchParams.set('start_date', start);
+            url.searchParams.set('end_date', end);
+            window.location.href = url.toString();
+        });
+
+        // Auto-filter on page load if this is the first load (no URL params)
+        if (!window.location.search.includes('start_date') && !serverStartDate) {
+            // Trigger initial filter for "this week"
+            setTimeout(() => {
+                filterButton.click();
+            }, 500);
+        }
+    });
     </script>
 </body>
 </html>
