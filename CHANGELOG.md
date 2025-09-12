@@ -5,6 +5,30 @@ All notable changes to the Lunch Delivery System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-09-12
+
+### Added
+- **Daily Menu Management Enhancements**
+  - Added "Select All" button to select all menu items at once in daily menu form
+  - Added "Unselect All" button to deselect all menu items in daily menu form
+  - Enhanced user experience for managing large menu lists with bulk selection functionality
+
+- **Order Security Features**
+  - Added prevention of editing orders that have already been paid
+  - Frontend protection with disabled "Edit Order" button and visual notice for paid orders
+  - Backend validation in both orderForm and submitOrder handlers to prevent API bypass
+
+### Fixed
+- **Template Error Handling**
+  - Fixed nil pointer error in daily menu form when no existing menu is present
+  - Added proper nil checking for `.existing` before accessing MenuItemIDs
+  - Resolved "Date and menu items required" error during daily menu saving
+
+### Security
+- **Order Integrity Protection**
+  - Added server-side validation to prevent modification of paid orders
+  - Enhanced security against bypassing frontend restrictions via direct API calls
+
 ## [0.1.0] - 2025-08-28
 
 ### Added
@@ -70,4 +94,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WhatsApp contact integration** for communication
 - **Flexible session management** with reopen capability
 
+[0.2.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.2.0
 [0.1.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.1.0
