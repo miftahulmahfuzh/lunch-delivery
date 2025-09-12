@@ -81,6 +81,10 @@
 
                 <div class="form-group">
                     <label>Select Your Menu Items:</label>
+                    <div style="margin-bottom: 10px;">
+                        <button type="button" class="btn" id="selectAllBtn" style="background: #28a745; margin-right: 10px;">Select All</button>
+                        <button type="button" class="btn" id="unselectAllBtn" style="background: #dc3545;">Unselect All</button>
+                    </div>
                     <!-- --- UPDATED HTML STRUCTURE --- -->
                     <ul class="menu-item-list">
                         {{range .menu_items}}
@@ -153,6 +157,8 @@
         const listItems = document.querySelectorAll('.menu-item-list li');
         const nutritionistBtn = document.getElementById('nutritionistBtn');
         const nutritionistResult = document.getElementById('nutritionistResult');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const unselectAllBtn = document.getElementById('unselectAllBtn');
 
         listItems.forEach(item => {
             const checkbox = item.querySelector('input[type="checkbox"]');
@@ -173,6 +179,22 @@
                 // Update the summary and total price
                 calculateTotal();
             });
+        });
+
+        // Select All button functionality
+        selectAllBtn.addEventListener('click', function() {
+            listItems.forEach(item => {
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                checkbox.checked = true;
+                item.classList.add('selected');
+            });
+            calculateTotal();
+        });
+
+        // Unselect All button functionality
+        unselectAllBtn.addEventListener('click', function() {
+            clearAllSelections();
+            calculateTotal();
         });
 
         // Nutritionist selection functionality
