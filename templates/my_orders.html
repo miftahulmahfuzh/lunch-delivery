@@ -1,296 +1,407 @@
-{{define "content"}}
-<main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-    <!-- Navigation -->
-    <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Orders - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399',
+                            500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b'
+                        },
+                        accent: {
+                            50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24',
+                            500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f'
+                        }
+                    },
+                    fontFamily: { 'sans': ['Inter', 'ui-sans-serif', 'system-ui'] },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 0.6s ease-in-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceSubtle {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+        .glass-effect {
+            backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 font-sans antialiased">
+    <!-- Header -->
+    <header class="glass-effect border-b border-white/20 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-14">
-                <div class="flex items-center space-x-6">
-                    <a href="/my-orders" class="flex items-center space-x-2 text-primary-600 font-medium border-b-2 border-primary-500 pb-4">
-                        <i class="fas fa-clipboard-list"></i>
-                        <span>My Orders</span>
-                    </a>
-                    <a href="/logout" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Logout</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Page Header & User Info -->
-        <div class="text-center mb-10 animate-fade-in">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-xl mb-6">
-                <i class="fas fa-user text-white text-3xl"></i>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-3">My Orders</h1>
-            <div class="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6 max-w-md mx-auto">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <i class="fas fa-user text-white text-lg"></i>
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-2 rounded-xl shadow-lg">
+                        <i class="fas fa-utensils text-white text-xl"></i>
                     </div>
-                    <div class="flex-1 text-left">
-                        <h3 class="font-semibold text-gray-900">{{.employee.Name}}</h3>
-                        <p class="text-sm text-gray-600">{{.company.Name}}</p>
-                        <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
-                            <span><i class="fas fa-envelope mr-1"></i>{{.employee.Email}}</span>
-                            <span><i class="fab fa-whatsapp mr-1"></i>{{.employee.WaContact}}</span>
-                        </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Lunch Delivery</h1>
+                        <p class="text-xs text-gray-500">Premium Food Service</p>
                     </div>
                 </div>
             </div>
         </div>
+    </header>
 
-        <!-- Today's Order Section -->
-        {{if .todaySession}}
-        <div class="mb-12 animate-slide-up">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-                <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-xl font-semibold text-white flex items-center">
-                                <i class="fas fa-calendar-day mr-3"></i>
-                                Today's Order
-                            </h2>
-                            <p class="text-primary-100 text-sm mt-1">{{.todaySession.Date.Format "January 2, 2006"}}</p>
-                        </div>
-                        <div class="flex items-center">
-                            {{if eq .todaySession.Status "OPEN"}}
-                                <span class="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full flex items-center">
-                                    <i class="fas fa-clock mr-1.5"></i>
-                                    OPEN
-                                </span>
-                            {{else if eq .todaySession.Status "CLOSED_FOR_ORDERS"}}
-                                <span class="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded-full flex items-center">
-                                    <i class="fas fa-lock mr-1.5"></i>
-                                    CLOSED
-                                </span>
-                            {{else if eq .todaySession.Status "DELIVERED"}}
-                                <span class="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full flex items-center">
-                                    <i class="fas fa-truck mr-1.5"></i>
-                                    DELIVERED
-                                </span>
-                            {{else if eq .todaySession.Status "PAYMENT_PENDING"}}
-                                <span class="px-3 py-1 bg-amber-500 text-white text-sm font-medium rounded-full flex items-center">
-                                    <i class="fas fa-credit-card mr-1.5"></i>
-                                    PAYMENT
-                                </span>
-                            {{else}}
-                                <span class="px-3 py-1 bg-teal-500 text-white text-sm font-medium rounded-full flex items-center">
-                                    <i class="fas fa-check mr-1.5"></i>
-                                    COMPLETED
-                                </span>
-                            {{end}}
-                        </div>
+    <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <!-- Navigation -->
+        <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-14">
+                    <div class="flex items-center space-x-6">
+                        <a href="/my-orders" class="flex items-center space-x-2 text-primary-600 font-medium border-b-2 border-primary-500 pb-4">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>My Orders</span>
+                        </a>
+                        <a href="/logout" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
                     </div>
                 </div>
+            </div>
+        </nav>
 
-                <div class="p-6">
-                    {{if .todayOrder}}
-                        <!-- Order Details -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!-- Order Items -->
-                            <div>
-                                <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                                    <i class="fas fa-utensils mr-2 text-primary-500"></i>
-                                    Your Order
-                                </h3>
-                                <div class="space-y-3">
-                                    {{range .todayOrderItems}}
-                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div class="flex items-center">
-                                            <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                                                <i class="fas fa-utensils text-primary-600"></i>
-                                            </div>
-                                            <span class="font-medium text-gray-900">{{.Name}}</span>
-                                        </div>
-                                        <span class="font-semibold text-primary-600">Rp {{.Price | divideBy100}}</span>
-                                    </div>
-                                    {{end}}
-                                </div>
-                                
-                                <!-- Total -->
-                                <div class="mt-6 p-4 bg-primary-50 rounded-xl border border-primary-200">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-lg font-semibold text-gray-900">Total Amount</span>
-                                        <span class="text-2xl font-bold text-primary-600">Rp {{.todayOrder.TotalPrice | divideBy100}}</span>
-                                    </div>
-                                </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header & User Info -->
+            <div class="text-center mb-10 animate-fade-in">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-xl mb-6">
+                    <i class="fas fa-user text-white text-3xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-3">My Orders</h1>
+                <div class="bg-white rounded-2xl shadow-lg border border-gray-200/50 p-6 max-w-md mx-auto">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-white text-lg"></i>
+                        </div>
+                        <div class="flex-1 text-left">
+                            <h3 class="font-semibold text-gray-900">{{.employee.Name}}</h3>
+                            <p class="text-sm text-gray-600">{{.company.Name}}</p>
+                            <div class="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                                <span><i class="fas fa-envelope mr-1"></i>{{.employee.Email}}</span>
+                                <span><i class="fab fa-whatsapp mr-1"></i>{{.employee.WaContact}}</span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                            <!-- Payment & Actions -->
+            <!-- Today's Order Section -->
+            {{if .todaySession}}
+            <div class="mb-12 animate-slide-up">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
-                                    <i class="fas fa-credit-card mr-2 text-accent-500"></i>
-                                    Payment Status
-                                </h3>
-                                
-                                <div class="mb-6">
-                                    {{if .todayOrder.Paid}}
-                                        <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
-                                            <div class="flex items-center">
-                                                <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
-                                                    <i class="fas fa-check text-white"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="font-semibold text-green-800">Payment Completed</p>
-                                                    <p class="text-sm text-green-600">Your order has been paid successfully</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {{else}}
-                                        <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
-                                            <div class="flex items-center">
-                                                <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mr-3">
-                                                    <i class="fas fa-clock text-white"></i>
-                                                </div>
-                                                <div>
-                                                    <p class="font-semibold text-amber-800">Payment Pending</p>
-                                                    <p class="text-sm text-amber-600">Awaiting payment confirmation</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {{end}}
-                                </div>
-
-                                <!-- Action Buttons -->
+                                <h2 class="text-xl font-semibold text-white flex items-center">
+                                    <i class="fas fa-calendar-day mr-3"></i>
+                                    Today's Order
+                                </h2>
+                                <p class="text-primary-100 text-sm mt-1">{{.todaySession.Date.Format "January 2, 2006"}}</p>
+                            </div>
+                            <div class="flex items-center">
                                 {{if eq .todaySession.Status "OPEN"}}
-                                    {{if .todayOrder.Paid}}
-                                        <div class="space-y-3">
-                                            <button class="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed flex items-center justify-center" disabled>
-                                                <i class="fas fa-lock mr-2"></i>
-                                                Cannot Edit (Paid Order)
-                                            </button>
-                                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                                <p class="text-sm text-blue-700">
-                                                    <i class="fas fa-info-circle mr-1"></i>
-                                                    This order cannot be modified because payment has been processed.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    {{else}}
-                                        <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center transform hover:-translate-y-0.5">
-                                            <i class="fas fa-edit mr-2"></i>
-                                            Edit My Order
-                                        </a>
-                                    {{end}}
+                                    <span class="px-3 py-1 bg-green-500 text-white text-sm font-medium rounded-full flex items-center">
+                                        <i class="fas fa-clock mr-1.5"></i>
+                                        OPEN
+                                    </span>
+                                {{else if eq .todaySession.Status "CLOSED_FOR_ORDERS"}}
+                                    <span class="px-3 py-1 bg-gray-500 text-white text-sm font-medium rounded-full flex items-center">
+                                        <i class="fas fa-lock mr-1.5"></i>
+                                        CLOSED
+                                    </span>
+                                {{else if eq .todaySession.Status "DELIVERED"}}
+                                    <span class="px-3 py-1 bg-blue-500 text-white text-sm font-medium rounded-full flex items-center">
+                                        <i class="fas fa-truck mr-1.5"></i>
+                                        DELIVERED
+                                    </span>
+                                {{else if eq .todaySession.Status "PAYMENT_PENDING"}}
+                                    <span class="px-3 py-1 bg-amber-500 text-white text-sm font-medium rounded-full flex items-center">
+                                        <i class="fas fa-credit-card mr-1.5"></i>
+                                        PAYMENT
+                                    </span>
+                                {{else}}
+                                    <span class="px-3 py-1 bg-teal-500 text-white text-sm font-medium rounded-full flex items-center">
+                                        <i class="fas fa-check mr-1.5"></i>
+                                        COMPLETED
+                                    </span>
                                 {{end}}
                             </div>
                         </div>
-                    {{else}}
-                        <!-- No Order Placed -->
-                        <div class="text-center py-12">
-                            {{if eq .todaySession.Status "OPEN"}}
-                                <div class="mb-6">
-                                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <i class="fas fa-plus text-3xl text-gray-400"></i>
-                                    </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Order Yet</h3>
-                                    <p class="text-gray-600 mb-6">You haven't placed an order for today. The order window is still open!</p>
-                                </div>
-                                <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                                    <i class="fas fa-shopping-cart mr-3"></i>
-                                    Place Order Now
-                                </a>
-                            {{else}}
-                                <div class="mb-6">
-                                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <i class="fas fa-times text-3xl text-red-400"></i>
-                                    </div>
-                                    <h3 class="text-xl font-semibold text-gray-900 mb-2">Order Window Closed</h3>
-                                    <p class="text-gray-600">Unfortunately, you missed the deadline for today's order.</p>
-                                </div>
-                            {{end}}
-                        </div>
-                    {{end}}
-                </div>
-            </div>
-        </div>
-        {{else}}
-        <div class="mb-12 animate-slide-up">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 p-8 text-center">
-                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-calendar-times text-3xl text-gray-400"></i>
-                </div>
-                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Session Today</h3>
-                <p class="text-gray-600">No order session available for your company today.</p>
-            </div>
-        </div>
-        {{end}}
+                    </div>
 
-        <!-- Recent Orders Section -->
-        <div class="animate-slide-up">
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-                <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4">
-                    <h2 class="text-xl font-semibold text-white flex items-center">
-                        <i class="fas fa-history mr-3"></i>
-                        Order History
-                    </h2>
-                    <p class="text-accent-100 text-sm mt-1">Your recent lunch orders</p>
-                </div>
-
-                <div class="p-6">
-                    {{if .recentOrders}}
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-200">
-                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
-                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Items</th>
-                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Total</th>
-                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {{range .recentOrders}}
-                                    <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                        <td class="py-4 px-4">
+                    <div class="p-6">
+                        {{if .todayOrder}}
+                            <!-- Order Details -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <!-- Order Items -->
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-utensils mr-2 text-primary-500"></i>
+                                        Your Order
+                                    </h3>
+                                    <div class="space-y-3">
+                                        {{range .todayOrderItems}}
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                                             <div class="flex items-center">
-                                                <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
-                                                    <i class="fas fa-calendar text-primary-600 text-sm"></i>
+                                                <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                                                    <i class="fas fa-utensils text-primary-600"></i>
                                                 </div>
-                                                <span class="font-medium text-gray-900">{{.Date.Format "Jan 02, 2006"}}</span>
+                                                <span class="font-medium text-gray-900">{{.Name}}</span>
                                             </div>
-                                        </td>
-                                        <td class="py-4 px-4">
-                                            <div class="max-w-xs">
-                                                <p class="text-gray-900 text-sm leading-relaxed">{{.MenuItemNames}}</p>
+                                            <span class="font-semibold text-primary-600">Rp {{.Price | divideBy100}}</span>
+                                        </div>
+                                        {{end}}
+                                    </div>
+                                    
+                                    <!-- Total -->
+                                    <div class="mt-6 p-4 bg-primary-50 rounded-xl border border-primary-200">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-lg font-semibold text-gray-900">Total Amount</span>
+                                            <span class="text-2xl font-bold text-primary-600">Rp {{.todayOrder.TotalPrice | divideBy100}}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Payment & Actions -->
+                                <div>
+                                    <h3 class="font-semibold text-gray-900 mb-4 flex items-center">
+                                        <i class="fas fa-credit-card mr-2 text-accent-500"></i>
+                                        Payment Status
+                                    </h3>
+                                    
+                                    <div class="mb-6">
+                                        {{if .todayOrder.Paid}}
+                                            <div class="p-4 bg-green-50 border border-green-200 rounded-xl">
+                                                <div class="flex items-center">
+                                                    <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center mr-3">
+                                                        <i class="fas fa-check text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-semibold text-green-800">Payment Completed</p>
+                                                        <p class="text-sm text-green-600">Your order has been paid successfully</p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </td>
-                                        <td class="py-4 px-4">
-                                            <span class="font-semibold text-primary-600">Rp {{.TotalPrice | divideBy100}}</span>
-                                        </td>
-                                        <td class="py-4 px-4">
-                                            {{if .Paid}}
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                    <i class="fas fa-check mr-1"></i>
-                                                    PAID
-                                                </span>
-                                            {{else}}
-                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                                    <i class="fas fa-clock mr-1"></i>
-                                                    UNPAID
-                                                </span>
-                                            {{end}}
-                                        </td>
-                                    </tr>
+                                        {{else}}
+                                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                                                <div class="flex items-center">
+                                                    <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mr-3">
+                                                        <i class="fas fa-clock text-white"></i>
+                                                    </div>
+                                                    <div>
+                                                        <p class="font-semibold text-amber-800">Payment Pending</p>
+                                                        <p class="text-sm text-amber-600">Awaiting payment confirmation</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {{end}}
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    {{if eq .todaySession.Status "OPEN"}}
+                                        {{if .todayOrder.Paid}}
+                                            <div class="space-y-3">
+                                                <button class="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed flex items-center justify-center" disabled>
+                                                    <i class="fas fa-lock mr-2"></i>
+                                                    Cannot Edit (Paid Order)
+                                                </button>
+                                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                    <p class="text-sm text-blue-700">
+                                                        <i class="fas fa-info-circle mr-1"></i>
+                                                        This order cannot be modified because payment has been processed.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        {{else}}
+                                            <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-lg font-medium hover:from-primary-700 hover:to-primary-800 transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center transform hover:-translate-y-0.5">
+                                                <i class="fas fa-edit mr-2"></i>
+                                                Edit My Order
+                                            </a>
+                                        {{end}}
                                     {{end}}
-                                </tbody>
-                            </table>
-                        </div>
-                    {{else}}
-                        <div class="text-center py-12">
-                            <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-receipt text-3xl text-gray-400"></i>
+                                </div>
                             </div>
-                            <h3 class="text-xl font-semibold text-gray-900 mb-2">No Order History</h3>
-                            <p class="text-gray-600">You haven't placed any orders yet. Start by placing your first order!</p>
-                        </div>
-                    {{end}}
+                        {{else}}
+                            <!-- No Order Placed -->
+                            <div class="text-center py-12">
+                                {{if eq .todaySession.Status "OPEN"}}
+                                    <div class="mb-6">
+                                        <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="fas fa-plus text-3xl text-gray-400"></i>
+                                        </div>
+                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">No Order Yet</h3>
+                                        <p class="text-gray-600 mb-6">You haven't placed an order for today. The order window is still open!</p>
+                                    </div>
+                                    <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+                                        <i class="fas fa-shopping-cart mr-3"></i>
+                                        Place Order Now
+                                    </a>
+                                {{else}}
+                                    <div class="mb-6">
+                                        <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <i class="fas fa-times text-3xl text-red-400"></i>
+                                        </div>
+                                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Order Window Closed</h3>
+                                        <p class="text-gray-600">Unfortunately, you missed the deadline for today's order.</p>
+                                    </div>
+                                {{end}}
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+            {{else}}
+            <div class="mb-12 animate-slide-up">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 p-8 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-times text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No Session Today</h3>
+                    <p class="text-gray-600">No order session available for your company today.</p>
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Recent Orders Section -->
+            <div class="animate-slide-up">
+                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+                    <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4">
+                        <h2 class="text-xl font-semibold text-white flex items-center">
+                            <i class="fas fa-history mr-3"></i>
+                            Order History
+                        </h2>
+                        <p class="text-accent-100 text-sm mt-1">Your recent lunch orders</p>
+                    </div>
+
+                    <div class="p-6">
+                        {{if .recentOrders}}
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="border-b border-gray-200">
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Items</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Total</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {{range .recentOrders}}
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <td class="py-4 px-4">
+                                                <div class="flex items-center">
+                                                    <div class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center mr-3">
+                                                        <i class="fas fa-calendar text-primary-600 text-sm"></i>
+                                                    </div>
+                                                    <span class="font-medium text-gray-900">{{.Date.Format "Jan 02, 2006"}}</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <div class="max-w-xs">
+                                                    <p class="text-gray-900 text-sm leading-relaxed">{{.MenuItemNames}}</p>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                <span class="font-semibold text-primary-600">Rp {{.TotalPrice | divideBy100}}</span>
+                                            </td>
+                                            <td class="py-4 px-4">
+                                                {{if .Paid}}
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                        <i class="fas fa-check mr-1"></i>
+                                                        PAID
+                                                    </span>
+                                                {{else}}
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                        <i class="fas fa-clock mr-1"></i>
+                                                        UNPAID
+                                                    </span>
+                                                {{end}}
+                                            </td>
+                                        </tr>
+                                        {{end}}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {{else}}
+                            <div class="text-center py-12">
+                                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-receipt text-3xl text-gray-400"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-gray-900 mb-2">No Order History</h3>
+                                <p class="text-gray-600">You haven't placed any orders yet. Start by placing your first order!</p>
+                            </div>
+                        {{end}}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</main>
-{{end}}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-2 rounded-xl">
+                            <i class="fas fa-utensils text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Lunch Delivery</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Premium corporate food delivery service providing fresh, healthy meals to your workplace.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/" class="hover:text-white transition-colors">Home</a></li>
+                        <li><a href="/menu" class="hover:text-white transition-colors">Today's Menu</a></li>
+                        <li><a href="/my-orders" class="hover:text-white transition-colors">My Orders</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <div class="space-y-2 text-gray-400">
+                        <p><i class="fas fa-envelope mr-2"></i> support@lunchdelivery.com</p>
+                        <p><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</p>
+                        <p><i class="fas fa-clock mr-2"></i> Mon-Fri 8AM-6PM</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2024 Lunch Delivery System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

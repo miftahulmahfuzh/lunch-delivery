@@ -1,259 +1,331 @@
-{{define "content"}}
-<main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-    <!-- Navigation Breadcrumb -->
-    <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Daily Menu - Lunch Delivery</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/svg+xml" href="/static/images/favicon.svg">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0', 300: '#6ee7b7', 400: '#34d399',
+                            500: '#10b981', 600: '#059669', 700: '#047857', 800: '#065f46', 900: '#064e3b'
+                        },
+                        accent: {
+                            50: '#fffbeb', 100: '#fef3c7', 200: '#fde68a', 300: '#fcd34d', 400: '#fbbf24',
+                            500: '#f59e0b', 600: '#d97706', 700: '#b45309', 800: '#92400e', 900: '#78350f'
+                        }
+                    },
+                    fontFamily: { 'sans': ['Inter', 'ui-sans-serif', 'system-ui'] },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 0.6s ease-in-out'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes bounceSubtle {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-5px); }
+            60% { transform: translateY(-3px); }
+        }
+        .glass-effect {
+            backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 font-sans antialiased">
+    <!-- Header -->
+    <header class="glass-effect border-b border-white/20 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-14">
-                <div class="flex items-center space-x-6">
-                    <a href="/admin/" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="/admin/menu" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-list"></i>
-                        <span>Menu Items</span>
-                    </a>
-                    <a href="/admin/companies" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-building"></i>
-                        <span>Companies</span>
-                    </a>
-                    <a href="/admin/daily-menu" class="flex items-center space-x-2 text-primary-600 font-medium border-b-2 border-primary-500 pb-4">
-                        <i class="fas fa-calendar-day"></i>
-                        <span>Daily Menu</span>
-                    </a>
-                    <a href="/admin/sessions" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-clock"></i>
-                        <span>Order Sessions</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Page Header -->
-        <div class="text-center mb-10">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg mb-4">
-                <i class="fas fa-calendar-day text-white text-2xl"></i>
-            </div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">Daily Menu</h1>
-            <p class="text-xl text-gray-600">Configure today's available menu items</p>
-            <div class="mt-4 inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium">
-                <i class="fas fa-calendar mr-2"></i>
-                {{.date}}
-            </div>
-        </div>
-
-        <!-- Status Alert -->
-        {{if .existing}}
-        <div class="mb-8 animate-fade-in">
-            <div class="bg-accent-50 border border-accent-200 rounded-xl p-4">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <i class="fas fa-info-circle text-accent-500 text-lg"></i>
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-2 rounded-xl shadow-lg">
+                        <i class="fas fa-utensils text-white text-xl"></i>
                     </div>
-                    <div class="ml-3">
-                        <h3 class="text-sm font-medium text-accent-800">Menu Already Exists</h3>
-                        <p class="mt-1 text-sm text-accent-700">Daily menu already exists for this date. Submitting will update the current configuration.</p>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900">Lunch Delivery</h1>
+                        <p class="text-xs text-gray-500">Admin Dashboard</p>
                     </div>
                 </div>
             </div>
         </div>
-        {{end}}
+    </header>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Menu Selection Card -->
-            <div class="lg:col-span-2">
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
-                        <h2 class="text-xl font-semibold text-white flex items-center">
-                            <i class="fas fa-utensils mr-3"></i>
-                            Select Menu Items
-                        </h2>
-                        <p class="text-primary-100 text-sm mt-1">{{len .items}} total items available</p>
+    <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <!-- Navigation Breadcrumb -->
+        <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-14">
+                    <div class="flex items-center space-x-6">
+                        <a href="/admin/" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                        <a href="/admin/menu" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                            <i class="fas fa-list"></i>
+                            <span>Menu Items</span>
+                        </a>
+                        <a href="/admin/companies" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                            <i class="fas fa-building"></i>
+                            <span>Companies</span>
+                        </a>
+                        <a href="/admin/daily-menu" class="flex items-center space-x-2 text-primary-600 font-medium border-b-2 border-primary-500 pb-4">
+                            <i class="fas fa-calendar-day"></i>
+                            <span>Daily Menu</span>
+                        </a>
+                        <a href="/admin/sessions" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                            <i class="fas fa-clock"></i>
+                            <span>Order Sessions</span>
+                        </a>
                     </div>
+                </div>
+            </div>
+        </nav>
 
-                    <form method="POST" action="/admin/daily-menu" class="p-6">
-                        <input type="hidden" name="date" value="{{.date}}">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Page Header -->
+            <div class="text-center mb-10">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-lg mb-4">
+                    <i class="fas fa-calendar-day text-white text-2xl"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Daily Menu</h1>
+                <p class="text-xl text-gray-600">Configure today's available menu items</p>
+                <div class="mt-4 inline-flex items-center px-4 py-2 bg-primary-100 text-primary-700 rounded-full font-medium">
+                    <i class="fas fa-calendar mr-2"></i>
+                    {{.date}}
+                </div>
+            </div>
 
-                        <!-- Action Buttons -->
-                        <div class="mb-6 flex flex-wrap gap-3">
-                            <button type="button" id="select-all-btn" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                <i class="fas fa-check-double mr-2"></i>
-                                Select All
-                            </button>
-                            <button type="button" id="unselect-all-btn" class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
-                                <i class="fas fa-times-circle mr-2"></i>
-                                Clear All
-                            </button>
+            <!-- Status Alert -->
+            {{if .existing}}
+            <div class="mb-8 animate-fade-in">
+                <div class="bg-accent-50 border border-accent-200 rounded-xl p-4">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas fa-info-circle text-accent-500 text-lg"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-accent-800">Menu Already Exists</h3>
+                            <p class="mt-1 text-sm text-accent-700">Daily menu already exists for this date. Submitting will update the current configuration.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {{end}}
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Menu Selection Card -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+                        <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
+                            <h2 class="text-xl font-semibold text-white flex items-center">
+                                <i class="fas fa-utensils mr-3"></i>
+                                Select Menu Items
+                            </h2>
+                            <p class="text-primary-100 text-sm mt-1">{{len .items}} total items available</p>
                         </div>
 
-                        <!-- Menu Items Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="menu-items-grid">
-                            {{range .items}}
-                            <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-105" data-id="{{.ID}}">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex-1">
-                                        <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{{.Name}}</h3>
-                                        <div class="flex items-center mt-2">
-                                            <span class="text-2xl font-bold text-primary-600">Rp {{.Price | divideBy100}}</span>
-                                        </div>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center group-hover:border-primary-400 transition-colors checkbox-indicator">
-                                            <i class="fas fa-check text-primary-600 text-sm hidden"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                                <input type="hidden" name="menu_items" value="{{.ID}}" id="item-input-{{.ID}}" disabled>
+                        <form method="POST" action="/admin/daily-menu" class="p-6">
+                            <input type="hidden" name="date" value="{{.date}}">
+
+                            <!-- Action Buttons -->
+                            <div class="mb-6 flex flex-wrap gap-3">
+                                <button type="button" id="select-all-btn" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    <i class="fas fa-check-double mr-2"></i>
+                                    Select All
+                                </button>
+                                <button type="button" id="unselect-all-btn" class="inline-flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                                    <i class="fas fa-times-circle mr-2"></i>
+                                    Clear All
+                                </button>
                             </div>
-                            {{end}}
-                        </div>
 
-                        <!-- Submit Button -->
-                        <div class="text-center">
-                            <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                                <i class="fas fa-save mr-3"></i>
-                                Save Daily Menu
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Current Menu Sidebar -->
-            <div class="lg:col-span-1">
-                {{if .existing}}
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 sticky top-8">
-                    <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
-                        <h3 class="text-lg font-semibold text-white flex items-center">
-                            <i class="fas fa-list-check mr-3"></i>
-                            Current Menu
-                        </h3>
-                    </div>
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            {{range .items}}
-                                {{$currentItem := .}}
-                                {{if $.existing}}
-                                    {{range $.existing.MenuItemIDs}}
-                                        {{if eq . $currentItem.ID}}
-                                            <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
-                                                <div>
-                                                    <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
-                                                    <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
-                                                </div>
-                                                <i class="fas fa-check-circle text-primary-500"></i>
+                            <!-- Menu Items Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="menu-items-grid">
+                                {{range .items}}
+                                <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-105" data-id="{{.ID}}">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex-1">
+                                            <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{{.Name}}</h3>
+                                            <div class="flex items-center mt-2">
+                                                <span class="text-2xl font-bold text-primary-600">Rp {{.Price | divideBy100}}</span>
                                             </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center group-hover:border-primary-400 transition-colors checkbox-indicator">
+                                                <i class="fas fa-check text-primary-600 text-sm hidden"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" name="menu_items" value="{{.ID}}" id="item-input-{{.ID}}" disabled>
+                                </div>
+                                {{end}}
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="text-center">
+                                <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+                                    <i class="fas fa-save mr-3"></i>
+                                    Save Daily Menu
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Current Menu Sidebar -->
+                <div class="lg:col-span-1">
+                    {{if .existing}}
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 sticky top-8">
+                        <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
+                            <h3 class="text-lg font-semibold text-white flex items-center">
+                                <i class="fas fa-list-check mr-3"></i>
+                                Current Menu
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-3">
+                                {{range .items}}
+                                    {{$currentItem := .}}
+                                    {{if $.existing}}
+                                        {{range $.existing.MenuItemIDs}}
+                                            {{if eq . $currentItem.ID}}
+                                                <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
+                                                    <div>
+                                                        <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
+                                                        <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
+                                                    </div>
+                                                    <i class="fas fa-check-circle text-primary-500"></i>
+                                                </div>
+                                            {{end}}
                                         {{end}}
                                     {{end}}
                                 {{end}}
-                            {{end}}
+                            </div>
                         </div>
                     </div>
-                </div>
-                {{end}}
+                    {{end}}
 
-                <!-- Stats Card -->
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 mt-6">
-                    <div class="p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                            <i class="fas fa-chart-pie mr-3 text-primary-500"></i>
-                            Menu Statistics
-                        </h3>
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Total Items</span>
-                                <span class="font-semibold text-gray-900">{{len .items}}</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Selected</span>
-                                <span class="font-semibold text-primary-600" id="selected-count">0</span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-gray-600">Coverage</span>
-                                <span class="font-semibold text-accent-600" id="coverage-percent">0%</span>
+                    <!-- Stats Card -->
+                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 mt-6">
+                        <div class="p-6">
+                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                <i class="fas fa-chart-pie mr-3 text-primary-500"></i>
+                                Menu Statistics
+                            </h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Total Items</span>
+                                    <span class="font-semibold text-gray-900">{{len .items}}</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Selected</span>
+                                    <span class="font-semibold text-primary-600" id="selected-count">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-600">Coverage</span>
+                                    <span class="font-semibold text-accent-600" id="coverage-percent">0%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</main>
+    </main>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const existingIDs = new Set([{{if .existing}}{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}{{end}}]);
-    const menuItems = document.querySelectorAll('.menu-item');
-    const totalItems = menuItems.length;
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const existingIDs = new Set([{{if .existing}}{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}{{end}}]);
+        const menuItems = document.querySelectorAll('.menu-item');
+        const totalItems = menuItems.length;
 
-    function updateStats() {
-        const selectedItems = document.querySelectorAll('.menu-item.selected').length;
-        document.getElementById('selected-count').textContent = selectedItems;
-        document.getElementById('coverage-percent').textContent = Math.round((selectedItems / totalItems) * 100) + '%';
-    }
-
-    menuItems.forEach(item => {
-        const itemID = parseInt(item.dataset.id, 10);
-        const hiddenInput = document.getElementById('item-input-' + itemID);
-        const checkboxIndicator = item.querySelector('.checkbox-indicator i');
-
-        if (existingIDs.has(itemID)) {
-            item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
-            item.classList.remove('bg-gray-50');
-            hiddenInput.disabled = false;
-            checkboxIndicator.classList.remove('hidden');
+        function updateStats() {
+            const selectedItems = document.querySelectorAll('.menu-item.selected').length;
+            document.getElementById('selected-count').textContent = selectedItems;
+            document.getElementById('coverage-percent').textContent = Math.round((selectedItems / totalItems) * 100) + '%';
         }
 
-        item.addEventListener('click', function() {
-            this.classList.toggle('selected');
-            
-            if (this.classList.contains('selected')) {
-                this.classList.add('bg-primary-100', 'border-primary-300');
-                this.classList.remove('bg-gray-50');
+        menuItems.forEach(item => {
+            const itemID = parseInt(item.dataset.id, 10);
+            const hiddenInput = document.getElementById('item-input-' + itemID);
+            const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+
+            if (existingIDs.has(itemID)) {
+                item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
+                item.classList.remove('bg-gray-50');
                 hiddenInput.disabled = false;
                 checkboxIndicator.classList.remove('hidden');
-            } else {
-                this.classList.remove('bg-primary-100', 'border-primary-300');
-                this.classList.add('bg-gray-50');
-                hiddenInput.disabled = true;
-                checkboxIndicator.classList.add('hidden');
             }
+
+            item.addEventListener('click', function() {
+                this.classList.toggle('selected');
+                
+                if (this.classList.contains('selected')) {
+                    this.classList.add('bg-primary-100', 'border-primary-300');
+                    this.classList.remove('bg-gray-50');
+                    hiddenInput.disabled = false;
+                    checkboxIndicator.classList.remove('hidden');
+                } else {
+                    this.classList.remove('bg-primary-100', 'border-primary-300');
+                    this.classList.add('bg-gray-50');
+                    hiddenInput.disabled = true;
+                    checkboxIndicator.classList.add('hidden');
+                }
+                updateStats();
+            });
+        });
+
+        document.getElementById('select-all-btn').addEventListener('click', function() {
+            menuItems.forEach(item => {
+                const itemID = parseInt(item.dataset.id, 10);
+                const hiddenInput = document.getElementById('item-input-' + itemID);
+                const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+                
+                item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
+                item.classList.remove('bg-gray-50');
+                hiddenInput.disabled = false;
+                checkboxIndicator.classList.remove('hidden');
+            });
             updateStats();
         });
-    });
 
-    document.getElementById('select-all-btn').addEventListener('click', function() {
-        menuItems.forEach(item => {
-            const itemID = parseInt(item.dataset.id, 10);
-            const hiddenInput = document.getElementById('item-input-' + itemID);
-            const checkboxIndicator = item.querySelector('.checkbox-indicator i');
-            
-            item.classList.add('selected', 'bg-primary-100', 'border-primary-300');
-            item.classList.remove('bg-gray-50');
-            hiddenInput.disabled = false;
-            checkboxIndicator.classList.remove('hidden');
+        document.getElementById('unselect-all-btn').addEventListener('click', function() {
+            menuItems.forEach(item => {
+                const itemID = parseInt(item.dataset.id, 10);
+                const hiddenInput = document.getElementById('item-input-' + itemID);
+                const checkboxIndicator = item.querySelector('.checkbox-indicator i');
+                
+                item.classList.remove('selected', 'bg-primary-100', 'border-primary-300');
+                item.classList.add('bg-gray-50');
+                hiddenInput.disabled = true;
+                checkboxIndicator.classList.add('hidden');
+            });
+            updateStats();
         });
+
         updateStats();
     });
-
-    document.getElementById('unselect-all-btn').addEventListener('click', function() {
-        menuItems.forEach(item => {
-            const itemID = parseInt(item.dataset.id, 10);
-            const hiddenInput = document.getElementById('item-input-' + itemID);
-            const checkboxIndicator = item.querySelector('.checkbox-indicator i');
-            
-            item.classList.remove('selected', 'bg-primary-100', 'border-primary-300');
-            item.classList.add('bg-gray-50');
-            hiddenInput.disabled = true;
-            checkboxIndicator.classList.add('hidden');
-        });
-        updateStats();
-    });
-
-    updateStats();
-});
-</script>
-{{end}}
+    </script>
+</body>
+</html>
