@@ -100,6 +100,12 @@ func (h *Handler) orderForm(c *gin.Context) {
 		}
 	}
 
+	// Prevent editing if order is already paid
+	if existingOrder != nil && existingOrder.Paid {
+		c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Payment has already been processed"})
+		return
+	}
+
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
 		"menu_items":     menuItems,
 		"session":        session,
@@ -156,6 +162,20 @@ func (h *Handler) submitOrder(c *gin.Context) {
 	totalPrice := 0
 	for _, item := range items {
 		totalPrice += item.Price
+	}
+
+	// Check if user already has a paid order for this session
+	orders, err := h.repo.GetOrdersBySession(sessionID)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	for _, order := range orders {
+		if order.EmployeeID == userID && order.Paid {
+			c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Payment has already been processed"})
+			return
+		}
 	}
 
 	_, err = h.repo.CreateIndividualOrder(sessionID, userID, itemIDs, totalPrice)

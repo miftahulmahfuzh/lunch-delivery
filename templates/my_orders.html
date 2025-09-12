@@ -32,6 +32,9 @@
         .paid { color: #28a745; font-weight: bold; }
         .unpaid { color: #dc3545; font-weight: bold; }
         .user-info { background: #e9ecef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+        .btn-disabled { background: #6c757d; cursor: not-allowed; opacity: 0.6; }
+        .btn-disabled:hover { background: #6c757d; }
+        .paid-notice { background: #d4edda; color: #155724; padding: 10px; border-radius: 3px; margin-top: 10px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -74,7 +77,14 @@
                 </p>
 
                 {{if eq .todaySession.Status "OPEN"}}
-                    <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="btn">Edit Order</a>
+                    {{if .todayOrder.Paid}}
+                        <button class="btn btn-disabled" disabled>Edit Order (Paid)</button>
+                        <div class="paid-notice">
+                            <strong>Note:</strong> This order cannot be modified because payment has been processed.
+                        </div>
+                    {{else}}
+                        <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="btn">Edit Order</a>
+                    {{end}}
                 {{end}}
             {{else}}
                 {{if eq .todaySession.Status "OPEN"}}
