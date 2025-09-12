@@ -15,6 +15,10 @@
         .btn:hover { background: #0056b3; }
         .btn-success { background: #28a745; }
         .btn-success:hover { background: #218838; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-group { margin-bottom: 15px; }
+        .btn-group .btn { margin-right: 10px; }
         .form-group { margin-bottom: 15px; }
         .form-group > label { display: block; margin-bottom: 5px; font-weight: bold; } /* Use > to target only the direct child label */
         .nav { background: #495057; padding: 10px 0; margin-bottom: 20px; }
@@ -70,6 +74,11 @@
                 
                 <div class="form-group">
                     <label>Select Menu Items for Today ({{len .items}} total available):</label>
+                    <!-- --- SELECTION BUTTONS --- -->
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary" id="select-all-btn">Select All</button>
+                        <button type="button" class="btn btn-secondary" id="unselect-all-btn">Unselect All</button>
+                    </div>
                     <!-- --- MODIFIED HTML STRUCTURE --- -->
                     <ul class="menu-item-list">
                         {{range .items}}
@@ -132,6 +141,28 @@
                     // Enable/disable the hidden input based on whether the 'selected' class is present
                     // A disabled input will not be sent with the form data
                     hiddenInput.disabled = !this.classList.contains('selected');
+                });
+            });
+
+            // Select All button functionality
+            document.getElementById('select-all-btn').addEventListener('click', function() {
+                listItems.forEach(item => {
+                    const itemID = parseInt(item.dataset.id, 10);
+                    const hiddenInput = document.getElementById('item-input-' + itemID);
+                    
+                    item.classList.add('selected');
+                    hiddenInput.disabled = false;
+                });
+            });
+
+            // Unselect All button functionality
+            document.getElementById('unselect-all-btn').addEventListener('click', function() {
+                listItems.forEach(item => {
+                    const itemID = parseInt(item.dataset.id, 10);
+                    const hiddenInput = document.getElementById('item-input-' + itemID);
+                    
+                    item.classList.remove('selected');
+                    hiddenInput.disabled = true;
                 });
             });
         });
