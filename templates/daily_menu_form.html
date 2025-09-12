@@ -93,9 +93,11 @@
             <ul class="current-menu-list">
                 {{range .items}}
                     {{$currentItem := .}}
-                    {{range $.existing.MenuItemIDs}}
-                        {{if eq . $currentItem.ID}}
-                            <li>{{$currentItem.Name}} - Rp {{$currentItem.Price | divideBy100}}</li>
+                    {{if $.existing}}
+                        {{range $.existing.MenuItemIDs}}
+                            {{if eq . $currentItem.ID}}
+                                <li>{{$currentItem.Name}} - Rp {{$currentItem.Price | divideBy100}}</li>
+                            {{end}}
                         {{end}}
                     {{end}}
                 {{end}}
@@ -108,7 +110,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // This is a safe way to pass Go slice data to JavaScript
-            const existingIDs = new Set([{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}]);
+            const existingIDs = new Set([{{if .existing}}{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}{{end}}]);
 
             const listItems = document.querySelectorAll('.menu-item-list li');
 
