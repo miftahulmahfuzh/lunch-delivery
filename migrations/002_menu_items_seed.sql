@@ -2,57 +2,56 @@
 -- This script adds all the standard menu items for the lunch delivery system
 
 INSERT INTO menu_items (name, price) VALUES
--- Vegetables
-('Cah buncis tempe', 4000),
+-- Staples (Nasi)
+('Nasi (1 Porsi)', 4000),
+('Nasi (1/2 Porsi)', 2000),
+
+-- Main Dishes (Lauk Protein)
+('Oseng Sapi Setan', 20000),
+('Filet Kungpao', 15000),
+('Ikan Kembung Dabu Dabu', 14000),
+('Ayam Oseng Pedes Daun Jeruk', 12000),
+('Fuyunghai Asam Manis', 11000),
+('Baby Cumi Cabe Ijo', 8000),
+('Rolade Ayam', 8000),
+('Tempe Lada Hitam', 7000),
+('Dori Cabe Ijo', 5000),
+('Ayam Suwir', 4000),
+
+-- Side Dishes (Sayur & Pelengkap)
+('Perkedel', 6000),
+('Oncom Leunca', 6000),
+('Bakwan Sayur', 5000),
+('Telor Ceplok', 5000),
+('Orek Basah', 5000),
+('Cah Buncis Tempe', 5000),
+('Cah Jagung Muda', 4000),
+('Cah Kembang Kol', 4000),
+('Cah Labu', 4000),
+('Jamur Crispy', 4000),
+('Kentang Semur', 4000),
+('Kentang Balado', 3000),
+
+-- Legacy items (keeping for backward compatibility)
 ('Cah pare rebon', 4200),
-('Cah labu', 4000),
-('Cah kembang kol', 4100),
-('Cah jagung muda', 4200),
 ('Terong cabe ijo', 4300),
 ('Cah oyong telur', 5000),
 ('Cah toge', 4500),
-
--- Main dishes - Meat/Protein
 ('Kikil balado', 5000),
-('Oncom leuncah', 4500),
-('Orek basah', 4500),
-('Kentang balado', 4500),
-('Kentang semur', 4800),
-('Baby cumi cabe ijo', 5500),
-('Dori cabe ijo', 5800),
-('Fillet ayam oseng pedes daun jeruk', 5500),
-('Fillet ayam kungpao', 5800),
 ('Udang gede crispy cabe garlic', 6000),
 ('Udang crispy cabe garam', 5000),
-('Oseng sapi setan', 5800),
-('Ikan kembung dabu dabu', 5200),
-('Telur ceplok cabe ijo', 4500),
-('Fuyunghai asam manis', 4800),
-('Jamur crispyyyyy', 4600),
-('Rolade ayam', 5200),
-('Perkedel', 4200),
-('Tempe lada hitammss', 4500),
 ('Tahu wijennss', 4500),
 ('Tongkol sarden', 5000),
 ('Ikan cue sarden', 5000),
 ('Ceker oseng pedes', 4800),
 ('Ceker cabe ijo', 3500),
-('Ayam suwir', 5000),
 ('Ayam goreng kandar merah', 4500),
-
--- Noodles/Rice
 ('Bihun goreng', 4700),
 ('Mie goreng', 4800),
-('Nasi', 5000),
-('Nasi 1/2', 3000),
-
--- Snacks
-('Gorengan - bakwan sayur 🥰', 4000),
-
--- Desserts
+('Nasi', 4000),
+('Nasi 1/2', 2000),
+('Gorengan - bakwan sayur 🥰', 5000),
 ('Puding lumut ijo 🥰', 4200),
-
--- Drinks
 ('Es mambo 🥰', 4000),
 ('Es ketan itam', 4200),
 ('Es sirup merah', 4000),
