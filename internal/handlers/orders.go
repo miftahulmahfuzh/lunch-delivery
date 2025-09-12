@@ -120,10 +120,10 @@ func (h *Handler) orderForm(c *gin.Context) {
 		}
 	}
 
-	// Get stock empty items for today
-	stockEmptyItems, err := h.repo.GetStockEmptyItemsByDate(date)
+	// Get stock empty items for this specific user on this date
+	stockEmptyItems, err := h.repo.GetStockEmptyItemsForUser(userID, date)
 	if err != nil {
-		log.Warn().Err(err).Msg("Failed to get stock empty items")
+		log.Warn().Err(err).Msg("Failed to get user-specific stock empty items")
 		stockEmptyItems = []int{} // Continue with empty list
 	}
 

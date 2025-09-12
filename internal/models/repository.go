@@ -456,17 +456,8 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 		return err
 	}
 
-	// Mark items as stock empty for the day
+	// Mark items as stock empty for this specific user/order only
 	for _, itemID := range itemIDs {
-		_, err = tx.Exec(`
-			INSERT INTO stock_empty_items (menu_item_id, date) 
-			VALUES ($1, $2) 
-			ON CONFLICT (menu_item_id, date) DO NOTHING`,
-			itemID, date.Format("2006-01-02"))
-		if err != nil {
-			return err
-		}
-
 		// Create user-specific stock empty notification
 		_, err = tx.Exec(`
 			INSERT INTO user_stock_empty_notifications (individual_order_id, menu_item_id, date) 
@@ -509,49 +500,6 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 	return tx.Commit()
 }
 
-// Global stock management methods
-func (r *Repository) MarkGlobalStockEmpty(itemID int, date time.Time) error {
-	_, err := r.db.Exec(`
-		INSERT INTO stock_empty_items (menu_item_id, date) 
-		VALUES ($1, $2) 
-		ON CONFLICT (menu_item_id, date) DO NOTHING`,
-		itemID, date.Format("2006-01-02"))
-	return err
-}
-
-func (r *Repository) UnmarkGlobalStockEmpty(itemID int, date time.Time) error {
-	tx, err := r.db.Beginx()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-
-	// Remove from global stock empty table
-	_, err = tx.Exec(`
-		DELETE FROM stock_empty_items 
-		WHERE menu_item_id = $1 AND date = $2`,
-		itemID, date.Format("2006-01-02"))
-	if err != nil {
-		return err
-	}
-
-	// Also remove all user-specific notifications for this item on this date
-	_, err = tx.Exec(`
-		DELETE FROM user_stock_empty_notifications usn
-		WHERE usn.menu_item_id = $1 AND usn.date = $2`,
-		itemID, date.Format("2006-01-02"))
-	if err != nil {
-		return err
-	}
-
-	return tx.Commit()
-}
-
-func (r *Repository) GetStockEmptyItemsByDate(date time.Time) ([]int, error) {
-	var itemIDs []int
-	err := r.db.Select(&itemIDs, `SELECT menu_item_id FROM stock_empty_items WHERE date = $1`, date.Format("2006-01-02"))
-	return itemIDs, err
-}
 
 func (r *Repository) GetUserNotifications(employeeID int, limit int) ([]UserNotification, error) {
 	var notifications []UserNotification
@@ -590,44 +538,26 @@ func (r *Repository) GetStockEmptyItemsForOrder(orderID int) ([]int, error) {
 	return itemIDs, err
 }
 
-func (r *Repository) UnmarkItemStockEmpty(itemID int, date time.Time, orderID int) error {
-	tx, err := r.db.Beginx()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+// Get stock empty items for a specific user on a specific date
+func (r *Repository) GetStockEmptyItemsForUser(employeeID int, date time.Time) ([]int, error) {
+	var itemIDs []int
+	err := r.db.Select(&itemIDs, `
+		SELECT DISTINCT usn.menu_item_id
+		FROM user_stock_empty_notifications usn
+		JOIN individual_orders io ON usn.individual_order_id = io.id
+		JOIN order_sessions os ON io.session_id = os.id
+		WHERE io.employee_id = $1 AND os.date = $2`,
+		employeeID, date.Format("2006-01-02"))
+	return itemIDs, err
+}
 
-	// Remove the user-specific stock empty notification
-	_, err = tx.Exec(`
+func (r *Repository) UnmarkItemStockEmpty(itemID int, date time.Time, orderID int) error {
+	// Simply remove the user-specific stock empty notification
+	// No need for global stock management since we're using user-specific logic only
+	_, err := r.db.Exec(`
 		DELETE FROM user_stock_empty_notifications 
 		WHERE individual_order_id = $1 AND menu_item_id = $2`,
 		orderID, itemID)
-	if err != nil {
-		return err
-	}
-
-	// Check if there are other orders with this item marked as stock empty for today
-	var count int
-	err = tx.Get(&count, `
-		SELECT COUNT(*) FROM user_stock_empty_notifications usn
-		JOIN individual_orders io ON usn.individual_order_id = io.id
-		JOIN order_sessions os ON io.session_id = os.id
-		WHERE usn.menu_item_id = $1 AND os.date = $2`,
-		itemID, date.Format("2006-01-02"))
-	if err != nil {
-		return err
-	}
-
-	// If no other orders have this item marked as stock empty, remove from global stock empty
-	if count == 0 {
-		_, err = tx.Exec(`
-			DELETE FROM stock_empty_items 
-			WHERE menu_item_id = $1 AND date = $2`,
-			itemID, date.Format("2006-01-02"))
-		if err != nil {
-			return err
-		}
-	}
-
-	return tx.Commit()
+	
+	return err
 }

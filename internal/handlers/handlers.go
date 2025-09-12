@@ -90,9 +90,5 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		admin.POST("/orders/:id/unmark-stock-empty", h.unmarkItemsStockEmpty)
 		admin.GET("/employees/:id/details", h.getEmployeeDetails)
 		
-		// Global stock management routes
-		admin.GET("/stock-status/:date", h.getStockStatus)
-		admin.POST("/stock-global/mark", h.markGlobalStockEmpty)
-		admin.POST("/stock-global/unmark", h.unmarkGlobalStockEmpty)
 	}
 }

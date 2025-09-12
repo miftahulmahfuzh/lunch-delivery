@@ -675,24 +675,6 @@
         }
     }
 
-    // Periodic stock status synchronization
-    function refreshDisplayedOrderStockStatus() {
-        // Find all currently displayed order details
-        const visibleDetailRows = document.querySelectorAll('.order-details-row:not(.hidden)');
-        
-        visibleDetailRows.forEach(row => {
-            const orderId = row.id.replace('details-', '');
-            if (orderId && !isNaN(orderId)) {
-                // Refresh the order items to get updated stock status
-                loadOrderItems(parseInt(orderId));
-            }
-        });
-    }
-
-    // Set up periodic refresh every 30 seconds to sync with other admin pages
-    document.addEventListener('DOMContentLoaded', function() {
-        setInterval(refreshDisplayedOrderStockStatus, 30000);
-    });
     </script>
 </body>
 </html>

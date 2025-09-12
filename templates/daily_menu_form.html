@@ -199,10 +199,10 @@
                     <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 sticky top-8">
                         <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
                             <h3 class="text-lg font-semibold text-white flex items-center">
-                                <i class="fas fa-list-check mr-3"></i>
-                                Current Menu & Stock Status
+                                <i class="fas fa-utensils mr-3"></i>
+                                Today's Menu
                             </h3>
-                            <p class="text-accent-100 text-sm mt-1">Manage availability for today</p>
+                            <p class="text-accent-100 text-sm mt-1">Items prepared for today</p>
                         </div>
                         <div class="p-6">
                             <div class="space-y-3" id="current-menu-items">
@@ -211,29 +211,15 @@
                                     {{if $.existing}}
                                         {{range $.existing.MenuItemIDs}}
                                             {{if eq . $currentItem.ID}}
-                                                <div class="menu-item-card bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300" data-item-id="{{$currentItem.ID}}">
+                                                <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
                                                     <div class="p-4">
-                                                        <div class="flex items-start justify-between">
-                                                            <div class="flex-1">
-                                                                <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
-                                                                <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
-                                                                <div class="mt-2">
-                                                                    <span class="stock-status-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                        <i class="fas fa-check-circle mr-1"></i>
-                                                                        Available
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <div class="ml-3">
-                                                                <label class="relative inline-flex items-center cursor-pointer">
-                                                                    <input type="checkbox" 
-                                                                           class="sr-only stock-toggle" 
-                                                                           data-item-id="{{$currentItem.ID}}" 
-                                                                           checked
-                                                                           onchange="toggleStockStatus({{$currentItem.ID}}, this.checked)">
-                                                                    <div class="w-11 h-6 bg-green-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-green-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
-                                                                </label>
-                                                            </div>
+                                                        <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
+                                                        <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
+                                                        <div class="mt-2">
+                                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                <i class="fas fa-utensils mr-1"></i>
+                                                                Prepared
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -241,21 +227,6 @@
                                         {{end}}
                                     {{end}}
                                 {{end}}
-                            </div>
-                            
-                            <!-- Stock Status Legend -->
-                            <div class="mt-6 pt-4 border-t border-gray-200">
-                                <h4 class="text-sm font-medium text-gray-700 mb-3">Stock Status Control</h4>
-                                <div class="space-y-2 text-xs text-gray-600">
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-green-600 rounded-full mr-2"></div>
-                                        <span>Toggle ON = Available for orders</span>
-                                    </div>
-                                    <div class="flex items-center">
-                                        <div class="w-3 h-3 bg-red-600 rounded-full mr-2"></div>
-                                        <span>Toggle OFF = Out of stock</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -361,122 +332,8 @@
 
         updateStats();
         
-        // Load stock status on page load
-        if (document.getElementById('current-menu-items')) {
-            loadStockStatus();
-            // Set up periodic refresh every 30 seconds to sync with other admin pages
-            setInterval(() => {
-                loadStockStatus(true); // Show sync notification for background updates
-            }, 30000);
-        }
     });
 
-    // Stock management functions
-    function loadStockStatus(showSyncNotification = false) {
-        const today = new Date().toISOString().split('T')[0];
-        
-        // Store current state to detect changes
-        const currentStockEmptyItems = new Set();
-        document.querySelectorAll('.stock-toggle').forEach(toggle => {
-            if (!toggle.checked) {
-                currentStockEmptyItems.add(parseInt(toggle.dataset.itemId));
-            }
-        });
-        
-        fetch(`/admin/stock-status/${today}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const newStockEmptyItems = new Set(data.stock_empty_items || []);
-                
-                // Check if there are any changes
-                const hasChanges = currentStockEmptyItems.size !== newStockEmptyItems.size || 
-                                 [...currentStockEmptyItems].some(id => !newStockEmptyItems.has(id)) ||
-                                 [...newStockEmptyItems].some(id => !currentStockEmptyItems.has(id));
-                
-                updateStockDisplay(data.stock_empty_items || []);
-                
-                if (showSyncNotification && hasChanges) {
-                    showToast('Stock status synchronized with other admin pages', 'info');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Failed to load stock status:', error);
-        });
-    }
-
-    function updateStockDisplay(stockEmptyItemIDs) {
-        const stockEmptySet = new Set(stockEmptyItemIDs);
-        
-        document.querySelectorAll('.menu-item-card').forEach(card => {
-            const itemId = parseInt(card.dataset.itemId);
-            const toggle = card.querySelector('.stock-toggle');
-            const badge = card.querySelector('.stock-status-badge');
-            const isStockEmpty = stockEmptySet.has(itemId);
-            
-            // Update toggle state
-            toggle.checked = !isStockEmpty;
-            
-            // Update badge
-            if (isStockEmpty) {
-                badge.className = 'stock-status-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800';
-                badge.innerHTML = '<i class="fas fa-times-circle mr-1"></i>Out of Stock';
-                card.className = 'menu-item-card bg-red-50 rounded-lg border border-red-200 transition-all duration-300';
-            } else {
-                badge.className = 'stock-status-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800';
-                badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Available';
-                card.className = 'menu-item-card bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300';
-            }
-        });
-    }
-
-    function toggleStockStatus(itemId, isAvailable) {
-        const today = new Date().toISOString().split('T')[0];
-        const action = isAvailable ? 'unmark' : 'mark';
-        
-        fetch(`/admin/stock-global/${action}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                item_id: itemId,
-                date: today
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showToast(`Item ${isAvailable ? 'marked as available' : 'marked as out of stock'}`, 'success');
-                // Update display
-                const card = document.querySelector(`[data-item-id="${itemId}"]`);
-                const badge = card.querySelector('.stock-status-badge');
-                
-                if (!isAvailable) {
-                    badge.className = 'stock-status-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800';
-                    badge.innerHTML = '<i class="fas fa-times-circle mr-1"></i>Out of Stock';
-                    card.className = 'menu-item-card bg-red-50 rounded-lg border border-red-200 transition-all duration-300';
-                } else {
-                    badge.className = 'stock-status-badge inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800';
-                    badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Available';
-                    card.className = 'menu-item-card bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300';
-                }
-            } else {
-                showToast(data.error || 'Failed to update stock status', 'error');
-                // Revert toggle state
-                const toggle = document.querySelector(`[data-item-id="${itemId}"] .stock-toggle`);
-                toggle.checked = !toggle.checked;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showToast('Network error occurred', 'error');
-            // Revert toggle state
-            const toggle = document.querySelector(`[data-item-id="${itemId}"] .stock-toggle`);
-            toggle.checked = !toggle.checked;
-        });
-    }
 
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
