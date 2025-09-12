@@ -9,6 +9,7 @@ import (
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
 // Update orderForm handler in internal/handlers/orders.go
@@ -106,12 +107,26 @@ func (h *Handler) orderForm(c *gin.Context) {
 		return
 	}
 
+	// Check if menu was reset and user needs notification
+	showResetNotification := false
+	if dailyMenu.NutritionistReset {
+		// Check if this user has used nutritionist selection for today and order is unpaid
+		unpaidUsers, _ := h.nutritionistService.GetUsersNeedingNotification(date)
+		for _, userSel := range unpaidUsers {
+			if userSel.EmployeeID == userID {
+				showResetNotification = true
+				break
+			}
+		}
+	}
+
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
-		"menu_items":     menuItems,
-		"session":        session,
-		"company":        company,
-		"existing_order": existingOrder,
-		"user_id":        userID,
+		"menu_items":            menuItems,
+		"session":               session,
+		"company":               company,
+		"existing_order":        existingOrder,
+		"user_id":               userID,
+		"show_reset_notification": showResetNotification,
 	})
 }
 
@@ -258,5 +273,85 @@ func (h *Handler) myOrders(c *gin.Context) {
 		"todayOrder":      todayOrder,
 		"todayOrderItems": todayOrderItems,
 		"recentOrders":    recentOrders,
+	})
+}
+
+// Nutritionist selection handler
+func (h *Handler) nutritionistSelect(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	dateStr := c.Param("date")
+
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid date format"})
+		return
+	}
+
+	// Get daily menu
+	dailyMenu, err := h.repo.GetDailyMenuByDate(date)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get daily menu")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get menu"})
+		return
+	}
+	if dailyMenu == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No menu available for this date"})
+		return
+	}
+
+	// Get available menu items
+	var itemIDs []int64
+	for _, id := range dailyMenu.MenuItemIDs {
+		itemIDs = append(itemIDs, id)
+	}
+
+	menuItems, err := h.repo.GetMenuItemsByIDs(itemIDs)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get menu items")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to get menu items"})
+		return
+	}
+
+	if len(menuItems) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No menu items available"})
+		return
+	}
+
+	// Call nutritionist service
+	ctx := c.Request.Context()
+	selection, err := h.nutritionistService.GetNutritionistSelection(ctx, date, menuItems)
+	if err != nil {
+		log.Error().Err(err).Msg("Nutritionist selection failed")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Nutritionist selection failed"})
+		return
+	}
+
+	// Track that this user used nutritionist selection
+	if err := h.nutritionistService.TrackUserSelection(userID, date, nil); err != nil {
+		log.Warn().Err(err).Msg("Failed to track user selection, but continuing")
+	}
+
+	log.Info().
+		Interface("selected_indices", selection.SelectedIndices).
+		Str("reasoning", selection.Reasoning).
+		Int("user_id", userID).
+		Msg("Nutritionist selection successful")
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":           true,
+		"selected_indices":  selection.SelectedIndices,
+		"reasoning":         selection.Reasoning,
+		"nutritional_summary": selection.NutritionalSummary,
 	})
 }

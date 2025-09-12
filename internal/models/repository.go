@@ -98,10 +98,12 @@ func (r *Repository) GetEmployeesByCompany(companyID int) ([]Employee, error) {
 func (r *Repository) CreateDailyMenu(date time.Time, menuItemIDs []int64) (*DailyMenu, error) {
 	var menu DailyMenu
 	err := r.db.Get(&menu,
-		`INSERT INTO daily_menus (date, menu_item_ids) VALUES ($1, $2)
-         ON CONFLICT (date) DO UPDATE SET menu_item_ids = $2
+		`INSERT INTO daily_menus (date, menu_item_ids, nutritionist_reset) VALUES ($1, $2, $3)
+         ON CONFLICT (date) DO UPDATE SET 
+             menu_item_ids = $2,
+             nutritionist_reset = $3
          RETURNING *`,
-		date.Format("2006-01-02"), pq.Array(menuItemIDs))
+		date.Format("2006-01-02"), pq.Array(menuItemIDs), true) // Always set reset flag to true when menu is updated
 	return &menu, err
 }
 
@@ -331,4 +333,63 @@ func (r *Repository) GetRecentOrdersByEmployee(employeeID, days int) ([]RecentOr
 	}
 
 	return orders, err
+}
+
+// Nutritionist Selections
+func (r *Repository) GetNutritionistSelectionByDate(date time.Time) (*NutritionistSelection, error) {
+	var selection NutritionistSelection
+	err := r.db.Get(&selection, `SELECT * FROM nutritionist_selections WHERE date = $1`, date.Format("2006-01-02"))
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &selection, err
+}
+
+func (r *Repository) CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning, nutritionalSummary string) (*NutritionistSelection, error) {
+	var selection NutritionistSelection
+	err := r.db.Get(&selection,
+		`INSERT INTO nutritionist_selections (date, menu_item_ids, selected_indices, reasoning, nutritional_summary) 
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+		date.Format("2006-01-02"), pq.Array(menuItemIDs), pq.Array(selectedIndices), reasoning, nutritionalSummary)
+	return &selection, err
+}
+
+func (r *Repository) DeleteNutritionistSelection(date time.Time) error {
+	_, err := r.db.Exec(`DELETE FROM nutritionist_selections WHERE date = $1`, date.Format("2006-01-02"))
+	return err
+}
+
+// Nutritionist User Selection Tracking
+func (r *Repository) CreateNutritionistUserSelection(employeeID int, date time.Time, orderID *int) error {
+	_, err := r.db.Exec(
+		`INSERT INTO nutritionist_user_selections (employee_id, date, order_id) 
+         VALUES ($1, $2, $3)
+         ON CONFLICT (employee_id, date) 
+         DO UPDATE SET order_id = $3`,
+		employeeID, date.Format("2006-01-02"), orderID)
+	return err
+}
+
+func (r *Repository) GetNutritionistUsersByDateAndUnpaid(date time.Time) ([]NutritionistUserSelection, error) {
+	var selections []NutritionistUserSelection
+	err := r.db.Select(&selections, `
+		SELECT nus.* FROM nutritionist_user_selections nus
+		JOIN individual_orders io ON nus.order_id = io.id
+		WHERE nus.date = $1 AND io.paid = false`,
+		date.Format("2006-01-02"))
+	return selections, err
+}
+
+// Daily Menu Reset Flag Methods
+func (r *Repository) SetDailyMenuResetFlag(date time.Time, reset bool) error {
+	_, err := r.db.Exec(`UPDATE daily_menus SET nutritionist_reset = $1 WHERE date = $2`, 
+		reset, date.Format("2006-01-02"))
+	return err
+}
+
+func (r *Repository) GetDailyMenuResetFlag(date time.Time) (bool, error) {
+	var resetFlag bool
+	err := r.db.Get(&resetFlag, `SELECT nutritionist_reset FROM daily_menus WHERE date = $1`, 
+		date.Format("2006-01-02"))
+	return resetFlag, err
 }

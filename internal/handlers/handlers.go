@@ -6,21 +6,26 @@ import (
 
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/middleware"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
+	"github.com/miftahulmahfuzh/lunch-delivery/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	repo *models.Repository
+	repo                *models.Repository
+	nutritionistService *services.NutritionistService
 }
 
-func NewHandler(repo *models.Repository) *Handler {
-	return &Handler{repo: repo}
+func NewHandler(repo *models.Repository, nutritionistService *services.NutritionistService) *Handler {
+	return &Handler{
+		repo:                repo,
+		nutritionistService: nutritionistService,
+	}
 }
 
 // internal/handlers/handlers.go
-func SetupRoutes(r *gin.Engine, repo *models.Repository) {
-	h := NewHandler(repo)
+func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *services.NutritionistService) {
+	h := NewHandler(repo, nutritionistService)
 
 	// Root redirect
 	r.GET("/", func(c *gin.Context) {
@@ -40,6 +45,7 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository) {
 		customer.GET("/logout", h.logout)
 		customer.GET("/order/:company/:date", h.orderForm)
 		customer.POST("/order", h.submitOrder)
+		customer.POST("/order/:company/:date/nutritionist-select", h.nutritionistSelect)
 		customer.GET("/my-orders", h.myOrders)
 	}
 

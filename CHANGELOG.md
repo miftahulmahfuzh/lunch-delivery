@@ -5,6 +5,56 @@ All notable changes to the Lunch Delivery System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-09-12
+
+### Added
+- **🧠 AI Nutritionist Selection Feature**
+  - Smart auto-selection button powered by DeepSeek AI
+  - Structured JSON responses for reliable menu item selection
+  - Daily caching system for optimal performance and cost efficiency
+  - Real-time nutritional analysis and reasoning display
+  - Auto-selection of menu items based on AI recommendations
+
+- **📊 Daily Cache Optimization System**
+  - Single LLM API call per day across all users for same menu
+  - PostgreSQL-based caching with nutritionist_selections table
+  - Menu change invalidation with automatic cache clearing
+  - Cost-effective scaling for high user volumes
+
+- **🔄 Menu Update Reset Mechanism**
+  - Admin menu updates trigger nutritionist_reset flag
+  - User notification system for menu changes affecting AI selections
+  - Tracking of users who utilized nutritionist recommendations
+  - Support for multiple daily menu updates with proper cache invalidation
+
+- **🎨 Enhanced User Experience**
+  - Beautiful teal "Nutritionist Selection" button with loading states
+  - Detailed AI reasoning display with nutritional breakdown
+  - Visual feedback for protein, vegetables, and carbohydrates assessment
+  - Warning notifications for users when menus are updated after AI selection
+
+- **🏗️ New Technical Infrastructure**
+  - LLM integration layer with DeepSeek API support
+  - Configuration management system for AI credentials
+  - Nutritionist service with structured prompt engineering
+  - User selection tracking for notification system
+  - Database migrations for new schema additions
+
+### Technical Implementation
+- **New API Endpoints**: `POST /order/:company/:date/nutritionist-select`
+- **Database Schema**: 2 new tables (nutritionist_selections, nutritionist_user_selections) + 1 new column
+- **New Dependencies**: langchaingo, tiktoken-go, zerolog for LLM integration
+- **JavaScript Frontend**: Auto-selection logic and API integration
+- **Error Handling**: JSON parsing with regex fallback for LLM responses
+- **Validation**: Index bounds checking and menu item validation
+
+### Performance & Architecture
+- **Daily Cache Strategy**: Dramatically reduces LLM API costs by sharing results
+- **Structured Responses**: Eliminates text parsing errors with JSON schema enforcement
+- **Reset Flag System**: Handles dynamic menu updates throughout the day
+- **User Tracking**: Enables targeted notifications for affected users
+- **Graceful Degradation**: Fallback mechanisms for LLM service interruptions
+
 ## [0.2.0] - 2025-09-12
 
 ### Added
@@ -94,5 +144,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WhatsApp contact integration** for communication
 - **Flexible session management** with reopen capability
 
+[0.3.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.3.0
 [0.2.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.2.0
 [0.1.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.1.0
