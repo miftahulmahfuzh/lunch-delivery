@@ -45,17 +45,19 @@
     bottom: -1px;
     width: 8px;
     height: 8px;
-    background: transparent;
+    background: white;
 }
 .chrome-tab-active::before {
     left: -8px;
+    background: transparent;
     border-bottom-right-radius: 8px;
-    box-shadow: 4px 4px 0 white;
+    box-shadow: 2px 2px 0 white;
 }
 .chrome-tab-active::after {
     right: -8px;
+    background: transparent;
     border-bottom-left-radius: 8px;
-    box-shadow: -4px 4px 0 white;
+    box-shadow: -2px 2px 0 white;
 }
 .chrome-tab-disabled {
     background: linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 100%);
@@ -67,7 +69,7 @@
     <!-- Navigation -->
     <nav class="bg-gray-200/50 backdrop-blur-lg border-b border-gray-300/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-end h-12 -mb-px">
+            <div class="flex items-end justify-between h-12 -mb-px">
                 <div class="flex items-end space-x-1">
                     <a href="/my-orders" class="chrome-tab">
                         <i class="fas fa-clipboard-list mr-2"></i>
@@ -77,7 +79,9 @@
                         <i class="fas fa-edit mr-2"></i>
                         <span>Edit Orders</span>
                     </span>
-                    <a href="/logout" class="chrome-tab">
+                </div>
+                <div class="flex items-end">
+                    <a href="/logout" class="chrome-tab !text-red-600 hover:!text-red-700">
                         <i class="fas fa-sign-out-alt mr-2"></i>
                         <span>Logout</span>
                     </a>
@@ -167,7 +171,7 @@
                         </div>
 
                         <!-- Menu Items Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 pb-20">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                             {{range $index, $item := .menu_items}}
                             {{$isStockEmpty := false}}
                             {{range $.stock_empty_items}}
@@ -175,8 +179,8 @@
                                     {{$isStockEmpty = true}}
                                 {{end}}
                             {{end}}
-                            
-                            <div class="menu-item group relative {{if $isStockEmpty}}bg-gray-200 cursor-pointer opacity-60{{else}}bg-gray-50{{end}} hover:bg-primary-50 hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg rounded-xl p-4 transition-all duration-300 border-2 border-transparent" 
+
+                            <div class="menu-item group relative {{if $isStockEmpty}}bg-gray-200 cursor-pointer opacity-60{{else}}bg-gray-50{{end}} hover:bg-primary-50 hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg rounded-xl p-4 transition-all duration-300 border-2 border-transparent"
                                  data-index="{{$index}}" {{if $isStockEmpty}}data-stock-empty="true"{{end}}>
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1 pr-3">
@@ -199,7 +203,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <input type="checkbox" name="menu_items" value="{{$item.ID}}" id="item-{{$item.ID}}" 
+                                <input type="checkbox" name="menu_items" value="{{$item.ID}}" id="item-{{$item.ID}}"
                                        data-price="{{$item.Price}}" {{if $isStockEmpty}}data-out-of-stock="true"{{end}} class="hidden menu-checkbox"
                                        {{if $.existing_order}}
                                            {{$currentID := $item.ID}}
@@ -212,7 +216,7 @@
                         </div>
 
                         <!-- AI Nutritionist Result -->
-                        <div id="nutritionistResult" class="hidden mb-8 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 animate-slide-up">
+                        <div id="nutritionistResult" class="hidden mb-20 bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-6 animate-slide-up">
                             <div class="flex items-start">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">

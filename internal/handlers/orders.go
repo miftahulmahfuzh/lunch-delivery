@@ -408,9 +408,9 @@ func (h *Handler) nutritionistSelect(c *gin.Context) {
 		return
 	}
 
-	// Call nutritionist service
+	// Call nutritionist service with user ID to handle user-specific stock constraints
 	ctx := c.Request.Context()
-	selection, err := h.nutritionistService.GetNutritionistSelection(ctx, date, menuItems)
+	selection, err := h.nutritionistService.GetNutritionistSelection(ctx, date, menuItems, userID)
 	if err != nil {
 		log.Error().Err(err).Msg("Nutritionist selection failed")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Nutritionist selection failed"})

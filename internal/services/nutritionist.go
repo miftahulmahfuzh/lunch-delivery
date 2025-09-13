@@ -46,15 +46,37 @@ func NewNutritionistService(cfg *config.Config, repo *models.Repository) (*Nutri
 	}, nil
 }
 
-func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date time.Time, menuItems []models.MenuItem) (*NutritionistResponse, error) {
-	// Use all menu items since stock management is now user-specific
-	// Each user will see their own stock constraints when placing orders
-	availableMenuItems := menuItems
-	if len(availableMenuItems) == 0 {
+func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date time.Time, menuItems []models.MenuItem, employeeID int) (*NutritionistResponse, error) {
+	if len(menuItems) == 0 {
 		return nil, fmt.Errorf("no menu items available")
 	}
 
-	// 3. Check if admin has set reset flag
+	// Get user's stock empty items for this date
+	stockEmptyItemIDs, err := s.repo.GetStockEmptyItemsForUser(employeeID, date)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to get stock empty items for user, continuing without filtering")
+		stockEmptyItemIDs = []int{}
+	}
+
+	// Create a set of stock empty item IDs for faster lookup
+	stockEmptySet := make(map[int]bool)
+	for _, itemID := range stockEmptyItemIDs {
+		stockEmptySet[itemID] = true
+	}
+
+	// Filter available menu items (remove stock empty items for this user)
+	var availableMenuItems []models.MenuItem
+	for _, item := range menuItems {
+		if !stockEmptySet[item.ID] {
+			availableMenuItems = append(availableMenuItems, item)
+		}
+	}
+
+	if len(availableMenuItems) == 0 {
+		return nil, fmt.Errorf("no menu items available for this user (all items are out of stock)")
+	}
+
+	// Check if admin has set reset flag
 	resetFlag, err := s.repo.GetDailyMenuResetFlag(date)
 	if err == nil && resetFlag {
 		log.Info().Msg("Reset flag detected - invalidating cache and clearing flag")
@@ -62,13 +84,36 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 		s.repo.SetDailyMenuResetFlag(date, false) // Clear the flag
 	}
 
-	// 4. Check cache first by date
+	// Check cache first by date
 	cached, err := s.repo.GetNutritionistSelectionByDate(date)
 	if err == nil && cached != nil {
-		// Cache hit - validate menu items match (no need to check stock conflicts with user-specific model)
-		if s.menuItemsMatch(cached.MenuItemIDs, availableMenuItems) {
-			log.Info().Msg("Cache hit - returning cached nutritionist selection")
-			return s.convertCachedToResponse(cached), nil
+		// Cache hit - check if cached selection contains stock empty items for this user
+		cachedResponse := s.convertCachedToResponse(cached)
+		if s.menuItemsMatch(cached.MenuItemIDs, menuItems) {
+			// Check if cached selection contains any stock empty items for this user
+			hasStockEmptyItems := s.cachedSelectionHasStockEmptyItems(cachedResponse, menuItems, stockEmptySet)
+
+			if !hasStockEmptyItems {
+				log.Info().Msg("Cache hit - returning cached nutritionist selection")
+				return cachedResponse, nil
+			} else {
+				log.Info().Msg("Cache hit but contains stock empty items for user - calling LLM with available items only")
+				// Call LLM with only available items and update cache
+				response, err := s.callLLMForSelection(ctx, availableMenuItems)
+				if err != nil {
+					return nil, fmt.Errorf("LLM call failed: %w", err)
+				}
+
+				// Map the response indices back to original menu items and update cache
+				mappedResponse := s.mapIndicesToOriginalMenu(response, availableMenuItems, menuItems)
+				// Delete existing cache before saving new one to avoid constraint violation
+				s.repo.DeleteNutritionistSelection(date)
+				if err := s.saveToCacheIfValid(date, menuItems, mappedResponse); err != nil {
+					log.Error().Err(err).Msg("Failed to update cache")
+				}
+
+				return mappedResponse, nil
+			}
 		}
 		// Menu changed, invalidate cache
 		log.Info().Msg("Menu items changed - invalidating cache")
@@ -76,21 +121,21 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 	}
 
 	log.Info().Msg("Cache miss or menu changed - calling LLM for nutritionist selection")
-	
-	// 5. Cache miss or menu changed - call LLM with available items
+
+	// Cache miss or menu changed - call LLM with available items only
 	response, err := s.callLLMForSelection(ctx, availableMenuItems)
 	if err != nil {
 		return nil, fmt.Errorf("LLM call failed: %w", err)
 	}
 
-	// 6. Map the response indices back to original menu items and save to cache
+	// Map the response indices back to original menu items and save to cache
 	mappedResponse := s.mapIndicesToOriginalMenu(response, availableMenuItems, menuItems)
 	if err := s.saveToCacheIfValid(date, menuItems, mappedResponse); err != nil {
 		log.Error().Err(err).Msg("Failed to save to cache")
 		// Don't fail the request if caching fails
 	}
 
-	return response, nil
+	return mappedResponse, nil
 }
 
 // Method to track that user used nutritionist selection
@@ -101,6 +146,19 @@ func (s *NutritionistService) TrackUserSelection(employeeID int, date time.Time,
 // Method to get users who need notification after menu reset
 func (s *NutritionistService) GetUsersNeedingNotification(date time.Time) ([]models.NutritionistUserSelection, error) {
 	return s.repo.GetNutritionistUsersByDateAndUnpaid(date)
+}
+
+// Helper function to check if cached selection contains stock empty items for a user
+func (s *NutritionistService) cachedSelectionHasStockEmptyItems(response *NutritionistResponse, menuItems []models.MenuItem, stockEmptySet map[int]bool) bool {
+	for _, selectedIndex := range response.SelectedIndices {
+		if selectedIndex < len(menuItems) {
+			selectedItem := menuItems[selectedIndex]
+			if stockEmptySet[selectedItem.ID] {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 
@@ -235,9 +293,12 @@ func (s *NutritionistService) buildMenuDescription(menuItems []models.MenuItem) 
 }
 
 func (s *NutritionistService) parseStructuredResponse(content string, maxIndex int) (*NutritionistResponse, error) {
+	// Clean the content by removing markdown code blocks
+	cleanedContent := s.cleanMarkdownCodeBlocks(content)
+
 	// Try to parse as JSON first
 	var response NutritionistResponse
-	if err := json.Unmarshal([]byte(content), &response); err == nil {
+	if err := json.Unmarshal([]byte(cleanedContent), &response); err == nil {
 		// Validate indices
 		if s.validateIndices(response.SelectedIndices, maxIndex) {
 			return &response, nil
@@ -247,7 +308,7 @@ func (s *NutritionistService) parseStructuredResponse(content string, maxIndex i
 
 	// Fallback: try to extract indices using regex/parsing
 	log.Warn().Msg("JSON parsing failed, attempting fallback parsing")
-	return s.fallbackParseResponse(content, maxIndex)
+	return s.fallbackParseResponse(cleanedContent, maxIndex)
 }
 
 func (s *NutritionistService) fallbackParseResponse(content string, maxIndex int) (*NutritionistResponse, error) {
@@ -315,6 +376,17 @@ func (s *NutritionistService) uniqueIndices(indices []int) []int {
 		}
 	}
 	return unique
+}
+
+func (s *NutritionistService) cleanMarkdownCodeBlocks(content string) string {
+	// Remove markdown code blocks (```json ... ``` or ``` ... ```)
+	content = strings.ReplaceAll(content, "```json", "")
+	content = strings.ReplaceAll(content, "```", "")
+
+	// Trim whitespace
+	content = strings.TrimSpace(content)
+
+	return content
 }
 
 func (s *NutritionistService) validateIndices(indices []int, maxIndex int) bool {

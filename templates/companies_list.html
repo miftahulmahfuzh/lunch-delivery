@@ -111,17 +111,19 @@
             bottom: -1px;
             width: 8px;
             height: 8px;
-            background: transparent;
+            background: white;
         }
         .chrome-tab-active::before {
             left: -8px;
+            background: transparent;
             border-bottom-right-radius: 8px;
-            box-shadow: 4px 4px 0 white;
+            box-shadow: 2px 2px 0 white;
         }
         .chrome-tab-active::after {
             right: -8px;
+            background: transparent;
             border-bottom-left-radius: 8px;
-            box-shadow: -4px 4px 0 white;
+            box-shadow: -2px 2px 0 white;
         }
         .chrome-tab-disabled {
             background: linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 100%);
