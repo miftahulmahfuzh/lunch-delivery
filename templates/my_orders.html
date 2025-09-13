@@ -80,6 +80,29 @@
                             <i class="fas fa-clipboard-list"></i>
                             <span>My Orders</span>
                         </a>
+                        {{if .todaySession}}
+                            {{if and .todayOrder (not .todayOrder.Paid) (eq .todaySession.Status "OPEN")}}
+                                <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Edit Orders</span>
+                                </a>
+                            {{else if and (not .todayOrder) (eq .todaySession.Status "OPEN")}}
+                                <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Edit Orders</span>
+                                </a>
+                            {{else}}
+                                <span class="flex items-center space-x-2 text-gray-400 cursor-not-allowed">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Edit Orders</span>
+                                </span>
+                            {{end}}
+                        {{else}}
+                            <span class="flex items-center space-x-2 text-gray-400 cursor-not-allowed">
+                                <i class="fas fa-edit"></i>
+                                <span>Edit Orders</span>
+                            </span>
+                        {{end}}
                         <a href="/logout" class="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors">
                             <i class="fas fa-sign-out-alt"></i>
                             <span>Logout</span>
@@ -289,6 +312,19 @@
                                                 Edit My Order
                                             </a>
                                         {{end}}
+                                    {{else}}
+                                        <div class="space-y-3">
+                                            <button class="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed flex items-center justify-center" disabled>
+                                                <i class="fas fa-lock mr-2"></i>
+                                                Cannot Edit (Session Closed)
+                                            </button>
+                                            <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                                <p class="text-sm text-blue-700">
+                                                    <i class="fas fa-info-circle mr-1"></i>
+                                                    This order cannot be modified because the order session is closed.
+                                                </p>
+                                            </div>
+                                        </div>
                                     {{end}}
                                 </div>
                             </div>
