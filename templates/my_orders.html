@@ -55,11 +55,11 @@
             align-items: center;
             padding: 8px 16px 10px 16px;
             margin-top: 4px;
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(209, 213, 219, 0.8);
+            background: #10b981;
+            border: none;
             border-bottom: none;
             border-radius: 8px 8px 0 0;
-            color: #6b7280;
+            color: white;
             text-decoration: none;
             font-weight: 500;
             font-size: 14px;
@@ -69,9 +69,8 @@
             backdrop-filter: blur(8px);
         }
         .chrome-tab:hover {
-            background: rgba(255, 255, 255, 0.8);
-            color: #374151;
-            border-color: rgba(156, 163, 175, 0.6);
+            background: #059669;
+            color: white;
         }
         .chrome-tab-active {
             background: white;
@@ -169,7 +168,7 @@
                         {{end}}
                     </div>
                     <div class="flex items-end">
-                        <a href="/logout" class="chrome-tab text-red-600 hover:text-red-700">
+                        <a href="/logout" class="chrome-tab !text-white hover:!text-gray-200">
                             <i class="fas fa-sign-out-alt mr-2"></i>
                             <span>Logout</span>
                         </a>
@@ -546,9 +545,8 @@
     </main>
 
     <!-- Notification Modal -->
-    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="handleModalBackdropClick(event)">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center" onclick="handleModalBackdropClick(event)">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden mx-4" onclick="event.stopPropagation()">
                 <!-- Modal Header -->
                 <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
                     <h2 class="text-xl font-semibold text-white flex items-center">
