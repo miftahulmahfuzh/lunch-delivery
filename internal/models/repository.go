@@ -541,7 +541,7 @@ func (r *Repository) GetUserNotifications(employeeID int, limit int) ([]UserNoti
 	var notifications []UserNotification
 	query := `SELECT * FROM user_notifications WHERE employee_id = $1 ORDER BY created_at DESC`
 	if limit > 0 {
-		query += ` LIMIT ` + string(rune(limit))
+		query += fmt.Sprintf(` LIMIT %d`, limit)
 	}
 	err := r.db.Select(&notifications, query, employeeID)
 	return notifications, err
