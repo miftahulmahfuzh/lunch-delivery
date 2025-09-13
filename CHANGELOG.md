@@ -5,6 +5,88 @@ All notable changes to the Lunch Delivery System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2025-09-13
+
+### Added
+- **🎨 Modern UI/UX Complete Redesign**
+  - Comprehensive visual overhaul with Tailwind CSS design system
+  - Chrome-style tab navigation across all templates
+  - Glassmorphism effects and streamlined UX patterns
+  - Smart floating submit button with improved positioning
+  - Modern admin panel with enhanced visual hierarchy
+
+- **🧠 Enhanced AI Nutritionist Features**
+  - Improved user experience with better positioning and close functionality
+  - User-specific stock filtering integration
+  - Enhanced floating button UX with AI nutritionist integration
+  - Real-time UI rendering improvements
+
+- **📋 Advanced Order Management**
+  - Enhanced order form with search functionality
+  - Select All and Unselect All buttons for bulk operations
+  - Date range filtering for order history
+  - Enhanced order session management with status controls
+  - Smart out-of-stock handling improvements
+
+- **📊 Comprehensive Stock Management System**
+  - User-specific stock tracking and filtering
+  - Admin controls for stock management
+  - Real-time stock synchronization
+  - Notification system for stock alerts
+  - Global stock management removal in favor of user-specific tracking
+
+- **🔔 Advanced Notification System**
+  - Modal interface for notification management
+  - Bulk notification operations
+  - Enhanced notification management workflow
+  - Real-time notification updates
+
+- **💰 Currency System Updates**
+  - Complete conversion from US cents to Indonesian Rupiah
+  - Updated price representation across all components
+  - Migration scripts for currency conversion
+  - Menu price statistics and reporting
+
+- **🛠️ Development Infrastructure**
+  - Comprehensive .gitignore configuration
+  - Environment configuration examples
+  - Enhanced migration system with test data
+  - Favicon and branding assets
+
+### Fixed
+- **🎯 UI Positioning and Layout**
+  - Multiple floating button positioning fixes
+  - Chrome tab navigation design improvements
+  - Header blur effects optimization
+  - Sticky positioning and layout adjustments
+  - Template routing bug resolution (admin/daily-menu)
+
+- **🔧 Technical Improvements**
+  - SQL LIMIT formatting corrections in notifications
+  - Enhanced error handling and validation
+  - Improved modal dialog functionality
+  - Better responsive design implementations
+
+### Changed
+- **🎨 Design System Standardization**
+  - Standardized chrome tab navigation with green color scheme
+  - Simplified navigation design patterns
+  - Streamlined admin operations (removed confirmation dialogs)
+  - Enhanced edit functionality with modal dialogs
+
+- **📈 Performance Optimizations**
+  - Dynamic preview functionality in daily menu forms
+  - Improved search functionality across forms
+  - Better data loading and caching strategies
+  - Enhanced template rendering performance
+
+### Security
+- **🔒 Enhanced Data Validation**
+  - Improved input validation across all forms
+  - Better error handling for edge cases
+  - Enhanced SQL injection prevention
+  - Secure file handling improvements
+
 ## [0.3.0] - 2025-09-12
 
 ### Added
@@ -144,6 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WhatsApp contact integration** for communication
 - **Flexible session management** with reopen capability
 
+[0.4.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.4.0
 [0.3.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.3.0
 [0.2.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.2.0
 [0.1.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.1.0
