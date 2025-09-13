@@ -287,39 +287,35 @@
 
     <script>
     function closeSession(sessionId) {
-        if (confirm('Close orders for this session? Employees will no longer be able to place orders.')) {
-            fetch('/admin/sessions/' + sessionId + '/close', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error closing session. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error. Please check your connection and try again.');
-            });
-        }
+        fetch('/admin/sessions/' + sessionId + '/close', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error closing session. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error. Please check your connection and try again.');
+        });
     }
 
     function reopenSession(sessionId) {
-        if (confirm('Reopen this order session? Employees will be able to place orders again.')) {
-            fetch('/admin/sessions/' + sessionId + '/reopen', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('Error reopening session. Please try again.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Network error. Please check your connection and try again.');
-            });
-        }
+        fetch('/admin/sessions/' + sessionId + '/reopen', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error reopening session. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error. Please check your connection and try again.');
+        });
     }
     </script>
 </body>

@@ -126,7 +126,7 @@
                                         OPEN
                                     </span>
                                 {{else if eq .session.Status "CLOSED_FOR_ORDERS"}}
-                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
                                         <i class="fas fa-lock mr-1.5"></i>
                                         CLOSED
                                     </span>
@@ -160,29 +160,12 @@
             {{if .orders}}
                 <!-- Orders Table -->
                 <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden animate-slide-up mb-8">
-                    <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
+                    <div class="{{if eq .session.Status "OPEN"}}bg-gradient-to-r from-primary-500 to-primary-600{{else}}bg-gradient-to-r from-gray-500 to-gray-600{{end}} px-6 py-4">
                         <div class="flex items-center justify-between">
                             <div>
                                 <h2 class="text-xl font-semibold text-white flex items-center">
                                     <i class="fas fa-receipt mr-3"></i>
                                     Order Details
-                                    {{if eq .session.Status "CLOSED_FOR_ORDERS"}}
-                                        <span class="ml-3 px-2 py-1 bg-red-500 text-white text-sm rounded-full">
-                                            CLOSED
-                                        </span>
-                                    {{else if eq .session.Status "DELIVERED"}}
-                                        <span class="ml-3 px-2 py-1 bg-blue-500 text-white text-sm rounded-full">
-                                            DELIVERED
-                                        </span>
-                                    {{else if eq .session.Status "PAYMENT_PENDING"}}
-                                        <span class="ml-3 px-2 py-1 bg-amber-500 text-white text-sm rounded-full">
-                                            PAYMENT
-                                        </span>
-                                    {{else if eq .session.Status "COMPLETED"}}
-                                        <span class="ml-3 px-2 py-1 bg-teal-500 text-white text-sm rounded-full">
-                                            COMPLETED
-                                        </span>
-                                    {{end}}
                                 </h2>
                                 <p class="text-primary-100 text-sm mt-1">{{len .orders}} orders placed for this session</p>
                             </div>
@@ -425,41 +408,35 @@
     }
 
     function markPaid(orderId) {
-        if (confirm('Are you sure you want to mark this order as paid?')) {
-            fetch('/admin/orders/' + orderId + '/paid', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showModal('Success', 'Order marked as paid successfully.', 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showModal('Error', 'Error marking order as paid. Please try again.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showModal('Network Error', 'Please check your connection and try again.', 'error');
-            });
-        }
+        fetch('/admin/orders/' + orderId + '/paid', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showModal('Error', 'Error marking order as paid. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModal('Network Error', 'Please check your connection and try again.', 'error');
+        });
     }
 
     function markUnpaid(orderId) {
-        if (confirm('Are you sure you want to mark this order as unpaid?')) {
-            fetch('/admin/orders/' + orderId + '/unpaid', {method: 'POST'})
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showModal('Success', 'Order marked as unpaid successfully.', 'success');
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    showModal('Error', 'Error marking order as unpaid. Please try again.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showModal('Network Error', 'Please check your connection and try again.', 'error');
-            });
-        }
+        fetch('/admin/orders/' + orderId + '/unpaid', {method: 'POST'})
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showModal('Error', 'Error marking order as unpaid. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModal('Network Error', 'Please check your connection and try again.', 'error');
+        });
     }
 
     function toggleOrderDetails(orderId) {
@@ -605,28 +582,25 @@
             messages.push(`${itemsToUnmark.length} item(s) unmarked as stock empty`);
         }
         
-        if (confirm(`Update stock status? ${messages.join(' and ')}.`)) {
-            Promise.all(promises)
-            .then(results => {
-                const allSuccessful = results.every(result => result.success);
-                if (allSuccessful) {
-                    showModal('Success', 'Stock status updated successfully.', 'success');
-                    // Update the initial status to reflect new state
-                    checkboxes.forEach(checkbox => {
-                        const itemId = parseInt(checkbox.value);
-                        window.initialStockStatus[orderId][itemId] = checkbox.checked;
-                    });
-                    // Refresh the empty stock items section
-                    loadEmptyStockItems(orderId);
-                } else {
-                    showModal('Error', 'Some updates failed. Please try again.', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showModal('Network Error', 'Please check your connection and try again.', 'error');
-            });
-        }
+        Promise.all(promises)
+        .then(results => {
+            const allSuccessful = results.every(result => result.success);
+            if (allSuccessful) {
+                // Update the initial status to reflect new state
+                checkboxes.forEach(checkbox => {
+                    const itemId = parseInt(checkbox.value);
+                    window.initialStockStatus[orderId][itemId] = checkbox.checked;
+                });
+                // Refresh the empty stock items section
+                loadEmptyStockItems(orderId);
+            } else {
+                showModal('Error', 'Some updates failed. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModal('Network Error', 'Please check your connection and try again.', 'error');
+        });
     }
 
     function loadEmptyStockItems(orderId) {
@@ -721,34 +695,31 @@
             return;
         }
         
-        if (confirm(`Remove empty stock status for ${itemsToUnmark.length} item(s)? This will make them available for ordering again.`)) {
-            fetch('/admin/orders/' + orderId + '/unmark-stock-empty', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ item_ids: itemsToUnmark })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showModal('Success', 'Empty stock status updated successfully.', 'success');
-                    // Update the initial status to reflect changes
-                    if (window.initialStockStatus[orderId]) {
-                        itemsToUnmark.forEach(itemId => {
-                            window.initialStockStatus[orderId][itemId] = false;
-                        });
-                    }
-                    // Reload both sections to refresh the display
-                    loadOrderItems(orderId);
-                    loadEmptyStockItems(orderId);
-                } else {
-                    showModal('Error', 'Failed to update empty stock status. Please try again.', 'error');
+        fetch('/admin/orders/' + orderId + '/unmark-stock-empty', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ item_ids: itemsToUnmark })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update the initial status to reflect changes
+                if (window.initialStockStatus[orderId]) {
+                    itemsToUnmark.forEach(itemId => {
+                        window.initialStockStatus[orderId][itemId] = false;
+                    });
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showModal('Network Error', 'Please check your connection and try again.', 'error');
-            });
-        }
+                // Reload both sections to refresh the display
+                loadOrderItems(orderId);
+                loadEmptyStockItems(orderId);
+            } else {
+                showModal('Error', 'Failed to update empty stock status. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModal('Network Error', 'Please check your connection and try again.', 'error');
+        });
     }
 
     function showEmployeeDetails(employeeId) {
