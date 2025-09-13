@@ -501,8 +501,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('proteinLevel').textContent = data.nutritional_summary.protein || 'Unknown';
         document.getElementById('vegetableLevel').textContent = data.nutritional_summary.vegetables || 'Unknown';
         document.getElementById('overallRating').textContent = data.nutritional_summary.overall_rating || 'Balanced';
-        
+
         nutritionistResult.classList.remove('hidden');
+
+        // Recalculate floating button position after showing nutritionist result
+        setTimeout(handleFloatingButton, 100);
     }
 
     calculateTotal();
@@ -513,30 +516,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const blurArea = document.getElementById('blurArea');
         const menuColumn = document.querySelector('.xl\\:col-span-2'); // Today's Menu column
         const menuBox = menuColumn?.querySelector('.bg-white.rounded-2xl'); // The white menu box
-        
+        const nutritionistResult = document.getElementById('nutritionistResult');
+
         if (!menuColumn || !menuBox || !blurArea) return;
-        
+
         const documentHeight = document.documentElement.scrollHeight;
         const windowHeight = window.innerHeight;
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollBottom = scrollTop + windowHeight;
-        
+
         // Get menu column and box dimensions
         const menuColumnRect = menuColumn.getBoundingClientRect();
         const menuBoxRect = menuBox.getBoundingClientRect();
         const menuColumnOffset = menuColumn.offsetLeft;
         const menuColumnWidth = menuColumn.offsetWidth;
         const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
-        
-        // Check if user has scrolled to the bottom or if the menu box bottom is visible
+
+        // Calculate the actual content bottom (considering AI Nutritionist box if visible)
+        let contentBottom = menuBoxBottom;
+        if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
+            // If AI Nutritionist is visible, use its bottom position
+            contentBottom = nutritionistResult.offsetTop + nutritionistResult.offsetHeight;
+        }
+
+        // Check if user has scrolled to the bottom or if the content bottom is visible
         const threshold = 50;
         const isAtPageBottom = scrollBottom >= documentHeight - threshold;
-        const isMenuBoxBottomVisible = scrollTop + windowHeight >= menuBoxBottom;
-        
-        if (isAtPageBottom || isMenuBoxBottomVisible) {
-            // When at bottom or menu box bottom is visible, position it at the bottom of the menu box
+        const isContentBottomVisible = scrollTop + windowHeight >= contentBottom;
+
+        if (isAtPageBottom || isContentBottomVisible) {
+            // When at bottom or content bottom is visible, position it below the content with proper spacing
             floatingContainer.style.position = 'absolute';
-            floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position 120px above menu box bottom for better spacing
+            floatingContainer.style.top = (contentBottom + 20) + 'px'; // Position 20px below content for better spacing
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
             floatingContainer.style.width = 'auto';
             floatingContainer.style.bottom = 'auto';
