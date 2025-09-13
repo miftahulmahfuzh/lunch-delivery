@@ -570,57 +570,28 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Handle floating button positioning based on scroll
+    // Handle floating button positioning - float until bottom, then fix inside form
     function handleFloatingButton() {
         const floatingContainer = document.getElementById('floatingButtonContainer');
         const blurArea = document.getElementById('blurArea');
         const menuColumn = document.querySelector('.xl\\:col-span-2'); // Today's Menu column
         const menuBox = menuColumn?.querySelector('.bg-white.rounded-2xl'); // The white menu box
-        const nutritionistResult = document.getElementById('nutritionistResult');
         const menuItemsGrid = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.mb-32');
 
-        if (!menuColumn || !menuBox || !blurArea) return;
+        if (!menuColumn || !menuBox || !blurArea || !menuItemsGrid) return;
 
         const documentHeight = document.documentElement.scrollHeight;
         const windowHeight = window.innerHeight;
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         const scrollBottom = scrollTop + windowHeight;
 
-        // Get menu column and box dimensions
-        const menuColumnRect = menuColumn.getBoundingClientRect();
-        const menuBoxRect = menuBox.getBoundingClientRect();
+        // Get menu column dimensions
         const menuColumnOffset = menuColumn.offsetLeft;
         const menuColumnWidth = menuColumn.offsetWidth;
-        const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
 
-        // Calculate the actual content bottom (considering AI Nutritionist box if visible)
-        let contentBottom = menuBoxBottom;
-        if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
-            // If AI Nutritionist is visible, use its bottom position
-            contentBottom = nutritionistResult.offsetTop + nutritionistResult.offsetHeight;
-        } else {
-            // If no AI Nutritionist, use menu items grid bottom position
-            if (menuItemsGrid) {
-                const menuItemsBottom = menuItemsGrid.offsetTop + menuItemsGrid.offsetHeight;
-                contentBottom = menuItemsBottom + 60; // 60px clearance below menu items but inside form
-            } else {
-                contentBottom = menuBoxBottom - 100; // Fallback
-            }
-        }
-
-        // Check if menu items grid is visible and user has scrolled past the first few menu items
-        let shouldShowButton = false;
-        if (menuItemsGrid) {
-            const menuItemsRect = menuItemsGrid.getBoundingClientRect();
-            const menuItemsTop = menuItemsGrid.offsetTop;
-            // Show button when user has scrolled down enough to see at least 200px of menu items
-            shouldShowButton = scrollTop > (menuItemsTop - windowHeight + 200);
-        }
-
-        // Check if user has scrolled to the bottom or if the content bottom is visible
-        const threshold = 50;
-        const isAtPageBottom = scrollBottom >= documentHeight - threshold;
-        const isContentBottomVisible = scrollTop + windowHeight >= contentBottom;
+        // Check if menu items are visible - show button when user has scrolled to see some menu items
+        const menuItemsTop = menuItemsGrid.offsetTop;
+        const shouldShowButton = scrollTop > (menuItemsTop - windowHeight + 300);
 
         if (!shouldShowButton) {
             // Hide the button when not scrolled enough
@@ -633,19 +604,19 @@ document.addEventListener('DOMContentLoaded', function() {
             floatingContainer.style.pointerEvents = 'auto';
         }
 
-        if (isAtPageBottom || isContentBottomVisible) {
-            // When at bottom or content bottom is visible, position inside the menu box
+        // Check if user has scrolled to the bottom
+        const threshold = 50;
+        const isAtPageBottom = scrollBottom >= documentHeight - threshold;
+
+        // Calculate menu box bottom for positioning inside the form
+        const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
+        const menuItemsBottom = menuItemsGrid.offsetTop + menuItemsGrid.offsetHeight;
+        const isMenuBottomVisible = scrollTop + windowHeight >= menuItemsBottom;
+
+        if (isAtPageBottom || isMenuBottomVisible) {
+            // When at bottom or menu bottom is visible, position INSIDE the Today's Menu form
             floatingContainer.style.position = 'absolute';
-
-            if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
-                // If AI Nutritionist is visible, position below it with clearance
-                floatingContainer.style.top = (contentBottom + 20) + 'px';
-            } else {
-                // If no AI Nutritionist, position inside the menu box with proper clearance from bottom
-                const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
-                floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position inside the box, 120px from bottom
-            }
-
+            floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position inside the form, 120px from bottom
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
             floatingContainer.style.width = 'auto';
             floatingContainer.style.bottom = 'auto';
@@ -654,14 +625,14 @@ document.addEventListener('DOMContentLoaded', function() {
             floatingContainer.style.justifyContent = 'unset';
             floatingContainer.style.paddingLeft = '0';
             floatingContainer.style.paddingRight = '0';
-            // Hide blur background when fixed at bottom
+            // Hide blur background when fixed inside form
             const blurBackground = blurArea.querySelector('.absolute.inset-0');
             if (blurBackground) {
                 blurBackground.style.opacity = '0';
             }
             blurArea.style.padding = '0';
         } else {
-            // When not at bottom, keep it floating centered in the menu column
+            // When not at bottom, keep it floating at the bottom of viewport
             floatingContainer.style.position = 'fixed';
             floatingContainer.style.bottom = '32px';
             floatingContainer.style.top = 'auto';
