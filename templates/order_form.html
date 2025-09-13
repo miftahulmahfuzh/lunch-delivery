@@ -67,8 +67,9 @@
 </style>
 <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
     <!-- Navigation -->
-    <nav class="bg-gray-200/50 backdrop-blur-lg border-b border-gray-300/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="header-blur-container border-b border-gray-300/50">
+        <div class="header-blur-mask"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="flex items-end justify-between h-12 -mb-px">
                 <div class="flex items-end space-x-1">
                     <a href="/my-orders" class="chrome-tab">
@@ -521,8 +522,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
         nutritionistResult.classList.remove('hidden');
 
+        // Auto-scroll to AI Nutritionist Recommendation section
+        setTimeout(() => {
+            nutritionistResult.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+                inline: 'nearest'
+            });
+        }, 200); // Small delay to ensure the element is fully visible
+
         // Recalculate floating button position after showing nutritionist result
-        setTimeout(handleFloatingButton, 100);
+        setTimeout(handleFloatingButton, 300);
     }
 
     calculateTotal();
@@ -597,9 +607,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isAtPageBottom || isContentBottomVisible) {
-            // When at bottom or content bottom is visible, position it below the content with proper spacing
+            // When at bottom or content bottom is visible, position it inside the menu box at the bottom
             floatingContainer.style.position = 'absolute';
-            floatingContainer.style.top = (contentBottom + 20) + 'px'; // Position 20px below content for better spacing
+            floatingContainer.style.top = (contentBottom - 120) + 'px'; // Position inside the box, 120px from bottom for more clearance
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
             floatingContainer.style.width = 'auto';
             floatingContainer.style.bottom = 'auto';

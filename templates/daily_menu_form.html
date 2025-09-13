@@ -126,7 +126,7 @@
                     </div>
                     <div>
                         <h1 class="text-xl font-bold text-gray-900">Lunch Delivery</h1>
-                        <p class="text-xs text-gray-500">Admin Dashboard</p>
+                        <p class="text-xs text-gray-500">Admin Panel</p>
                     </div>
                 </div>
             </div>
@@ -135,8 +135,9 @@
 
     <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
         <!-- Navigation Breadcrumb -->
-        <nav class="bg-gray-200/50 backdrop-blur-lg border-b border-gray-300/50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="header-blur-container border-b border-gray-300/50">
+            <div class="header-blur-mask"></div>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="flex items-end h-12 -mb-px">
                     <div class="flex items-end space-x-1">
                         <a href="/admin/" class="chrome-tab">
@@ -311,11 +312,18 @@
 
     <!-- Smart Floating Submit Button -->
     <div id="floatingButtonContainer" class="fixed bottom-8 z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div id="blurArea" class="backdrop-blur-sm bg-white/10 rounded-2xl px-8 py-4 transition-all duration-300">
-            <button type="submit" form="daily-menu-form" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1" id="floatingSubmitBtn">
-                <i class="fas fa-save mr-3"></i>
-                Save Daily Menu
-            </button>
+        <div id="blurArea" class="relative transition-all duration-300" style="padding: 3rem;">
+            <!-- Gradual blur background with mask -->
+            <div class="absolute inset-0 backdrop-blur-sm bg-white/10 transition-all duration-300" style="
+                mask: radial-gradient(ellipse 140px 100px at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%);
+                -webkit-mask: radial-gradient(ellipse 140px 100px at center, rgba(0,0,0,1) 30%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0.4) 70%, rgba(0,0,0,0) 100%);
+            "></div>
+            <div class="relative">
+                <button type="submit" form="daily-menu-form" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1" id="floatingSubmitBtn">
+                    <i class="fas fa-save mr-3"></i>
+                    Save Daily Menu
+                </button>
+            </div>
         </div>
     </div>
 
@@ -493,9 +501,11 @@
                 floatingContainer.style.width = 'auto';
                 floatingContainer.style.bottom = 'auto';
                 floatingContainer.style.transform = 'translateX(-50%)';
-                // Remove blur effect when fixed at bottom
-                blurArea.style.backdropFilter = 'none';
-                blurArea.style.backgroundColor = 'transparent';
+                // Hide blur background when fixed at bottom
+                const blurBackground = blurArea.querySelector('.absolute.inset-0');
+                if (blurBackground) {
+                    blurBackground.style.opacity = '0';
+                }
                 blurArea.style.padding = '0';
             } else {
                 // When not at bottom, keep it floating centered in the menu column
@@ -505,10 +515,12 @@
                 floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
                 floatingContainer.style.width = 'auto';
                 floatingContainer.style.transform = 'translateX(-50%)';
-                // Restore blur effect when floating
-                blurArea.style.backdropFilter = 'blur(4px)';
-                blurArea.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-                blurArea.style.padding = '1rem 2rem';
+                // Show blur background when floating
+                const blurBackground = blurArea.querySelector('.absolute.inset-0');
+                if (blurBackground) {
+                    blurBackground.style.opacity = '1';
+                }
+                blurArea.style.padding = '3rem';
             }
         }
 
