@@ -65,7 +65,7 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
         <!-- Page Header -->
         <div class="text-center mb-10 animate-fade-in">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-xl mb-6">
@@ -583,7 +583,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isAtPageBottom || isContentBottomVisible) {
             // When at bottom or content bottom is visible, position it inside the menu box at the bottom
             floatingContainer.style.position = 'absolute';
-            floatingContainer.style.top = (contentBottom - 120) + 'px'; // Position inside the box, 120px from bottom for more clearance
+            floatingContainer.style.top = (contentBottom - 160) + 'px'; // Position inside the box, 160px from bottom for more clearance
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
             floatingContainer.style.width = 'auto';
             floatingContainer.style.bottom = 'auto';
