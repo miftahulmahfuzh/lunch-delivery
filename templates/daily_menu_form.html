@@ -234,7 +234,7 @@
                             </div>
 
                             <!-- Menu Items Grid -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8" id="menu-items-grid">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-32" id="menu-items-grid">
                                 {{range .items}}
                                 <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-105" data-id="{{.ID}}">
                                     <div class="flex items-center justify-between">
@@ -260,43 +260,25 @@
 
                 <!-- Current Menu Sidebar -->
                 <div class="lg:col-span-1">
-                    <div class="sticky top-8 space-y-6">
-                        {{if .existing}}
+                    <div class="sticky top-16 space-y-2">
                         <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50">
                             <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
                                 <h3 class="text-lg font-semibold text-white flex items-center">
                                     <i class="fas fa-utensils mr-3"></i>
                                     Today's Menu
                                 </h3>
-                                <p class="text-accent-100 text-sm mt-1">Items prepared for today</p>
+                                <p class="text-accent-100 text-sm mt-1">Items selected for today</p>
                             </div>
                             <div class="p-6" style="max-height: 400px; overflow-y: auto;">
                                 <div class="space-y-3" id="current-menu-items">
-                                    {{range .items}}
-                                        {{$currentItem := .}}
-                                        {{if $.existing}}
-                                            {{range $.existing.MenuItemIDs}}
-                                                {{if eq . $currentItem.ID}}
-                                                    <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
-                                                        <div class="p-4">
-                                                            <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
-                                                            <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
-                                                            <div class="mt-2">
-                                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                    <i class="fas fa-utensils mr-1"></i>
-                                                                    Prepared
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                {{end}}
-                                            {{end}}
-                                        {{end}}
-                                    {{end}}
+                                    <div class="text-center text-gray-500 py-8">
+                                        <i class="fas fa-utensils text-3xl mb-3 text-gray-300"></i>
+                                        <p>No items selected</p>
+                                        <p class="text-sm">Select items to preview today's menu</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        {{end}}
 
                         <!-- Stats Card -->
                         <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50">
@@ -305,16 +287,16 @@
                                     <i class="fas fa-chart-pie mr-3 text-primary-500"></i>
                                     Menu Statistics
                                 </h3>
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between">
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between text-sm">
                                         <span class="text-gray-600">Total Items</span>
                                         <span class="font-semibold text-gray-900">{{len .items}}</span>
                                     </div>
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-between text-sm">
                                         <span class="text-gray-600">Selected</span>
                                         <span class="font-semibold text-primary-600" id="selected-count">0</span>
                                     </div>
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex items-center justify-between text-sm">
                                         <span class="text-gray-600">Coverage</span>
                                         <span class="font-semibold text-accent-600" id="coverage-percent">0%</span>
                                     </div>
@@ -349,6 +331,40 @@
             document.getElementById('coverage-percent').textContent = Math.round((selectedItems / totalItems) * 100) + '%';
         }
 
+        function updateTodaysMenu() {
+            const selectedMenuItems = document.querySelectorAll('.menu-item.selected');
+            const currentMenuContainer = document.getElementById('current-menu-items');
+
+            if (selectedMenuItems.length === 0) {
+                currentMenuContainer.innerHTML = `
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-utensils text-3xl mb-3 text-gray-300"></i>
+                        <p>No items selected</p>
+                        <p class="text-sm">Select items to preview today's menu</p>
+                    </div>
+                `;
+            } else {
+                let itemsHtml = '<div class="space-y-3">';
+
+                selectedMenuItems.forEach(item => {
+                    const itemName = item.querySelector('h3').textContent.trim();
+                    const priceText = item.querySelector('.text-2xl').textContent.trim();
+
+                    itemsHtml += `
+                        <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
+                            <div class="p-4">
+                                <p class="font-medium text-gray-900">${itemName}</p>
+                                <p class="text-sm text-primary-600 font-semibold">${priceText}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                itemsHtml += '</div>';
+                currentMenuContainer.innerHTML = itemsHtml;
+            }
+        }
+
         menuItems.forEach(item => {
             const itemID = parseInt(item.dataset.id, 10);
             const hiddenInput = document.getElementById('item-input-' + itemID);
@@ -376,6 +392,7 @@
                     checkboxIndicator.classList.add('hidden');
                 }
                 updateStats();
+                updateTodaysMenu();
             });
         });
 
@@ -391,6 +408,7 @@
                 checkboxIndicator.classList.remove('hidden');
             });
             updateStats();
+            updateTodaysMenu();
         });
 
         document.getElementById('unselect-all-btn').addEventListener('click', function() {
@@ -405,9 +423,11 @@
                 checkboxIndicator.classList.add('hidden');
             });
             updateStats();
+            updateTodaysMenu();
         });
 
         updateStats();
+        updateTodaysMenu();
 
         // Search functionality
         const searchInput = document.getElementById('menu-search');
@@ -455,18 +475,20 @@
             const menuColumnOffset = menuColumn.offsetLeft;
             const menuColumnWidth = menuColumn.offsetWidth;
 
-            // Get menu items grid bottom position
+            // Get menu items grid bottom position and the containing white box
+            const menuBox = menuColumn.querySelector('.bg-white.rounded-2xl');
             const gridBottom = menuItemsGrid.offsetTop + menuItemsGrid.offsetHeight;
+            const menuBoxBottom = menuBox ? menuBox.offsetTop + menuBox.offsetHeight : gridBottom;
 
             // Check if user has scrolled to the bottom or if the grid bottom is visible
             const threshold = 50;
             const isAtPageBottom = scrollBottom >= documentHeight - threshold;
-            const isGridBottomVisible = scrollTop + windowHeight >= gridBottom + 150; // Increased buffer
+            const isGridBottomVisible = scrollTop + windowHeight >= gridBottom + 100;
 
             if (isAtPageBottom || isGridBottomVisible) {
-                // When at bottom or grid bottom is visible, position it just below the grid with minimal gap
+                // When at bottom or grid bottom is visible, position it inside the menu box at the bottom
                 floatingContainer.style.position = 'absolute';
-                floatingContainer.style.top = (gridBottom + 40) + 'px'; // Reduced gap from 120px to 40px
+                floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position inside the box, 120px from bottom for more clearance
                 floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
                 floatingContainer.style.width = 'auto';
                 floatingContainer.style.bottom = 'auto';
