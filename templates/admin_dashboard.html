@@ -53,6 +53,40 @@
         .gradient-bg {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
+        .chrome-tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px 10px 16px;
+            margin-top: 4px;
+            background: linear-gradient(to bottom, #e5e7eb 0%, #d1d5db 100%);
+            border: 1px solid #9ca3af;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            color: #6b7280;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            position: relative;
+            min-height: 36px;
+        }
+        .chrome-tab:hover {
+            background: linear-gradient(to bottom, #f3f4f6 0%, #e5e7eb 100%);
+            color: #374151;
+        }
+        .chrome-tab-active {
+            background: white;
+            color: #10b981;
+            font-weight: 600;
+            border-color: #d1d5db;
+            z-index: 1;
+            margin-bottom: -1px;
+            border-bottom: 1px solid white;
+        }
+        .chrome-tab-active:hover {
+            background: white;
+            color: #059669;
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 font-sans antialiased">
@@ -74,28 +108,28 @@
     </header>
 <main class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
     <!-- Navigation Breadcrumb -->
-    <nav class="bg-white/80 backdrop-blur-lg border-b border-gray-200/50">
+    <nav class="bg-gray-200/50 backdrop-blur-lg border-b border-gray-300/50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-14">
-                <div class="flex items-center space-x-6">
-                    <a href="/admin/" class="flex items-center space-x-2 text-primary-600 font-medium border-b-2 border-primary-500 pb-4">
-                        <i class="fas fa-tachometer-alt"></i>
+            <div class="flex items-end h-12 -mb-px">
+                <div class="flex items-end space-x-1">
+                    <a href="/admin/" class="chrome-tab chrome-tab-active">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
                         <span>Dashboard</span>
                     </a>
-                    <a href="/admin/menu" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-list"></i>
+                    <a href="/admin/menu" class="chrome-tab">
+                        <i class="fas fa-list mr-2"></i>
                         <span>Menu Items</span>
                     </a>
-                    <a href="/admin/companies" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-building"></i>
+                    <a href="/admin/companies" class="chrome-tab">
+                        <i class="fas fa-building mr-2"></i>
                         <span>Companies</span>
                     </a>
-                    <a href="/admin/daily-menu" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-calendar-day"></i>
+                    <a href="/admin/daily-menu" class="chrome-tab">
+                        <i class="fas fa-calendar-day mr-2"></i>
                         <span>Daily Menu</span>
                     </a>
-                    <a href="/admin/sessions" class="flex items-center space-x-2 text-gray-600 hover:text-primary-600 transition-colors">
-                        <i class="fas fa-clock"></i>
+                    <a href="/admin/sessions" class="chrome-tab">
+                        <i class="fas fa-clock mr-2"></i>
                         <span>Order Sessions</span>
                     </a>
                 </div>
