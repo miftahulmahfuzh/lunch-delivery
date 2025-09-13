@@ -156,7 +156,7 @@
                         </div>
 
                         <!-- Menu Items Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-32">
                             {{range $index, $item := .menu_items}}
                             {{$isStockEmpty := false}}
                             {{range $.stock_empty_items}}
@@ -532,7 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const menuColumn = document.querySelector('.xl\\:col-span-2'); // Today's Menu column
         const menuBox = menuColumn?.querySelector('.bg-white.rounded-2xl'); // The white menu box
         const nutritionistResult = document.getElementById('nutritionistResult');
-        const menuItemsGrid = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.mb-4');
+        const menuItemsGrid = document.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2.gap-4.mb-32');
 
         if (!menuColumn || !menuBox || !blurArea) return;
 
@@ -589,15 +589,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isAtPageBottom || isContentBottomVisible) {
-            // When at bottom or content bottom is visible, position appropriately
+            // When at bottom or content bottom is visible, position inside the menu box
             floatingContainer.style.position = 'absolute';
 
             if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
                 // If AI Nutritionist is visible, position below it with clearance
                 floatingContainer.style.top = (contentBottom + 20) + 'px';
             } else {
-                // If no AI Nutritionist, position inside the menu box at calculated position
-                floatingContainer.style.top = contentBottom + 'px';
+                // If no AI Nutritionist, position inside the menu box with proper clearance from bottom
+                const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
+                floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position inside the box, 120px from bottom
             }
 
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
