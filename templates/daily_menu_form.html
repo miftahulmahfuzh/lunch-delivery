@@ -208,7 +208,7 @@
                             <p class="text-primary-100 text-sm mt-1">{{len .items}} total items available</p>
                         </div>
 
-                        <form method="POST" action="/admin/daily-menu" class="p-6">
+                        <form method="POST" action="/admin/daily-menu" class="p-6" id="daily-menu-form">
                             <input type="hidden" name="date" value="{{.date}}">
 
                             <!-- Action Buttons -->
@@ -221,6 +221,16 @@
                                     <i class="fas fa-times-circle mr-2"></i>
                                     Clear All
                                 </button>
+                            </div>
+
+                            <!-- Search Bar -->
+                            <div class="mb-6">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <i class="fas fa-search text-gray-400"></i>
+                                    </div>
+                                    <input type="text" id="menu-search" class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500" placeholder="Search menu items...">
+                                </div>
                             </div>
 
                             <!-- Menu Items Grid -->
@@ -244,76 +254,70 @@
                                 </div>
                                 {{end}}
                             </div>
-
-                            <!-- Submit Button -->
-                            <div class="text-center">
-                                <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-                                    <i class="fas fa-save mr-3"></i>
-                                    Save Daily Menu
-                                </button>
-                            </div>
                         </form>
                     </div>
                 </div>
 
                 <!-- Current Menu Sidebar -->
                 <div class="lg:col-span-1">
-                    {{if .existing}}
-                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 sticky top-8">
-                        <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
-                            <h3 class="text-lg font-semibold text-white flex items-center">
-                                <i class="fas fa-utensils mr-3"></i>
-                                Today's Menu
-                            </h3>
-                            <p class="text-accent-100 text-sm mt-1">Items prepared for today</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="space-y-3" id="current-menu-items">
-                                {{range .items}}
-                                    {{$currentItem := .}}
-                                    {{if $.existing}}
-                                        {{range $.existing.MenuItemIDs}}
-                                            {{if eq . $currentItem.ID}}
-                                                <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
-                                                    <div class="p-4">
-                                                        <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
-                                                        <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
-                                                        <div class="mt-2">
-                                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                <i class="fas fa-utensils mr-1"></i>
-                                                                Prepared
-                                                            </span>
+                    <div class="sticky top-8 space-y-6">
+                        {{if .existing}}
+                        <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50">
+                            <div class="bg-gradient-to-r from-accent-500 to-accent-600 px-6 py-4 rounded-t-2xl">
+                                <h3 class="text-lg font-semibold text-white flex items-center">
+                                    <i class="fas fa-utensils mr-3"></i>
+                                    Today's Menu
+                                </h3>
+                                <p class="text-accent-100 text-sm mt-1">Items prepared for today</p>
+                            </div>
+                            <div class="p-6" style="max-height: 400px; overflow-y: auto;">
+                                <div class="space-y-3" id="current-menu-items">
+                                    {{range .items}}
+                                        {{$currentItem := .}}
+                                        {{if $.existing}}
+                                            {{range $.existing.MenuItemIDs}}
+                                                {{if eq . $currentItem.ID}}
+                                                    <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
+                                                        <div class="p-4">
+                                                            <p class="font-medium text-gray-900">{{$currentItem.Name}}</p>
+                                                            <p class="text-sm text-primary-600 font-semibold">Rp {{$currentItem.Price | divideBy100}}</p>
+                                                            <div class="mt-2">
+                                                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                                    <i class="fas fa-utensils mr-1"></i>
+                                                                    Prepared
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                {{end}}
                                             {{end}}
                                         {{end}}
                                     {{end}}
-                                {{end}}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {{end}}
+                        {{end}}
 
-                    <!-- Stats Card -->
-                    <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 mt-6">
-                        <div class="p-6">
-                            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                                <i class="fas fa-chart-pie mr-3 text-primary-500"></i>
-                                Menu Statistics
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Total Items</span>
-                                    <span class="font-semibold text-gray-900">{{len .items}}</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Selected</span>
-                                    <span class="font-semibold text-primary-600" id="selected-count">0</span>
-                                </div>
-                                <div class="flex items-center justify-between">
-                                    <span class="text-gray-600">Coverage</span>
-                                    <span class="font-semibold text-accent-600" id="coverage-percent">0%</span>
+                        <!-- Stats Card -->
+                        <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50">
+                            <div class="p-6">
+                                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                    <i class="fas fa-chart-pie mr-3 text-primary-500"></i>
+                                    Menu Statistics
+                                </h3>
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-600">Total Items</span>
+                                        <span class="font-semibold text-gray-900">{{len .items}}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-600">Selected</span>
+                                        <span class="font-semibold text-primary-600" id="selected-count">0</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-600">Coverage</span>
+                                        <span class="font-semibold text-accent-600" id="coverage-percent">0%</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -322,6 +326,16 @@
             </div>
         </div>
     </main>
+
+    <!-- Smart Floating Submit Button -->
+    <div id="floatingButtonContainer" class="fixed bottom-8 z-50 transition-all duration-300 opacity-0 pointer-events-none">
+        <div id="blurArea" class="backdrop-blur-sm bg-white/10 rounded-2xl px-8 py-4 transition-all duration-300">
+            <button type="submit" form="daily-menu-form" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1" id="floatingSubmitBtn">
+                <i class="fas fa-save mr-3"></i>
+                Save Daily Menu
+            </button>
+        </div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -394,14 +408,102 @@
         });
 
         updateStats();
-        
+
+        // Search functionality
+        const searchInput = document.getElementById('menu-search');
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            menuItems.forEach(item => {
+                const itemName = item.querySelector('h3').textContent.toLowerCase();
+                if (itemName.includes(searchTerm)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Handle floating button positioning
+        function handleFloatingButton() {
+            const floatingContainer = document.getElementById('floatingButtonContainer');
+            const blurArea = document.getElementById('blurArea');
+            const menuColumn = document.querySelector('.lg\\:col-span-2'); // Menu selection column
+            const menuItemsGrid = document.getElementById('menu-items-grid'); // The menu items grid
+
+            if (!menuColumn || !menuItemsGrid || !blurArea) return;
+
+            const documentHeight = document.documentElement.scrollHeight;
+            const windowHeight = window.innerHeight;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const scrollBottom = scrollTop + windowHeight;
+
+            // Show button only after user scrolls down to see some menu items (200px threshold)
+            const scrollThreshold = 200;
+            const shouldShowButton = scrollTop > scrollThreshold;
+
+            if (!shouldShowButton) {
+                // Hide button when at top
+                floatingContainer.classList.add('opacity-0', 'pointer-events-none');
+                return;
+            } else {
+                // Show button when scrolled down
+                floatingContainer.classList.remove('opacity-0', 'pointer-events-none');
+            }
+
+            // Get menu column dimensions
+            const menuColumnRect = menuColumn.getBoundingClientRect();
+            const menuColumnOffset = menuColumn.offsetLeft;
+            const menuColumnWidth = menuColumn.offsetWidth;
+
+            // Get menu items grid bottom position
+            const gridBottom = menuItemsGrid.offsetTop + menuItemsGrid.offsetHeight;
+
+            // Check if user has scrolled to the bottom or if the grid bottom is visible
+            const threshold = 50;
+            const isAtPageBottom = scrollBottom >= documentHeight - threshold;
+            const isGridBottomVisible = scrollTop + windowHeight >= gridBottom + 150; // Increased buffer
+
+            if (isAtPageBottom || isGridBottomVisible) {
+                // When at bottom or grid bottom is visible, position it just below the grid with minimal gap
+                floatingContainer.style.position = 'absolute';
+                floatingContainer.style.top = (gridBottom + 40) + 'px'; // Reduced gap from 120px to 40px
+                floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
+                floatingContainer.style.width = 'auto';
+                floatingContainer.style.bottom = 'auto';
+                floatingContainer.style.transform = 'translateX(-50%)';
+                // Remove blur effect when fixed at bottom
+                blurArea.style.backdropFilter = 'none';
+                blurArea.style.backgroundColor = 'transparent';
+                blurArea.style.padding = '0';
+            } else {
+                // When not at bottom, keep it floating centered in the menu column
+                floatingContainer.style.position = 'fixed';
+                floatingContainer.style.bottom = '32px';
+                floatingContainer.style.top = 'auto';
+                floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
+                floatingContainer.style.width = 'auto';
+                floatingContainer.style.transform = 'translateX(-50%)';
+                // Restore blur effect when floating
+                blurArea.style.backdropFilter = 'blur(4px)';
+                blurArea.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                blurArea.style.padding = '1rem 2rem';
+            }
+        }
+
+        // Add scroll and resize event listeners
+        window.addEventListener('scroll', handleFloatingButton);
+        window.addEventListener('resize', handleFloatingButton);
+
+        // Initial call
+        handleFloatingButton();
+
     });
 
 
     function showToast(message, type = 'info') {
         const toast = document.createElement('div');
         toast.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-all duration-300 transform translate-y-full`;
-        
+
         if (type === 'success') {
             toast.className += ' bg-green-600';
         } else if (type === 'error') {
@@ -409,15 +511,15 @@
         } else {
             toast.className += ' bg-blue-600';
         }
-        
+
         toast.textContent = message;
         document.body.appendChild(toast);
-        
+
         // Animate in
         setTimeout(() => {
             toast.classList.remove('translate-y-full');
         }, 100);
-        
+
         // Auto remove after 3 seconds
         setTimeout(() => {
             toast.classList.add('translate-y-full');
@@ -429,5 +531,46 @@
         }, 3000);
     }
     </script>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="bg-gradient-to-r from-primary-500 to-primary-600 p-2 rounded-xl">
+                            <i class="fas fa-utensils text-white"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold">Lunch Delivery</h3>
+                    </div>
+                    <p class="text-gray-400 mb-4">Premium corporate food delivery service providing fresh, healthy meals to your workplace.</p>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4">Admin Panel</h4>
+                    <ul class="space-y-2 text-gray-400">
+                        <li><a href="/admin/" class="hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="/admin/menu" class="hover:text-white transition-colors">Menu Items</a></li>
+                        <li><a href="/admin/companies" class="hover:text-white transition-colors">Companies</a></li>
+                        <li><a href="/admin/daily-menu" class="hover:text-white transition-colors">Daily Menu</a></li>
+                        <li><a href="/admin/sessions" class="hover:text-white transition-colors">Order Sessions</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="font-semibold mb-4">Contact</h4>
+                    <div class="space-y-2 text-gray-400">
+                        <p><i class="fas fa-envelope mr-2"></i> admin@lunchdelivery.com</p>
+                        <p><i class="fas fa-phone mr-2"></i> +1 (555) 123-4567</p>
+                        <p><i class="fas fa-clock mr-2"></i> Mon-Fri 8AM-6PM</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500">
+                <p>&copy; 2024 Lunch Delivery System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 </body>
 </html>
