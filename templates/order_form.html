@@ -23,7 +23,7 @@
         </div>
     </nav>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-32">
         <!-- Page Header -->
         <div class="text-center mb-10 animate-fade-in">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl shadow-xl mb-6">
@@ -104,7 +104,7 @@
                         </div>
 
                         <!-- Menu Items Grid -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 pb-20">
                             {{range $index, $item := .menu_items}}
                             {{$isStockEmpty := false}}
                             {{range $.stock_empty_items}}
@@ -113,7 +113,7 @@
                                 {{end}}
                             {{end}}
                             
-                            <div class="menu-item group relative {{if $isStockEmpty}}bg-gray-200 cursor-not-allowed opacity-60{{else}}bg-gray-50 hover:bg-primary-50 cursor-pointer hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg{{end}} rounded-xl p-4 transition-all duration-300 border-2 border-transparent" 
+                            <div class="menu-item group relative {{if $isStockEmpty}}bg-gray-200 cursor-pointer opacity-60{{else}}bg-gray-50{{end}} hover:bg-primary-50 hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg rounded-xl p-4 transition-all duration-300 border-2 border-transparent" 
                                  data-index="{{$index}}" {{if $isStockEmpty}}data-stock-empty="true"{{end}}>
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1 pr-3">
@@ -131,17 +131,13 @@
                                         </div>
                                     </div>
                                     <div class="flex-shrink-0">
-                                        <div class="w-7 h-7 border-2 {{if $isStockEmpty}}border-gray-400 bg-gray-300{{else}}border-gray-300 group-hover:border-primary-400{{end}} rounded-full flex items-center justify-center transition-colors checkbox-indicator">
-                                            {{if $isStockEmpty}}
-                                                <i class="fas fa-times text-gray-600 text-sm"></i>
-                                            {{else}}
-                                                <i class="fas fa-check text-primary-600 text-sm hidden"></i>
-                                            {{end}}
+                                        <div class="w-7 h-7 border-2 border-gray-300 group-hover:border-primary-400 rounded-full flex items-center justify-center transition-colors checkbox-indicator">
+                                            <i class="fas fa-check text-primary-600 text-sm hidden"></i>
                                         </div>
                                     </div>
                                 </div>
                                 <input type="checkbox" name="menu_items" value="{{$item.ID}}" id="item-{{$item.ID}}" 
-                                       data-price="{{$item.Price}}" class="hidden menu-checkbox" {{if $isStockEmpty}}disabled{{end}}
+                                       data-price="{{$item.Price}}" {{if $isStockEmpty}}data-out-of-stock="true"{{end}} class="hidden menu-checkbox"
                                        {{if $.existing_order}}
                                            {{$currentID := $item.ID}}
                                            {{range $.existing_order.MenuItemIDs}}
@@ -184,13 +180,6 @@
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="text-center">
-                            <button type="submit" class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none" id="submitBtn">
-                                <i class="fas fa-paper-plane mr-3"></i>
-                                {{if .existing_order}}Update My Order{{else}}Place Order{{end}}
-                            </button>
-                        </div>
                     </form>
                 </div>
             </div>
@@ -246,6 +235,16 @@
             </div>
         </div>
     </div>
+
+    <!-- Smart Floating Submit Button -->
+    <div id="floatingButtonContainer" class="fixed bottom-8 z-50 transition-all duration-300">
+        <div id="blurArea" class="backdrop-blur-sm bg-white/10 rounded-2xl px-8 py-4 transition-all duration-300">
+            <button type="submit" form="orderForm" class="inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 transition-all duration-300 font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none" id="floatingSubmitBtn">
+                <i class="fas fa-paper-plane mr-3"></i>
+                {{if .existing_order}}Update My Order{{else}}Place Order{{end}}
+            </button>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -262,30 +261,48 @@ function calculateTotal() {
                 <p class="text-sm">Choose your favorite dishes</p>
             </div>
         `;
-        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('floatingSubmitBtn').disabled = true;
     } else {
         let itemsHtml = '<div class="space-y-3">';
         
         checkboxes.forEach((checkbox, index) => {
             const price = parseInt(checkbox.dataset.price, 10);
-            total += price;
+            const isOutOfStock = checkbox.dataset.outOfStock === 'true';
             const itemText = checkbox.parentElement.querySelector('h3').textContent.trim();
             
-            itemsHtml += `
-                <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
-                    <div class="flex-1">
-                        <p class="font-medium text-gray-900 text-sm">${itemText}</p>
+            if (!isOutOfStock) {
+                total += price;
+            }
+            
+            if (isOutOfStock) {
+                itemsHtml += `
+                    <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-500">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-500 text-sm">${itemText.replace(/\s*Out of Stock.*$/, '')} - <span class="text-xs italic">Out of Stock</span></p>
+                        </div>
+                        <div class="text-gray-400 font-semibold line-through">
+                            Rp ${price.toLocaleString('en-US')}
+                        </div>
                     </div>
-                    <div class="text-primary-600 font-semibold">
-                        Rp ${price.toLocaleString('en-US')}
+                `;
+            } else {
+                itemsHtml += `
+                    <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
+                        <div class="flex-1">
+                            <p class="font-medium text-gray-900 text-sm">${itemText}</p>
+                        </div>
+                        <div class="text-primary-600 font-semibold">
+                            Rp ${price.toLocaleString('en-US')}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            }
         });
         
         itemsHtml += '</div>';
         document.getElementById('selectedItems').innerHTML = itemsHtml;
-        document.getElementById('submitBtn').disabled = false;
+        const hasInStockItems = Array.from(checkboxes).some(checkbox => checkbox.dataset.outOfStock !== 'true');
+        document.getElementById('floatingSubmitBtn').disabled = !hasInStockItems;
     }
 
     document.getElementById('totalPrice').textContent = total.toLocaleString('en-US');
@@ -309,11 +326,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         item.addEventListener('click', function() {
-            // Don't allow clicking on stock empty items
-            if (this.dataset.stockEmpty === 'true') {
-                return;
-            }
-            
             checkbox.checked = !checkbox.checked;
             this.classList.toggle('selected');
             
@@ -332,11 +344,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     selectAllBtn.addEventListener('click', function() {
         menuItems.forEach(item => {
-            // Skip stock empty items
-            if (item.dataset.stockEmpty === 'true') {
-                return;
-            }
-            
             const checkbox = item.querySelector('input[type="checkbox"]');
             const checkboxIndicator = item.querySelector('.checkbox-indicator i');
             
@@ -432,6 +439,74 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     calculateTotal();
+
+    // Handle floating button positioning based on scroll
+    function handleFloatingButton() {
+        const floatingContainer = document.getElementById('floatingButtonContainer');
+        const blurArea = document.getElementById('blurArea');
+        const menuColumn = document.querySelector('.xl\\:col-span-2'); // Today's Menu column
+        const menuBox = menuColumn?.querySelector('.bg-white.rounded-2xl'); // The white menu box
+        
+        if (!menuColumn || !menuBox || !blurArea) return;
+        
+        const documentHeight = document.documentElement.scrollHeight;
+        const windowHeight = window.innerHeight;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollBottom = scrollTop + windowHeight;
+        
+        // Get menu column and box dimensions
+        const menuColumnRect = menuColumn.getBoundingClientRect();
+        const menuBoxRect = menuBox.getBoundingClientRect();
+        const menuColumnOffset = menuColumn.offsetLeft;
+        const menuColumnWidth = menuColumn.offsetWidth;
+        const menuBoxBottom = menuBox.offsetTop + menuBox.offsetHeight;
+        
+        // Check if user has scrolled to the bottom or if the menu box bottom is visible
+        const threshold = 50;
+        const isAtPageBottom = scrollBottom >= documentHeight - threshold;
+        const isMenuBoxBottomVisible = scrollTop + windowHeight >= menuBoxBottom;
+        
+        if (isAtPageBottom || isMenuBoxBottomVisible) {
+            // When at bottom or menu box bottom is visible, position it at the bottom of the menu box
+            floatingContainer.style.position = 'absolute';
+            floatingContainer.style.top = (menuBoxBottom - 120) + 'px'; // Position 120px above menu box bottom for better spacing
+            floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
+            floatingContainer.style.width = 'auto';
+            floatingContainer.style.bottom = 'auto';
+            floatingContainer.style.transform = 'translateX(-50%)';
+            floatingContainer.style.display = 'block';
+            floatingContainer.style.justifyContent = 'unset';
+            floatingContainer.style.paddingLeft = '0';
+            floatingContainer.style.paddingRight = '0';
+            // Remove blur effect when fixed at bottom
+            blurArea.style.backdropFilter = 'none';
+            blurArea.style.backgroundColor = 'transparent';
+            blurArea.style.padding = '0';
+        } else {
+            // When not at bottom, keep it floating centered in the menu column
+            floatingContainer.style.position = 'fixed';
+            floatingContainer.style.bottom = '32px';
+            floatingContainer.style.top = 'auto';
+            floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
+            floatingContainer.style.width = 'auto';
+            floatingContainer.style.transform = 'translateX(-50%)';
+            floatingContainer.style.display = 'block';
+            floatingContainer.style.justifyContent = 'unset';
+            floatingContainer.style.paddingLeft = '0';
+            floatingContainer.style.paddingRight = '0';
+            // Restore blur effect when floating
+            blurArea.style.backdropFilter = 'blur(4px)';
+            blurArea.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+            blurArea.style.padding = '1rem 2rem'; // px-8 py-4 equivalent
+        }
+    }
+
+    // Add scroll event listener
+    window.addEventListener('scroll', handleFloatingButton);
+    window.addEventListener('resize', handleFloatingButton);
+    
+    // Initial call
+    handleFloatingButton();
 
     // Show error modal if needed (for JavaScript error handling)
     function showErrorModal(title, message) {
