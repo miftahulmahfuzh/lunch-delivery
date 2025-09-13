@@ -553,6 +553,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
             // If AI Nutritionist is visible, use its bottom position
             contentBottom = nutritionistResult.offsetTop + nutritionistResult.offsetHeight;
+        } else {
+            // If no AI Nutritionist, use menu items grid bottom position
+            if (menuItemsGrid) {
+                const menuItemsBottom = menuItemsGrid.offsetTop + menuItemsGrid.offsetHeight;
+                contentBottom = menuItemsBottom + 60; // 60px clearance below menu items but inside form
+            } else {
+                contentBottom = menuBoxBottom - 100; // Fallback
+            }
         }
 
         // Check if menu items grid is visible and user has scrolled past the first few menu items
@@ -581,9 +589,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isAtPageBottom || isContentBottomVisible) {
-            // When at bottom or content bottom is visible, position it inside the menu box at the bottom
+            // When at bottom or content bottom is visible, position appropriately
             floatingContainer.style.position = 'absolute';
-            floatingContainer.style.top = (contentBottom - 160) + 'px'; // Position inside the box, 160px from bottom for more clearance
+
+            if (nutritionistResult && !nutritionistResult.classList.contains('hidden')) {
+                // If AI Nutritionist is visible, position below it with clearance
+                floatingContainer.style.top = (contentBottom + 20) + 'px';
+            } else {
+                // If no AI Nutritionist, position inside the menu box at calculated position
+                floatingContainer.style.top = contentBottom + 'px';
+            }
+
             floatingContainer.style.left = menuColumnOffset + (menuColumnWidth / 2) + 'px';
             floatingContainer.style.width = 'auto';
             floatingContainer.style.bottom = 'auto';
