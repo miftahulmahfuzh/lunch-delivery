@@ -274,7 +274,13 @@ func (h *Handler) myOrders(c *gin.Context) {
 		if err == nil {
 			for _, order := range orders {
 				if order.EmployeeID == userID {
-					todayOrder = &order
+					// Get fresh order data from database to ensure payment status is current
+					freshOrder, freshErr := h.repo.GetOrderByID(order.ID)
+					if freshErr == nil && freshOrder != nil {
+						todayOrder = freshOrder
+					} else {
+						todayOrder = &order
+					}
 					break
 				}
 			}
@@ -521,6 +527,72 @@ func (h *Handler) deleteNotification(c *gin.Context) {
 	}
 
 	err = h.repo.DeleteUserNotification(notificationID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) clearAllNotifications(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err = h.repo.DeleteAllUserNotifications(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) clearStockEmptyNotifications(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err = h.repo.DeleteUserNotificationsByType(userID, "STOCK_EMPTY")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true})
+}
+
+func (h *Handler) clearMenuRelatedNotifications(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Not logged in"})
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	err = h.repo.DeleteUserNotificationsByTypes(userID, []string{"STOCK_EMPTY", "MENU_UPDATED"})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

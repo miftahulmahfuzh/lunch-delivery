@@ -119,12 +119,26 @@
                 <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
                     <div class="bg-gradient-to-r from-primary-500 to-primary-600 px-6 py-4">
                         <div class="flex items-center justify-between">
-                            <div>
-                                <h2 class="text-xl font-semibold text-white flex items-center">
-                                    <i class="fas fa-calendar-day mr-3"></i>
-                                    Today's Order
-                                </h2>
-                                <p class="text-primary-100 text-sm mt-1">{{.todaySession.Date.Format "January 2, 2006"}}</p>
+                            <div class="flex items-center">
+                                <div>
+                                    <h2 class="text-xl font-semibold text-white flex items-center">
+                                        <i class="fas fa-calendar-day mr-3"></i>
+                                        Today's Order
+                                    </h2>
+                                    <p class="text-primary-100 text-sm mt-1">{{.todaySession.Date.Format "January 2, 2006"}}</p>
+                                </div>
+                                <!-- Notification Bell Button -->
+                                <div class="ml-4">
+                                    <button id="notificationBell" onclick="openNotificationModal()" 
+                                            class="relative p-2 text-white hover:text-primary-100 transition-colors focus:outline-none">
+                                        <i class="fas fa-bell text-lg"></i>
+                                        {{if .notifications}}
+                                        <span id="notificationCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                                            {{len .notifications}}
+                                        </span>
+                                        {{end}}
+                                    </button>
+                                </div>
                             </div>
                             <div class="flex items-center">
                                 {{if eq .todaySession.Status "OPEN"}}
@@ -319,74 +333,6 @@
             </div>
             {{end}}
 
-            <!-- Notifications Section -->
-            {{if .notifications}}
-            <div class="mb-12 animate-slide-up">
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-                    <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4">
-                        <h2 class="text-xl font-semibold text-white flex items-center">
-                            <i class="fas fa-bell mr-3"></i>
-                            Notifications
-                        </h2>
-                        <p class="text-blue-100 text-sm mt-1">Stay updated with your orders</p>
-                    </div>
-
-                    <div class="p-6">
-                        <div class="space-y-3">
-                            {{range .notifications}}
-                            <div class="notification-item relative group bg-gray-50 hover:bg-blue-50 rounded-lg p-4 transition-colors border-l-4 {{if eq .NotificationType "STOCK_EMPTY"}}border-red-500{{else if eq .NotificationType "PAID"}}border-green-500{{else if eq .NotificationType "SESSION_CLOSED"}}border-blue-500{{else}}border-amber-500{{end}} cursor-pointer" 
-                                 data-notification-id="{{.ID}}" 
-                                 data-redirect-url="{{.RedirectURL}}" 
-                                 onclick="handleNotificationClick({{.ID}}, {{if .RedirectURL}}'{{.RedirectURL}}'{{else}}null{{end}})">
-                                
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center mb-1">
-                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {{if eq .NotificationType "STOCK_EMPTY"}}bg-red-100{{else if eq .NotificationType "PAID"}}bg-green-100{{else if eq .NotificationType "SESSION_CLOSED"}}bg-blue-100{{else}}bg-amber-100{{end}}">
-                                                {{if eq .NotificationType "STOCK_EMPTY"}}
-                                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
-                                                {{else if eq .NotificationType "PAID"}}
-                                                    <i class="fas fa-credit-card text-green-600"></i>
-                                                {{else if eq .NotificationType "SESSION_CLOSED"}}
-                                                    <i class="fas fa-lock text-blue-600"></i>
-                                                {{else}}
-                                                    <i class="fas fa-utensils text-amber-600"></i>
-                                                {{end}}
-                                            </div>
-                                            <div class="flex-1">
-                                                <h4 class="font-semibold text-gray-900">{{.Title}}</h4>
-                                                {{if not .IsRead}}
-                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                        New
-                                                    </span>
-                                                {{end}}
-                                            </div>
-                                        </div>
-                                        <p class="text-sm text-gray-600 ml-11">{{.Message}}</p>
-                                        <p class="text-xs text-gray-500 ml-11 mt-1">{{.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}</p>
-                                    </div>
-                                    
-                                    <!-- Delete button (shown on hover) -->
-                                    <button onclick="deleteNotification(event, {{.ID}})" 
-                                            class="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-red-500">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            {{end}}
-                        </div>
-                        
-                        {{if gt (len .notifications) 5}}
-                        <div class="text-center mt-6">
-                            <button class="text-blue-600 hover:text-blue-700 font-medium text-sm">
-                                View all notifications
-                            </button>
-                        </div>
-                        {{end}}
-                    </div>
-                </div>
-            </div>
-            {{end}}
 
             <!-- Recent Orders Section -->
             <div class="animate-slide-up">
@@ -499,6 +445,90 @@
         </div>
     </main>
 
+    <!-- Notification Modal -->
+    <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden" onclick="handleModalBackdropClick(event)">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
+                    <h2 class="text-xl font-semibold text-white flex items-center">
+                        <i class="fas fa-bell mr-3"></i>
+                        Notifications
+                    </h2>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="clearAllNotifications()" 
+                                class="px-3 py-1 bg-blue-700 hover:bg-blue-800 text-white text-sm rounded-lg transition-colors">
+                            <i class="fas fa-trash-alt mr-1"></i>
+                            Clear All
+                        </button>
+                        <button onclick="closeNotificationModal()" 
+                                class="text-white hover:text-gray-200 text-xl">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Content -->
+                <div class="p-6 max-h-96 overflow-y-auto">
+                    <div id="notificationList" class="space-y-3">
+                        {{if .notifications}}
+                            {{range .notifications}}
+                            <div class="notification-item relative group bg-gray-50 hover:bg-blue-50 rounded-lg p-4 transition-colors border-l-4 {{if eq .NotificationType "STOCK_EMPTY"}}border-red-500{{else if eq .NotificationType "PAID"}}border-green-500{{else if eq .NotificationType "SESSION_CLOSED"}}border-blue-500{{else}}border-amber-500{{end}} cursor-pointer" 
+                                 data-notification-id="{{.ID}}" 
+                                 data-notification-type="{{.NotificationType}}"
+                                 data-redirect-url="{{.RedirectURL}}" 
+                                 onclick="handleNotificationClick({{.ID}}, '{{.NotificationType}}', {{if .RedirectURL}}'{{.RedirectURL}}'{{else}}null{{end}})">
+                                
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center mb-1">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center mr-3 {{if eq .NotificationType "STOCK_EMPTY"}}bg-red-100{{else if eq .NotificationType "PAID"}}bg-green-100{{else if eq .NotificationType "SESSION_CLOSED"}}bg-blue-100{{else}}bg-amber-100{{end}}">
+                                                {{if eq .NotificationType "STOCK_EMPTY"}}
+                                                    <i class="fas fa-exclamation-triangle text-red-600"></i>
+                                                {{else if eq .NotificationType "PAID"}}
+                                                    <i class="fas fa-credit-card text-green-600"></i>
+                                                {{else if eq .NotificationType "SESSION_CLOSED"}}
+                                                    <i class="fas fa-lock text-blue-600"></i>
+                                                {{else}}
+                                                    <i class="fas fa-utensils text-amber-600"></i>
+                                                {{end}}
+                                            </div>
+                                            <div class="flex-1">
+                                                <h4 class="font-semibold text-gray-900">{{.Title}}</h4>
+                                                {{if not .IsRead}}
+                                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                        New
+                                                    </span>
+                                                {{end}}
+                                            </div>
+                                        </div>
+                                        <p class="text-sm text-gray-600 ml-11">{{.Message}}</p>
+                                        <p class="text-xs text-gray-500 ml-11 mt-1">{{.CreatedAt.Format "Jan 02, 2006 at 3:04 PM"}}</p>
+                                    </div>
+                                    
+                                    <!-- Delete button (shown on hover) -->
+                                    <button onclick="deleteNotification(event, {{.ID}})" 
+                                            class="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-gray-400 hover:text-red-500">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {{end}}
+                        {{else}}
+                            <div class="text-center py-12">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-bell-slash text-2xl text-gray-400"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Notifications</h3>
+                                <p class="text-gray-600">You're all caught up!</p>
+                            </div>
+                        {{end}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-900 text-white mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -539,7 +569,17 @@
     </footer>
 
     <script>
-    function handleNotificationClick(notificationId, redirectUrl) {
+    function openNotificationModal() {
+        document.getElementById('notificationModal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeNotificationModal() {
+        document.getElementById('notificationModal').classList.add('hidden');
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+
+    function handleNotificationClick(notificationId, notificationType, redirectUrl) {
         // Mark notification as read
         fetch('/notifications/' + notificationId + '/read', {
             method: 'POST'
@@ -558,54 +598,149 @@
             console.error('Failed to mark notification as read:', error);
         });
 
-        // Redirect if there's a redirect URL
-        if (redirectUrl) {
-            setTimeout(() => {
-                window.location.href = redirectUrl;
-            }, 100);
+        // Handle different notification types
+        if (notificationType === 'STOCK_EMPTY' || notificationType === 'MENU_UPDATED') {
+            // Delete all stock empty and menu updated notifications (grouped together)
+            deleteAllMenuRelatedNotifications();
+            // Redirect to Place Your Order page
+            if (redirectUrl) {
+                setTimeout(() => {
+                    window.location.href = redirectUrl;
+                }, 300);
+            }
+        } else {
+            // For other notification types, just delete this notification
+            deleteNotification(null, notificationId);
         }
     }
 
-    function deleteNotification(event, notificationId) {
-        event.stopPropagation(); // Prevent the notification click handler
-        
-        if (confirm('Delete this notification?')) {
-            fetch('/notifications/' + notificationId, {
-                method: 'DELETE'
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Remove the notification element from DOM
-                    const notificationElement = document.querySelector('[data-notification-id="' + notificationId + '"]');
-                    notificationElement.style.opacity = '0';
-                    notificationElement.style.transform = 'translateX(-100%)';
-                    
+    function deleteAllMenuRelatedNotifications() {
+        fetch('/notifications/menu-related/clear', {
+            method: 'DELETE'
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove all STOCK_EMPTY and MENU_UPDATED notifications from the DOM
+                const menuRelatedNotifications = document.querySelectorAll('[data-notification-type="STOCK_EMPTY"], [data-notification-type="MENU_UPDATED"]');
+                menuRelatedNotifications.forEach(notification => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateX(-100%)';
                     setTimeout(() => {
-                        notificationElement.remove();
-                        
-                        // If no notifications left, hide the section
-                        const remainingNotifications = document.querySelectorAll('.notification-item');
-                        if (remainingNotifications.length === 0) {
-                            const notificationSection = document.querySelector('.mb-12.animate-slide-up');
-                            if (notificationSection && notificationSection.querySelector('.fas.fa-bell')) {
-                                notificationSection.style.opacity = '0';
-                                setTimeout(() => {
-                                    notificationSection.remove();
-                                }, 300);
-                            }
-                        }
+                        notification.remove();
+                        updateNotificationCount();
                     }, 200);
-                    
-                    showToast('Notification deleted', 'success');
-                } else {
-                    showToast('Failed to delete notification', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Failed to delete notification:', error);
-                showToast('Failed to delete notification', 'error');
-            });
+                });
+                showToast('All menu-related notifications cleared', 'success');
+            } else {
+                showToast('Failed to clear menu-related notifications', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to clear menu-related notifications:', error);
+            showToast('Failed to clear menu-related notifications', 'error');
+        });
+    }
+
+    function clearAllNotifications() {
+        fetch('/notifications/clear-all', {
+            method: 'DELETE'
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove all notifications from the DOM
+                const notificationList = document.getElementById('notificationList');
+                notificationList.innerHTML = `
+                    <div class="text-center py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-bell-slash text-2xl text-gray-400"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">No Notifications</h3>
+                        <p class="text-gray-600">You're all caught up!</p>
+                    </div>
+                `;
+                updateNotificationCount();
+                showToast('All notifications cleared', 'success');
+            } else {
+                showToast('Failed to clear all notifications', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to clear all notifications:', error);
+            showToast('Failed to clear all notifications', 'error');
+        });
+    }
+
+    function updateNotificationCount() {
+        const remainingNotifications = document.querySelectorAll('.notification-item');
+        const countElement = document.getElementById('notificationCount');
+        
+        if (remainingNotifications.length === 0) {
+            if (countElement) {
+                countElement.remove();
+            }
+        } else if (countElement) {
+            countElement.textContent = remainingNotifications.length;
         }
+    }
+
+    function handleModalBackdropClick(event) {
+        // Only close if clicking the backdrop itself, not the modal content
+        if (event.target === event.currentTarget) {
+            closeNotificationModal();
+        }
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeNotificationModal();
+        }
+    });
+
+    function deleteNotification(event, notificationId) {
+        if (event) {
+            event.stopPropagation(); // Prevent the notification click handler
+        }
+        
+        fetch('/notifications/' + notificationId, {
+            method: 'DELETE'
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remove the notification element from DOM
+                const notificationElement = document.querySelector('[data-notification-id="' + notificationId + '"]');
+                notificationElement.style.opacity = '0';
+                notificationElement.style.transform = 'translateX(-100%)';
+                
+                setTimeout(() => {
+                    notificationElement.remove();
+                    updateNotificationCount();
+                    
+                    // If no notifications left in modal, show empty state
+                    const remainingNotifications = document.querySelectorAll('.notification-item');
+                    if (remainingNotifications.length === 0) {
+                        const notificationList = document.getElementById('notificationList');
+                        notificationList.innerHTML = `
+                            <div class="text-center py-12">
+                                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-bell-slash text-2xl text-gray-400"></i>
+                                </div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-2">No Notifications</h3>
+                                <p class="text-gray-600">You're all caught up!</p>
+                            </div>
+                        `;
+                    }
+                }, 200);
+                
+                showToast('Notification deleted', 'success');
+            } else {
+                showToast('Failed to delete notification', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Failed to delete notification:', error);
+            showToast('Failed to delete notification', 'error');
+        });
     }
 
     function showToast(message, type = 'info') {

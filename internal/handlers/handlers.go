@@ -56,6 +56,9 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		// Notification routes
 		customer.POST("/notifications/:id/read", h.markNotificationRead)
 		customer.DELETE("/notifications/:id", h.deleteNotification)
+		customer.DELETE("/notifications/clear-all", h.clearAllNotifications)
+		customer.DELETE("/notifications/stock-empty/clear", h.clearStockEmptyNotifications)
+		customer.DELETE("/notifications/menu-related/clear", h.clearMenuRelatedNotifications)
 	}
 
 	// Admin routes

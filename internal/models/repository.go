@@ -597,3 +597,36 @@ func (r *Repository) UnmarkItemStockEmpty(itemID int, date time.Time, orderID in
 	
 	return err
 }
+
+func (r *Repository) DeleteAllUserNotifications(employeeID int) error {
+	_, err := r.db.Exec(`DELETE FROM user_notifications WHERE employee_id = $1`, employeeID)
+	return err
+}
+
+func (r *Repository) DeleteUserNotificationsByType(employeeID int, notificationType string) error {
+	_, err := r.db.Exec(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type = $2`, 
+		employeeID, notificationType)
+	return err
+}
+
+func (r *Repository) DeleteUserNotificationsByTypes(employeeID int, notificationTypes []string) error {
+	if len(notificationTypes) == 0 {
+		return nil
+	}
+	
+	// Build placeholders for the IN clause
+	placeholders := make([]string, len(notificationTypes))
+	args := make([]interface{}, len(notificationTypes)+1)
+	args[0] = employeeID
+	
+	for i, notificationType := range notificationTypes {
+		placeholders[i] = fmt.Sprintf("$%d", i+2)
+		args[i+1] = notificationType
+	}
+	
+	query := fmt.Sprintf(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type IN (%s)`, 
+		strings.Join(placeholders, ","))
+	
+	_, err := r.db.Exec(query, args...)
+	return err
+}
