@@ -659,7 +659,9 @@
                         <li><a href="/my-orders" class="hover:text-white transition-colors">My Orders</a></li>
                         <li>
                             {{if .todaySession}}
-                                {{if and .todayOrder .todayOrder.Paid}}
+                                {{if eq .todaySession.Status "CLOSED_FOR_ORDERS"}}
+                                    <span class="text-gray-600 cursor-not-allowed">Edit Orders (Session Closed)</span>
+                                {{else if and .todayOrder .todayOrder.Paid}}
                                     <span class="text-gray-600 cursor-not-allowed">Edit Orders (Paid)</span>
                                 {{else if and .todayOrder (eq .todayOrder.Status "READY_FOR_DELIVERY") (not .todayOrder.Paid)}}
                                     <span class="text-gray-600 cursor-not-allowed">Edit Orders (Prepared)</span>
