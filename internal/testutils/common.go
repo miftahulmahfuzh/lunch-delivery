@@ -66,8 +66,8 @@ func MockMenuItems() []interface{} {
 	}
 }
 
-// Mock Company for testing
-func MockCompany() interface{} {
+// Mock Company for testing (generic interface version)
+func MockCompanyGeneric() interface{} {
 	return map[string]interface{}{
 		"ID":      1,
 		"Name":    "Test Company",

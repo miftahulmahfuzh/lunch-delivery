@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/gin-gonic/gin"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/mocks"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/testutils"
