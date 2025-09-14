@@ -9,11 +9,13 @@ This application manages a restaurant's lunch delivery service that operates on 
 ### Key Features
 - **Company Management**: Register and manage corporate clients
 - **Employee Self-Registration**: Company employees can create their own accounts
+- **🔐 Secure Authentication**: Complete login system with forgot password functionality
 - **Daily Menu Management**: Admin can set available menu items for each day
 - **Order Sessions**: Time-bound ordering windows for each company
 - **Individual Order Tracking**: Track each employee's order and payment status
 - **Real-time Order Management**: Close/reopen order sessions as needed
 - **🤖 AI Nutritionist**: AI-powered meal recommendations with nutritional analysis and intelligent caching
+- **📧 Email Integration**: SMTP-based email service for password resets and notifications
 
 ## Architecture
 
@@ -21,7 +23,8 @@ This application manages a restaurant's lunch delivery service that operates on 
 - **Backend**: Go 1.21+ with Gin framework
 - **Database**: PostgreSQL with sqlx for query handling
 - **Frontend**: Server-side rendered HTML templates with vanilla CSS/JavaScript
-- **Authentication**: Cookie-based sessions with bcrypt password hashing
+- **Authentication**: Cookie-based sessions with bcrypt password hashing and email-based password reset
+- **Email Service**: SMTP integration with TLS/STARTTLS support for Gmail, Outlook, and other providers
 - **AI Integration**: LLM-powered nutritionist service with smart caching
 
 ### Project Structure
@@ -32,23 +35,34 @@ lunch-delivery/
 │       └── main.go                 # Application entry point
 ├── internal/
 │   ├── models/
-│   │   ├── models.go              # Data structures
+│   │   ├── models.go              # Data structures & password reset tokens
 │   │   └── repository.go          # Database operations
 │   ├── handlers/
 │   │   ├── handlers.go            # Route setup
 │   │   ├── admin.go               # Admin functionality
-│   │   ├── auth.go                # Authentication
+│   │   ├── auth.go                # Authentication & password reset
 │   │   ├── orders.go              # Customer orders
 │   │   └── employees.go           # Employee management
 │   ├── services/
 │   │   └── nutritionist.go        # AI nutritionist service
+│   ├── utils/
+│   │   ├── token.go               # Secure token generation
+│   │   └── email.go               # SMTP email service
 │   ├── middleware/
 │   │   └── auth.go                # Authentication middleware
 │   └── database/
 │       └── db.go                  # Database connection
-├── migrations/
-│   └── 001_initial.sql            # Database schema
-├── templates/                     # HTML templates
+├── scripts/
+│   ├── sql/                       # Organized SQL scripts
+│   │   ├── schema/                # Database structure & migrations
+│   │   ├── seeds/                 # Initial data & test data
+│   │   ├── updates/               # Data modifications
+│   │   └── deletions/             # Data cleanup scripts
+│   └── smtp/                      # Email testing tools
+│       ├── send.go                # SMTP configuration tester
+│       ├── test-forgot-password.go # Password reset email tester
+│       └── setup-gmail.md         # Gmail setup guide
+├── templates/                     # HTML templates (includes password reset forms)
 └── static/                        # Static assets (CSS, JS, images)
 ```
 
@@ -67,6 +81,11 @@ lunch-delivery/
 **employees**
 - Individual users who can place orders
 - Fields: id, company_id, name, email, wa_contact, password_hash, active, created_at
+
+**password_reset_tokens**
+- Secure tokens for password reset functionality
+- Fields: id, employee_id, token, expires_at, used, created_at
+- Security: One-time use tokens with 1-hour expiration
 
 **daily_menus**
 - Subset of menu items available on specific dates
@@ -200,7 +219,139 @@ CREATE TABLE nutritionist_user_selections (
 
 CREATE INDEX idx_nutritionist_user_selections_date ON nutritionist_user_selections(date);
 CREATE INDEX idx_nutritionist_user_selections_employee ON nutritionist_user_selections(employee_id);
+
+-- Add password reset tokens table
+CREATE TABLE password_reset_tokens (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id) ON DELETE CASCADE,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    expires_at TIMESTAMP NOT NULL,
+    used BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
+CREATE INDEX idx_password_reset_tokens_employee ON password_reset_tokens(employee_id);
+CREATE INDEX idx_password_reset_tokens_expires ON password_reset_tokens(expires_at);
 ```
+
+## Scripts Directory
+
+The `scripts/` directory contains organized tools and SQL scripts for database management, testing, and development workflows. This structure was designed for maintainability and ease of use across different environments.
+
+### Directory Structure
+
+```
+scripts/
+├── sql/                           # SQL database scripts
+│   ├── schema/                    # Database structure & migrations
+│   │   ├── 001_initial.sql        # Core tables and relationships
+│   │   ├── 003_nutritionist_reset_flag.sql  # AI nutritionist feature
+│   │   ├── 005_stock_empty_and_notifications.sql  # Stock tracking
+│   │   ├── 008_nutritionist_selections.sql   # AI recommendations
+│   │   └── 009_password_reset_tokens.sql     # Forgot password feature
+│   ├── seeds/                     # Data population scripts
+│   │   ├── 002_menu_items_seed.sql          # Menu catalog data
+│   │   └── 007_test_data_order_history.sql  # Development test data
+│   ├── updates/                   # Schema and data modifications
+│   │   ├── 004_update_price_to_rupiah.sql   # Price format conversion
+│   │   └── 006_remove_global_stock_empty.sql # Schema cleanup
+│   └── deletions/                 # Data cleanup and testing
+│       ├── 007_delete_today_order_session.sql  # Session cleanup
+│       ├── 009_test_footer_edge_case.sql       # Edge case testing
+│       └── delete_test_order.sql               # Test data removal
+└── smtp/                          # Email testing and configuration
+    ├── send.go                    # SMTP configuration tester
+    ├── test-forgot-password.go    # Password reset email tester
+    ├── README.md                  # SMTP setup documentation
+    └── setup-gmail.md             # Gmail App Password guide
+```
+
+### Usage Guide
+
+#### 📋 Fresh Database Setup
+For new installations, run schema scripts in order:
+
+```bash
+# 1. Core database structure
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/001_initial.sql
+
+# 2. Feature additions (run in order)
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/003_nutritionist_reset_flag.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/005_stock_empty_and_notifications.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/008_nutritionist_selections.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/009_password_reset_tokens.sql
+
+# 3. Seed initial data
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/002_menu_items_seed.sql
+```
+
+#### 🌱 Development Setup
+Add test data for development:
+
+```bash
+# Add test order history for UI testing
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/007_test_data_order_history.sql
+```
+
+#### 📧 SMTP Testing
+Test email functionality:
+
+```bash
+# Test basic SMTP configuration
+go run scripts/smtp/send.go
+
+# Test forgot password email flow
+go run scripts/smtp/test-forgot-password.go
+```
+
+#### 🔄 Maintenance Operations
+Use update and cleanup scripts as needed:
+
+```bash
+# Example: Price format conversion (one-time)
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/updates/004_update_price_to_rupiah.sql
+
+# Example: Clean test data
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/deletions/delete_test_order.sql
+```
+
+### Directory Guidelines
+
+#### 🛡️ Safety Levels
+
+**🟢 Safe (schema/, seeds/):**
+- Schema scripts: Idempotent table creation
+- Seeds: Safe to run multiple times
+- No data loss risk
+
+**🟡 Caution (updates/):**
+- Modifies existing data or schema
+- Test in development first
+- May require downtime
+
+**🔴 Danger (deletions/):**
+- Can permanently delete data
+- Always backup before running
+- Primarily for development/testing
+
+#### 📝 Best Practices
+
+**Development Workflow:**
+1. Always run scripts in development environment first
+2. Use version control for all script modifications
+3. Follow naming convention: `###_descriptive_name.sql`
+4. Document any manual steps or prerequisites
+
+**Production Safety:**
+- **Always backup** before running updates or deletions
+- Test scripts in staging environment
+- Use database transactions for complex operations
+- Document all production changes in change log
+
+For detailed information about each directory, see the README.md files in:
+- `scripts/sql/README.md` - Complete SQL script documentation
+- `scripts/smtp/README.md` - SMTP testing and setup guide
 
 ### Application Setup
 
@@ -287,6 +438,7 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 
 **Daily Ordering:**
 1. **Login**: Access `http://localhost:8080/login`
+   - **Forgot Password**: Click "Forgot your password?" if needed, enter email to receive reset link
 2. **View Dashboard**: See today's order session and recent order history
 3. **Place Order**: Click "Place Order Now" if session is open
 4. **Select Items**: Choose from today's available menu with real-time price calculation
@@ -302,6 +454,10 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - `POST /login` - Process login
 - `GET /signup` - Registration form
 - `POST /signup` - Process registration
+- `GET /forgot-password` - Forgot password form
+- `POST /forgot-password` - Request password reset email
+- `GET /reset-password` - Password reset form (with token validation)
+- `POST /reset-password` - Process password reset
 
 ### Protected Customer Routes (Authentication Required)
 - `GET /logout` - Logout user
@@ -335,6 +491,73 @@ INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUE
 - `POST /admin/orders/:id/unpaid` - Mark order as unpaid
 
 ## Features Details
+
+### 🔐 Forgot Password Feature
+
+The application includes a comprehensive, secure password reset system that allows employees to recover their accounts via email verification.
+
+#### How It Works
+
+**User Flow:**
+1. **Request Reset**: User clicks "Forgot Password?" on login page
+2. **Enter Email**: User enters their registered email address
+3. **Email Sent**: System sends password reset link to user's email
+4. **Secure Link**: User clicks link with secure token to access reset form
+5. **New Password**: User creates new password with confirmation
+6. **Account Recovery**: User can immediately login with new password
+
+**Security Features:**
+- **Secure Tokens**: Cryptographically secure tokens using UUID + random bytes + timestamp
+- **One-Time Use**: Tokens can only be used once and are marked as used after password reset
+- **Time Expiration**: Tokens automatically expire after 1 hour for security
+- **No User Enumeration**: Same response for valid/invalid emails to prevent account discovery
+- **Password Validation**: Minimum length requirements and confirmation matching
+
+#### Technical Implementation
+
+**Architecture:**
+- `internal/utils/token.go`: Cryptographically secure token generation
+- `internal/utils/email.go`: SMTP email service with TLS/STARTTLS support
+- `internal/models/repository.go`: Token management and password update methods
+- `templates/forgot_password.html` & `templates/reset_password.html`: Responsive UI forms
+
+**Database Schema:**
+- `password_reset_tokens`: Secure token storage with expiration tracking
+- Proper foreign key relationships and indexing for performance
+- Automatic cleanup of expired/used tokens
+
+**Email Integration:**
+- SMTP support for Gmail, Outlook, Yahoo, SendGrid, and custom providers
+- TLS/STARTTLS encryption for secure email transmission
+- Professional email templates with branded content
+- Configurable via environment variables
+
+#### SMTP Configuration
+
+Set up email sending in your `.env` file:
+
+```bash
+# Gmail (recommended)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password  # Use Gmail App Password
+SMTP_FROM=your-email@gmail.com
+
+# Outlook/Hotmail
+SMTP_HOST=smtp-mail.outlook.com
+SMTP_PORT=587
+SMTP_USERNAME=your-email@outlook.com
+SMTP_PASSWORD=your-password
+
+# Test target email
+SMTP_TEST_EMAIL_ADDRESS=test@example.com
+```
+
+**Testing Tools:**
+- `scripts/smtp/send.go`: Test SMTP configuration with real email
+- `scripts/smtp/test-forgot-password.go`: Test complete forgot password flow
+- `scripts/smtp/setup-gmail.md`: Detailed Gmail App Password setup guide
 
 ### 🤖 AI Nutritionist Feature
 
