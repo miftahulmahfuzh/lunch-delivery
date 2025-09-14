@@ -416,7 +416,7 @@ func (h *Handler) closeOrderSession(c *gin.Context) {
 			order.EmployeeID,
 			models.NotificationSessionClosed,
 			"Order Session Closed",
-			"The lunch order session for "+session.CompanyName+" has been closed. Your order is now being processed.",
+			"The lunch order session for "+session.CompanyName+" has been closed.",
 			nil,
 		)
 		if err != nil {
@@ -566,10 +566,32 @@ func (h *Handler) updateOrderStatus(c *gin.Context) {
 		return
 	}
 
+	// Get order details for notification (before updating status)
+	order, err := h.repo.GetOrderByID(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
 	err = h.repo.UpdateOrderStatus(id, request.Status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Create notification for READY_FOR_DELIVERY status
+	if request.Status == models.OrderStatusReadyDelivery {
+		err = h.repo.CreateUserNotification(
+			order.EmployeeID,
+			models.NotificationReadyForDelivery,
+			"Order Ready for Delivery",
+			"Your lunch order has been prepared and is ready for delivery!",
+			nil,
+		)
+		if err != nil {
+			// Log error but don't fail the request
+			log.Warn().Err(err).Int("employee_id", order.EmployeeID).Msg("Failed to create ready for delivery notification")
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true})

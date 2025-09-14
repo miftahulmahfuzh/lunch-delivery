@@ -135,4 +135,5 @@ const (
 	NotificationPaid        = "PAID"
 	NotificationSessionClosed = "SESSION_CLOSED"
 	NotificationMenuUpdated = "MENU_UPDATED"
+	NotificationReadyForDelivery = "READY_FOR_DELIVERY"
 )
