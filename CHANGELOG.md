@@ -5,6 +5,111 @@ All notable changes to the Lunch Delivery System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-01-14
+
+### Added
+- **🔐 Complete Password Reset System**
+  - Forgot password functionality with email-based token system
+  - Secure password reset tokens with expiration (1 hour)
+  - SMTP email integration with configurable settings
+  - Dedicated forgot password and reset password templates
+  - Comprehensive email utilities and token management
+
+- **📊 Individual Order Tracking Enhancement**
+  - Individual order preparation status tracking system
+  - Real-time order status updates with visual indicators
+  - Enhanced order management with preparation workflow
+  - Status-based UI updates and notifications
+
+- **🎯 Advanced Order Session Management**
+  - Duplicate order session detection and prevention
+  - Smart redirect functionality for existing sessions
+  - Enhanced session validation with user-friendly popups
+  - Improved session creation workflow with conflict handling
+
+- **🎨 Enhanced User Interface & Navigation**
+  - Clickable order summary with scroll-to-item functionality
+  - Improved order navigation and user experience
+  - Toggle switches replacing traditional action buttons
+  - Refresh button integration for real-time updates
+  - Priority-based Edit Orders link with session status awareness
+
+- **🗂️ Complete SQL Scripts Reorganization**
+  - Organized SQL scripts into logical directory structure
+  - Separated schema, seeds, updates, and deletion scripts
+  - Enhanced documentation for all script categories
+  - Migration from legacy migrations folder to structured scripts/sql/
+
+- **📧 SMTP Testing and Documentation**
+  - Comprehensive SMTP testing utilities
+  - Gmail integration setup documentation
+  - Email testing scripts for password reset functionality
+  - Complete SMTP configuration examples
+
+- **🛡️ Enhanced Admin Features**
+  - Menu validation for order session creation
+  - Improved admin page footer consistency
+  - Standardized admin interface across all pages
+  - Enhanced menu management with validation checks
+
+- **📖 Documentation Improvements**
+  - Enhanced README with forgot password feature documentation
+  - Comprehensive scripts directory documentation
+  - Detailed setup instructions for email functionality
+  - Updated seed data documentation
+
+### Changed
+- **🔄 File Structure Modernization**
+  - Migrated from migrations/ to scripts/sql/ structure
+  - Reorganized SQL files by purpose (schema/seeds/updates/deletions)
+  - Updated .gitignore for improved project structure
+  - Enhanced .env.example with email configuration
+
+- **🎯 UI/UX Enhancements**
+  - Replaced traditional buttons with modern toggle switches
+  - Improved order status layout with better visual hierarchy
+  - Enhanced session orders interface with status prioritization
+  - Streamlined order management interface
+
+- **📊 Order Management Improvements**
+  - Enhanced order preparation tracking workflow
+  - Improved session status handling and validation
+  - Better integration between order creation and session management
+  - Enhanced order summary display with navigation features
+
+### Fixed
+- **🔧 Session Management Issues**
+  - Fixed duplicate order session creation problems
+  - Resolved session validation edge cases
+  - Improved error handling for session conflicts
+  - Enhanced session status update reliability
+
+- **🎨 UI Consistency & Layout**
+  - Standardized footer layouts across admin pages
+  - Improved toggle switch functionality and appearance
+  - Fixed order status display inconsistencies
+  - Enhanced responsive design elements
+
+### Security
+- **🔐 Authentication System Enhancements**
+  - Secure password reset token implementation
+  - Time-limited token validation (1-hour expiration)
+  - Email-based verification for password resets
+  - Enhanced input validation for authentication flows
+
+### Technical Infrastructure
+- **📧 Email System Integration**
+  - SMTP client implementation with configurable settings
+  - Token generation and validation utilities
+  - Email template system for password reset notifications
+  - Comprehensive error handling for email operations
+
+- **🗄️ Database Schema Updates**
+  - Password reset tokens table implementation
+  - Individual order status tracking enhancement
+  - Updated seed data with realistic menu items
+  - Enhanced data validation and constraints
+
 ## [0.4.0] - 2025-09-13
 
 ### Added
@@ -226,6 +331,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WhatsApp contact integration** for communication
 - **Flexible session management** with reopen capability
 
+[0.5.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.5.0
 [0.4.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.4.0
 [0.3.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.3.0
 [0.2.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.2.0
