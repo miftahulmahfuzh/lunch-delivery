@@ -243,28 +243,28 @@ The `scripts/` directory contains organized tools and SQL scripts for database m
 
 ```
 scripts/
-├── sql/                                            # SQL database scripts
-│   ├── schema/                                     # Database structure & migrations
-│   │   ├── 001_initial.sql                         # Core tables and relationships
-│   │   ├── 002_nutritionist_reset_flag.sql         # AI nutritionist feature
-│   │   ├── 003_stock_empty_and_notifications.sql   # Stock tracking
-│   │   ├── 004_nutritionist_selections.sql         # AI recommendations
-│   │   └── 005_password_reset_tokens.sql           # Forgot password feature
-│   ├── seeds/                                      # Data population scripts
-│   │   ├── 001_menu_items_seed.sql                 # Menu catalog data
-│   │   └── 002_test_data_order_history.sql         # Development test data
-│   ├── updates/                                    # Schema and data modifications
-│   │   ├── 001_update_price_to_rupiah.sql          # Price format conversion
-│   │   └── 002_remove_global_stock_empty.sql       # Schema cleanup
-│   └── deletions/                                  # Data cleanup and testing
-│       ├── 001_delete_today_order_session.sql      # Session cleanup
-│       ├── 002_test_footer_edge_case.sql           # Edge case testing
-│       └── 003_delete_test_order.sql                   # Test data removal
-└── smtp/                                           # Email testing and configuration
-    ├── send.go                                     # SMTP configuration tester
-    ├── test-forgot-password.go                     # Password reset email tester
-    ├── README.md                                   # SMTP setup documentation
-    └── setup-gmail.md                              # Gmail App Password guide
+├── sql/                                           # SQL database scripts
+│   ├── schema/                                    # Database structure & migrations
+│   │   ├── 001_initial.sql                        # Core tables and relationships
+│   │   ├── 002_nutritionist_reset_flag.sql        # AI nutritionist feature
+│   │   ├── 003_stock_empty_and_notifications.sql  # Stock tracking
+│   │   ├── 004_nutritionist_selections.sql        # AI recommendations
+│   │   └── 005_password_reset_tokens.sql          # Forgot password feature
+│   ├── seeds/                                     # Data population scripts
+│   │   ├── 001_menu_items_seed.sql                # Menu catalog data
+│   │   └── 002_test_data_order_history.sql        # Development test data
+│   ├── updates/                                   # Schema and data modifications
+│   │   ├── 001_update_price_to_rupiah.sql         # Price format conversion
+│   │   └── 002_remove_global_stock_empty.sql      # Schema cleanup
+│   └── deletions/                                 # Data cleanup and testing
+│       ├── 001_delete_today_order_session.sql     # Session cleanup
+│       ├── 002_test_footer_edge_case.sql          # Edge case testing
+│       └── 003_delete_test_order.sql              # Test data removal
+└── smtp/                                          # Email testing and configuration
+    ├── send.go                                    # SMTP configuration tester
+    ├── test-forgot-password.go                    # Password reset email tester
+    ├── README.md                                  # SMTP setup documentation
+    └── setup-gmail.md                             # Gmail App Password guide
 ```
 
 ### Usage Guide
@@ -277,13 +277,13 @@ For new installations, run schema scripts in order:
 PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/001_initial.sql
 
 # 2. Feature additions (run in order)
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/003_nutritionist_reset_flag.sql
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/005_stock_empty_and_notifications.sql
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/008_nutritionist_selections.sql
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/009_password_reset_tokens.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/002_nutritionist_reset_flag.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/003_stock_empty_and_notifications.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/004_nutritionist_selections.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/schema/005_password_reset_tokens.sql
 
 # 3. Seed initial data
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/002_menu_items_seed.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/001_menu_items_seed.sql
 ```
 
 #### 🌱 Development Setup
@@ -291,7 +291,7 @@ Add test data for development:
 
 ```bash
 # Add test order history for UI testing
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/007_test_data_order_history.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/seeds/002_test_data_order_history.sql
 ```
 
 #### 📧 SMTP Testing
@@ -310,10 +310,10 @@ Use update and cleanup scripts as needed:
 
 ```bash
 # Example: Price format conversion (one-time)
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/updates/004_update_price_to_rupiah.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/updates/001_update_price_to_rupiah.sql
 
 # Example: Clean test data
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/deletions/delete_test_order.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f scripts/sql/deletions/003_delete_test_order.sql
 ```
 
 ### Directory Guidelines
@@ -373,35 +373,6 @@ go run cmd/server/main.go
 ```
 
 The server will start on `http://localhost:8080`
-
-### Sample Data
-
-Insert test data to explore the application:
-
-```sql
--- Sample menu items
-INSERT INTO menu_items (name, price) VALUES
-('Cah jagung muda', 1500),
-('Cah labu', 1500),
-('Cah toge', 1200),
-('Cah kembang kol', 1500),
-('Cah oyong telur', 1800),
-('Ceker cabe ijo', 2000),
-('Ayam goreng kandar merah', 2500),
-('Udang crispy cabe garam', 3000);
-
--- Sample companies
-INSERT INTO companies (name, address, contact) VALUES
-('Tech Corp', 'Jakarta Selatan', 'tech@corp.com'),
-('Marketing Inc', 'Jakarta Pusat', 'hello@marketing.com'),
-('Finance Ltd', 'Jakarta Barat', 'contact@finance.com');
-
--- Sample employees (password: 'password')
-INSERT INTO employees (company_id, name, email, wa_contact, password_hash) VALUES
-(1, 'Jemmy', 'jemmy@techcorp.com', '+628123456789', '$2a$10$dummy.hash.for.testing'),
-(1, 'Hafidh', 'hafidh@techcorp.com', '+628234567890', '$2a$10$dummy.hash.for.testing'),
-(1, 'Jeri', 'jeri@techcorp.com', '+628345678901', '$2a$10$dummy.hash.for.testing');
-```
 
 ## User Workflows
 
