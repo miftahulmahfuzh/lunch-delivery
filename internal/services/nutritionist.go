@@ -148,7 +148,12 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 
 // Method to track that user used nutritionist selection
 func (s *NutritionistService) TrackUserSelection(employeeID int, date time.Time, orderID *int) error {
-	return s.repo.CreateNutritionistUserSelection(employeeID, date, orderID)
+	var menuItemIDs []int64
+	if orderID != nil {
+		menuItemIDs = append(menuItemIDs, int64(*orderID))
+	}
+	_, err := s.repo.CreateNutritionistUserSelection(date, employeeID, menuItemIDs)
+	return err
 }
 
 // Method to get users who need notification after menu reset
@@ -411,12 +416,6 @@ func (s *NutritionistService) saveToCacheIfValid(date time.Time, menuItems []mod
 		selectedIndices = append(selectedIndices, int32(idx))
 	}
 
-	// Convert nutritional summary to JSON
-	summaryJSON, err := json.Marshal(response.NutritionalSummary)
-	if err != nil {
-		return fmt.Errorf("failed to marshal nutritional summary: %w", err)
-	}
-
-	_, err = s.repo.CreateNutritionistSelection(date, menuItemIDs, selectedIndices, response.Reasoning, string(summaryJSON))
+	_, err := s.repo.CreateNutritionistSelection(date, menuItemIDs)
 	return err
 }

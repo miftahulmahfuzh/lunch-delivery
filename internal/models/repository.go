@@ -101,12 +101,11 @@ func (r *Repository) UpdateEmployeePassword(employeeID int, passwordHash string)
 }
 
 // Password Reset Tokens
-func (r *Repository) CreatePasswordResetToken(employeeID int, token string, expiresAt time.Time) (*PasswordResetToken, error) {
-	var resetToken PasswordResetToken
-	err := r.db.Get(&resetToken,
-		`INSERT INTO password_reset_tokens (employee_id, token, expires_at) VALUES ($1, $2, $3) RETURNING *`,
+func (r *Repository) CreatePasswordResetToken(employeeID int, token string, expiresAt time.Time) error {
+	_, err := r.db.Exec(
+		`INSERT INTO password_reset_tokens (employee_id, token, expires_at) VALUES ($1, $2, $3)`,
 		employeeID, token, expiresAt)
-	return &resetToken, err
+	return err
 }
 
 func (r *Repository) GetPasswordResetToken(token string) (*PasswordResetToken, error) {
@@ -120,8 +119,13 @@ func (r *Repository) GetPasswordResetToken(token string) (*PasswordResetToken, e
 	return &resetToken, err
 }
 
-func (r *Repository) MarkPasswordResetTokenAsUsed(id int) error {
-	_, err := r.db.Exec(`UPDATE password_reset_tokens SET used = true WHERE id = $1`, id)
+func (r *Repository) MarkPasswordResetTokenAsUsed(token string) error {
+	_, err := r.db.Exec(`UPDATE password_reset_tokens SET used = true WHERE token = $1`, token)
+	return err
+}
+
+func (r *Repository) DeletePasswordResetToken(token string) error {
+	_, err := r.db.Exec(`DELETE FROM password_reset_tokens WHERE token = $1`, token)
 	return err
 }
 
@@ -153,11 +157,11 @@ func (r *Repository) GetDailyMenuByDate(date time.Time) (*DailyMenu, error) {
 }
 
 // Order Sessions
-func (r *Repository) CreateOrderSession(companyID int, date time.Time) (*OrderSession, error) {
+func (r *Repository) CreateOrderSession(companyID int, date time.Time, status string) (*OrderSession, error) {
 	var session OrderSession
 	err := r.db.Get(&session,
-		`INSERT INTO order_sessions (company_id, date) VALUES ($1, $2) RETURNING *`,
-		companyID, date.Format("2006-01-02"))
+		`INSERT INTO order_sessions (company_id, date, status) VALUES ($1, $2, $3) RETURNING *`,
+		companyID, date.Format("2006-01-02"), status)
 	return &session, err
 }
 
@@ -234,12 +238,6 @@ func (r *Repository) GetMenuItemsByIDs(ids []int64) ([]MenuItem, error) {
 	return items, err
 }
 
-// Add this to internal/models/repository.go
-
-type OrderSessionWithCompany struct {
-	OrderSession
-	CompanyName string `json:"company_name" db:"company_name"`
-}
 
 func (r *Repository) GetOrderSessionsByDateWithCompany(date time.Time) ([]OrderSessionWithCompany, error) {
 	var sessions []OrderSessionWithCompany
@@ -260,12 +258,6 @@ func (r *Repository) ReopenOrderSession(id int) error {
 }
 
 // For individual orders
-
-type IndividualOrderWithDetails struct {
-	IndividualOrder
-	EmployeeName  string `json:"employee_name" db:"employee_name"`
-	MenuItemNames string `json:"menu_item_names"`
-}
 
 func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualOrderWithDetails, error) {
 	var orders []IndividualOrderWithDetails
@@ -352,12 +344,6 @@ func (r *Repository) GetEmployeeByID(id int) (*Employee, error) {
 	return &employee, err
 }
 
-type RecentOrder struct {
-	Date          time.Time `db:"date"`
-	TotalPrice    int       `db:"total_price"`
-	Paid          bool      `db:"paid"`
-	MenuItemNames string    `json:"menu_item_names"`
-}
 
 func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDate time.Time) ([]RecentOrder, error) {
 	type OrderRow struct {
@@ -380,18 +366,18 @@ func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDat
 	}
 	
 	var orders []RecentOrder
-	
+
 	// Get menu item names for each order
 	for _, row := range orderRows {
 		var menuItemNames []string
-		
+
 		if len(row.MenuItemIDs) > 0 {
 			// Convert pq.Int64Array to []int64
 			var itemIDs []int64
 			for _, id := range row.MenuItemIDs {
 				itemIDs = append(itemIDs, id)
 			}
-			
+
 			items, err := r.GetMenuItemsByIDs(itemIDs)
 			if err == nil {
 				for _, item := range items {
@@ -399,7 +385,7 @@ func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDat
 				}
 			}
 		}
-		
+
 		order := RecentOrder{
 			Date:          row.Date,
 			TotalPrice:    row.TotalPrice,
@@ -422,12 +408,12 @@ func (r *Repository) GetNutritionistSelectionByDate(date time.Time) (*Nutritioni
 	return &selection, err
 }
 
-func (r *Repository) CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning, nutritionalSummary string) (*NutritionistSelection, error) {
+func (r *Repository) CreateNutritionistSelection(date time.Time, menuItemIDs []int64) (*NutritionistSelection, error) {
 	var selection NutritionistSelection
 	err := r.db.Get(&selection,
-		`INSERT INTO nutritionist_selections (date, menu_item_ids, selected_indices, reasoning, nutritional_summary) 
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-		date.Format("2006-01-02"), pq.Array(menuItemIDs), pq.Array(selectedIndices), reasoning, nutritionalSummary)
+		`INSERT INTO nutritionist_selections (date, menu_item_ids)
+         VALUES ($1, $2) RETURNING *`,
+		date.Format("2006-01-02"), pq.Array(menuItemIDs))
 	return &selection, err
 }
 
@@ -437,14 +423,23 @@ func (r *Repository) DeleteNutritionistSelection(date time.Time) error {
 }
 
 // Nutritionist User Selection Tracking
-func (r *Repository) CreateNutritionistUserSelection(employeeID int, date time.Time, orderID *int) error {
-	_, err := r.db.Exec(
-		`INSERT INTO nutritionist_user_selections (employee_id, date, order_id) 
-         VALUES ($1, $2, $3)
-         ON CONFLICT (employee_id, date) 
-         DO UPDATE SET order_id = $3`,
-		employeeID, date.Format("2006-01-02"), orderID)
-	return err
+func (r *Repository) CreateNutritionistUserSelection(date time.Time, employeeID int, menuItemIDs []int64) (*NutritionistUserSelection, error) {
+	var selection NutritionistUserSelection
+	err := r.db.Get(&selection,
+		`INSERT INTO nutritionist_user_selections (employee_id, date)
+         VALUES ($1, $2)
+         ON CONFLICT (employee_id, date)
+         DO NOTHING RETURNING *`,
+		employeeID, date.Format("2006-01-02"))
+	return &selection, err
+}
+
+func (r *Repository) GetNutritionistUserSelectionByDate(employeeID int, date time.Time) (*NutritionistUserSelection, error) {
+	var selection NutritionistUserSelection
+	err := r.db.Get(&selection,
+		`SELECT * FROM nutritionist_user_selections WHERE employee_id = $1 AND date = $2`,
+		employeeID, date.Format("2006-01-02"))
+	return &selection, err
 }
 
 func (r *Repository) GetNutritionistUsersByDateAndUnpaid(date time.Time) ([]NutritionistUserSelection, error) {
@@ -472,6 +467,35 @@ func (r *Repository) GetDailyMenuResetFlag(date time.Time) (bool, error) {
 }
 
 // Stock Empty and Notification methods
+func (r *Repository) CreateStockEmptyItem(menuItemID int) error {
+	_, err := r.db.Exec(`INSERT INTO stock_empty_items (menu_item_id, date) VALUES ($1, CURRENT_DATE)
+		ON CONFLICT (menu_item_id, date) DO NOTHING`, menuItemID)
+	return err
+}
+
+func (r *Repository) DeleteStockEmptyItem(menuItemID int) error {
+	_, err := r.db.Exec(`DELETE FROM stock_empty_items WHERE menu_item_id = $1 AND date = CURRENT_DATE`, menuItemID)
+	return err
+}
+
+func (r *Repository) GetStockEmptyItems() ([]StockEmptyItem, error) {
+	var items []StockEmptyItem
+	err := r.db.Select(&items, `SELECT * FROM stock_empty_items WHERE date = CURRENT_DATE`)
+	return items, err
+}
+
+func (r *Repository) CreateUserStockEmptyNotification(employeeID, menuItemID int) error {
+	_, err := r.db.Exec(`INSERT INTO user_stock_empty_notifications (individual_order_id, menu_item_id, date)
+		VALUES (0, $1, CURRENT_DATE) ON CONFLICT DO NOTHING`, menuItemID)
+	return err
+}
+
+func (r *Repository) GetUsersNeedingNotification(date time.Time) ([]int, error) {
+	var userIDs []int
+	err := r.db.Select(&userIDs, `SELECT DISTINCT employee_id FROM user_stock_empty_notifications WHERE date = $1`, date.Format("2006-01-02"))
+	return userIDs, err
+}
+
 func (r *Repository) GetOrderItemsByOrderID(orderID int) ([]MenuItem, error) {
 	var items []MenuItem
 	query := `
@@ -501,10 +525,6 @@ func (r *Repository) GetOrderSessionByID(id int) (*OrderSession, error) {
 	return &session, err
 }
 
-type EmployeeWithCompany struct {
-	Employee
-	CompanyName string `json:"company_name" db:"company_name"`
-}
 
 func (r *Repository) GetEmployeeWithCompany(id int) (*EmployeeWithCompany, error) {
 	var employee EmployeeWithCompany
@@ -597,11 +617,11 @@ func (r *Repository) DeleteUserNotification(id int) error {
 	return err
 }
 
-func (r *Repository) CreateUserNotification(employeeID int, notificationType, title, message string, redirectURL *string) error {
+func (r *Repository) CreateUserNotification(employeeID int, notificationType, message string, redirectURL *string) error {
 	_, err := r.db.Exec(`
-		INSERT INTO user_notifications (employee_id, notification_type, title, message, redirect_url) 
-		VALUES ($1, $2, $3, $4, $5)`,
-		employeeID, notificationType, title, message, redirectURL)
+		INSERT INTO user_notifications (employee_id, notification_type, message, redirect_url)
+		VALUES ($1, $2, $3, $4)`,
+		employeeID, notificationType, message, redirectURL)
 	return err
 }
 

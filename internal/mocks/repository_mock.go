@@ -131,12 +131,9 @@ func (m *RepositoryMock) GetEmployeeWithCompany(id int) (*models.EmployeeWithCom
 }
 
 // Password Reset Tokens
-func (m *RepositoryMock) CreatePasswordResetToken(employeeID int, token string, expiresAt time.Time) (*models.PasswordResetToken, error) {
+func (m *RepositoryMock) CreatePasswordResetToken(employeeID int, token string, expiresAt time.Time) error {
 	args := m.Called(employeeID, token, expiresAt)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*models.PasswordResetToken), args.Error(1)
+	return args.Error(0)
 }
 
 func (m *RepositoryMock) GetPasswordResetToken(token string) (*models.PasswordResetToken, error) {
@@ -147,13 +144,13 @@ func (m *RepositoryMock) GetPasswordResetToken(token string) (*models.PasswordRe
 	return args.Get(0).(*models.PasswordResetToken), args.Error(1)
 }
 
-func (m *RepositoryMock) MarkPasswordResetTokenAsUsed(id int) error {
-	args := m.Called(id)
+func (m *RepositoryMock) MarkPasswordResetTokenAsUsed(token string) error {
+	args := m.Called(token)
 	return args.Error(0)
 }
 
-func (m *RepositoryMock) CleanupExpiredPasswordResetTokens() error {
-	args := m.Called()
+func (m *RepositoryMock) DeletePasswordResetToken(token string) error {
+	args := m.Called(token)
 	return args.Error(0)
 }
 
@@ -174,8 +171,8 @@ func (m *RepositoryMock) GetDailyMenuByDate(date time.Time) (*models.DailyMenu, 
 	return args.Get(0).(*models.DailyMenu), args.Error(1)
 }
 
-func (m *RepositoryMock) SetDailyMenuResetFlag(date time.Time, reset bool) error {
-	args := m.Called(date, reset)
+func (m *RepositoryMock) SetDailyMenuResetFlag(date time.Time, value bool) error {
+	args := m.Called(date, value)
 	return args.Error(0)
 }
 
@@ -185,8 +182,8 @@ func (m *RepositoryMock) GetDailyMenuResetFlag(date time.Time) (bool, error) {
 }
 
 // Order Sessions
-func (m *RepositoryMock) CreateOrderSession(companyID int, date time.Time) (*models.OrderSession, error) {
-	args := m.Called(companyID, date)
+func (m *RepositoryMock) CreateOrderSession(companyID int, date time.Time, status string) (*models.OrderSession, error) {
+	args := m.Called(companyID, date, status)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -237,10 +234,6 @@ func (m *RepositoryMock) ReopenOrderSession(id int) error {
 	return args.Error(0)
 }
 
-func (m *RepositoryMock) UpdateOrderSessionStatus(id int, status string) error {
-	args := m.Called(id, status)
-	return args.Error(0)
-}
 
 // Individual Orders
 func (m *RepositoryMock) CreateIndividualOrder(sessionID, employeeID int, menuItemIDs []int64, totalPrice int) (*models.IndividualOrder, error) {
@@ -303,8 +296,8 @@ func (m *RepositoryMock) GetNutritionistSelectionByDate(date time.Time) (*models
 	return args.Get(0).(*models.NutritionistSelection), args.Error(1)
 }
 
-func (m *RepositoryMock) CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning, nutritionalSummary string) (*models.NutritionistSelection, error) {
-	args := m.Called(date, menuItemIDs, selectedIndices, reasoning, nutritionalSummary)
+func (m *RepositoryMock) CreateNutritionistSelection(date time.Time, menuItemIDs []int64) (*models.NutritionistSelection, error) {
+	args := m.Called(date, menuItemIDs)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -316,14 +309,25 @@ func (m *RepositoryMock) DeleteNutritionistSelection(date time.Time) error {
 	return args.Error(0)
 }
 
-func (m *RepositoryMock) CreateNutritionistUserSelection(employeeID int, date time.Time, orderID *int) error {
-	args := m.Called(employeeID, date, orderID)
-	return args.Error(0)
+func (m *RepositoryMock) CreateNutritionistUserSelection(date time.Time, employeeID int, menuItemIDs []int64) (*models.NutritionistUserSelection, error) {
+	args := m.Called(date, employeeID, menuItemIDs)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.NutritionistUserSelection), args.Error(1)
 }
 
 func (m *RepositoryMock) GetNutritionistUsersByDateAndUnpaid(date time.Time) ([]models.NutritionistUserSelection, error) {
 	args := m.Called(date)
 	return args.Get(0).([]models.NutritionistUserSelection), args.Error(1)
+}
+
+func (m *RepositoryMock) GetNutritionistUserSelectionByDate(employeeID int, date time.Time) (*models.NutritionistUserSelection, error) {
+	args := m.Called(employeeID, date)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.NutritionistUserSelection), args.Error(1)
 }
 
 // Stock and Notifications
@@ -347,9 +351,36 @@ func (m *RepositoryMock) GetStockEmptyItemsForUser(employeeID int, date time.Tim
 	return args.Get(0).([]int), args.Error(1)
 }
 
+// Stock Empty Items
+func (m *RepositoryMock) CreateStockEmptyItem(menuItemID int) error {
+	args := m.Called(menuItemID)
+	return args.Error(0)
+}
+
+func (m *RepositoryMock) DeleteStockEmptyItem(menuItemID int) error {
+	args := m.Called(menuItemID)
+	return args.Error(0)
+}
+
+func (m *RepositoryMock) GetStockEmptyItems() ([]models.StockEmptyItem, error) {
+	args := m.Called()
+	return args.Get(0).([]models.StockEmptyItem), args.Error(1)
+}
+
+// User Stock Empty Notifications
+func (m *RepositoryMock) CreateUserStockEmptyNotification(employeeID, menuItemID int) error {
+	args := m.Called(employeeID, menuItemID)
+	return args.Error(0)
+}
+
+func (m *RepositoryMock) GetUsersNeedingNotification(date time.Time) ([]int, error) {
+	args := m.Called(date)
+	return args.Get(0).([]int), args.Error(1)
+}
+
 // User Notifications
-func (m *RepositoryMock) CreateUserNotification(employeeID int, notificationType, title, message string, redirectURL *string) error {
-	args := m.Called(employeeID, notificationType, title, message, redirectURL)
+func (m *RepositoryMock) CreateUserNotification(employeeID int, notificationType, message string, redirectURL *string) error {
+	args := m.Called(employeeID, notificationType, message, redirectURL)
 	return args.Error(0)
 }
 

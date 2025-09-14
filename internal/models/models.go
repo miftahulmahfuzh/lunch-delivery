@@ -130,6 +130,31 @@ const (
 	OrderStatusReadyDelivery  = "READY_FOR_DELIVERY"
 )
 
+// Extended models for joins
+type OrderSessionWithCompany struct {
+	OrderSession
+	CompanyName string `json:"company_name" db:"company_name"`
+}
+
+type IndividualOrderWithDetails struct {
+	IndividualOrder
+	EmployeeName  string `json:"employee_name" db:"employee_name"`
+	CompanyName   string `json:"company_name" db:"company_name"`
+	MenuItemNames string `json:"menu_item_names"`
+}
+
+type EmployeeWithCompany struct {
+	Employee
+	CompanyName string `json:"company_name" db:"company_name"`
+}
+
+type RecentOrder struct {
+	Date          time.Time `db:"date"`
+	TotalPrice    int       `db:"total_price"`
+	Paid          bool      `db:"paid"`
+	MenuItemNames string    `json:"menu_item_names"`
+}
+
 const (
 	NotificationStockEmpty  = "STOCK_EMPTY"
 	NotificationPaid        = "PAID"

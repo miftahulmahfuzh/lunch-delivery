@@ -269,7 +269,6 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 		err = h.repo.CreateUserNotification(
 			employeeID,
 			models.NotificationMenuUpdated,
-			"Menu Updated",
 			"The daily menu has been updated for "+date.Format("January 2, 2006")+". Please review your order as it may be affected.",
 			&redirectURL,
 		)
@@ -373,7 +372,7 @@ func (h *Handler) createOrderSession(c *gin.Context) {
 		return
 	}
 
-	_, err = h.repo.CreateOrderSession(companyID, date)
+	_, err = h.repo.CreateOrderSession(companyID, date, "OPEN")
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
 		return
@@ -415,7 +414,6 @@ func (h *Handler) closeOrderSession(c *gin.Context) {
 		err = h.repo.CreateUserNotification(
 			order.EmployeeID,
 			models.NotificationSessionClosed,
-			"Order Session Closed",
 			"The lunch order session for "+session.CompanyName+" has been closed.",
 			nil,
 		)
@@ -513,7 +511,6 @@ func (h *Handler) markOrderPaid(c *gin.Context) {
 	err = h.repo.CreateUserNotification(
 		order.EmployeeID,
 		models.NotificationPaid,
-		"Payment Confirmed",
 		"Your lunch order payment has been confirmed. Thank you!",
 		nil,
 	)
@@ -584,7 +581,6 @@ func (h *Handler) updateOrderStatus(c *gin.Context) {
 		err = h.repo.CreateUserNotification(
 			order.EmployeeID,
 			models.NotificationReadyForDelivery,
-			"Order Ready for Delivery",
 			"Your lunch order has been prepared and is ready for delivery!",
 			nil,
 		)

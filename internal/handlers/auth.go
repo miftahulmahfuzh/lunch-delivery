@@ -201,7 +201,7 @@ func (h *Handler) forgotPassword(c *gin.Context) {
 		}
 
 		expiresAt := time.Now().Add(1 * time.Hour)
-		_, err = h.repo.CreatePasswordResetToken(employee.ID, token, expiresAt)
+		err = h.repo.CreatePasswordResetToken(employee.ID, token, expiresAt)
 		if err != nil {
 			c.HTML(http.StatusInternalServerError, "forgot_password.html", gin.H{
 				"error": "System error. Please try again.",
@@ -321,7 +321,7 @@ func (h *Handler) resetPassword(c *gin.Context) {
 		return
 	}
 
-	err = h.repo.MarkPasswordResetTokenAsUsed(resetToken.ID)
+	err = h.repo.MarkPasswordResetTokenAsUsed(token)
 	if err != nil {
 		// Log error but don't fail the request since password was already updated
 	}

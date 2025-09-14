@@ -315,11 +315,11 @@ func TestRepository_OrderSessions(t *testing.T) {
 
 		testDate := testutils.TestDate()
 		mock.ExpectQuery(`INSERT INTO order_sessions`).
-			WithArgs(1, testDate.Format("2006-01-02")).
+			WithArgs(1, testDate.Format("2006-01-02"), StatusOpen).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "company_id", "date", "status", "created_at"}).
 				AddRow(1, 1, testDate, StatusOpen, time.Now()))
 
-		session, err := repo.CreateOrderSession(1, testDate)
+		session, err := repo.CreateOrderSession(1, testDate, StatusOpen)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, session)
@@ -503,10 +503,10 @@ func TestRepository_UserNotifications(t *testing.T) {
 
 		redirectURL := "/test/path"
 		mock.ExpectExec(`INSERT INTO user_notifications`).
-			WithArgs(1, NotificationStockEmpty, "Test Title", "Test Message", &redirectURL).
+			WithArgs(1, NotificationStockEmpty, "Test Message", &redirectURL).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		err := repo.CreateUserNotification(1, NotificationStockEmpty, "Test Title", "Test Message", &redirectURL)
+		err := repo.CreateUserNotification(1, NotificationStockEmpty, "Test Message", &redirectURL)
 
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())

@@ -11,13 +11,24 @@ import (
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"github.com/stretchr/testify/require"
 )
+
+// Helper function to create test menu items
+func createTestMenuItems() []models.MenuItem {
+	return []models.MenuItem{
+		{ID: 1, Name: "Nasi Gudeg", Price: 25000, Active: true},
+		{ID: 2, Name: "Ayam Bakar", Price: 30000, Active: true},
+		{ID: 3, Name: "Sayur Lodeh", Price: 15000, Active: true},
+		{ID: 4, Name: "Tempe Goreng", Price: 10000, Active: true},
+		{ID: 5, Name: "Es Teh Manis", Price: 5000, Active: true},
+	}
+}
 
 func TestNewNutritionistService(t *testing.T) {
 	t.Run("creates service with valid configuration", func(t *testing.T) {
-		cfg := testutils.MockConfig()
-		cfg.DeepseekTencentAPIKey = "test-api-key"
+		cfg := &config.Config{
+			DeepseekTencentAPIKey: "test-api-key",
+		}
 
 		mockRepo := &mocks.RepositoryMock{}
 
@@ -34,8 +45,9 @@ func TestNewNutritionistService(t *testing.T) {
 	})
 
 	t.Run("fails with invalid configuration", func(t *testing.T) {
-		cfg := testutils.MockConfig()
-		cfg.DeepseekTencentAPIKey = "" // Empty API key
+		cfg := &config.Config{
+			DeepseekTencentAPIKey: "", // Empty API key
+		}
 
 		mockRepo := &mocks.RepositoryMock{}
 
@@ -82,7 +94,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 		mockRepo.On("GetStockEmptyItemsForUser", 1, testutils.TestDate()).Return([]int{1, 2, 3}, nil)
 
 		ctx := context.Background()
-		menuItems := testutils.MockMenuItems()[:3] // Only first 3 items
+		menuItems := createTestMenuItems()[:3] // Only first 3 items
 
 		result, err := service.GetNutritionistSelection(ctx, testutils.TestDate(), menuItems, 1)
 
@@ -95,7 +107,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 	t.Run("returns cached selection when available and valid", func(t *testing.T) {
 		service, mockRepo, _ := createMockService()
 
-		menuItems := testutils.MockMenuItems()
+		menuItems := createTestMenuItems()
 		testDate := testutils.TestDate()
 
 		// Mock stock empty items (none)
@@ -130,7 +142,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 	t.Run("invalidates cache when reset flag is set", func(t *testing.T) {
 		service, mockRepo, mockLLM := createMockService()
 
-		menuItems := testutils.MockMenuItems()
+		menuItems := createTestMenuItems()
 		testDate := testutils.TestDate()
 
 		// Mock stock empty items (none)
@@ -165,7 +177,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 	t.Run("calls LLM when cache miss", func(t *testing.T) {
 		service, mockRepo, mockLLM := createMockService()
 
-		menuItems := testutils.MockMenuItems()
+		menuItems := createTestMenuItems()
 		testDate := testutils.TestDate()
 
 		// Mock stock empty items (none)
@@ -198,7 +210,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 	t.Run("handles LLM error gracefully", func(t *testing.T) {
 		service, mockRepo, mockLLM := createMockService()
 
-		menuItems := testutils.MockMenuItems()
+		menuItems := createTestMenuItems()
 		testDate := testutils.TestDate()
 
 		// Mock stock empty items (none)
@@ -226,7 +238,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 	t.Run("filters out stock empty items for user", func(t *testing.T) {
 		service, mockRepo, mockLLM := createMockService()
 
-		menuItems := testutils.MockMenuItems()
+		menuItems := createTestMenuItems()
 		testDate := testutils.TestDate()
 
 		// Mock stock empty items (first two items are empty for this user)
