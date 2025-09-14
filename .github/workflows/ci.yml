@@ -1,0 +1,194 @@
+name: 🧪 Comprehensive Unit Tests CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: 🚀 Run Unit Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        go-version: [1.21, 1.22]
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: 📦 Cache Go Modules
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: 🔍 Verify Dependencies
+      run: go mod verify
+
+    - name: 📥 Download Dependencies
+      run: go mod download
+
+    - name: 🔨 Build Application
+      run: go build -v ./...
+
+    - name: 🧪 Run ALL Unit Tests
+      run: |
+        echo "🧪 Running comprehensive unit test suite..."
+        echo "Testing ALL functions in internal/ folder"
+        go test ./internal/... -v -race -coverprofile=coverage.out
+
+    - name: 📊 Generate Coverage Report
+      run: |
+        go tool cover -html=coverage.out -o coverage.html
+        go tool cover -func=coverage.out -o coverage.txt
+
+    - name: 📈 Upload Coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+    - name: 💾 Archive Coverage Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report-go${{ matrix.go-version }}
+        path: |
+          coverage.out
+          coverage.html
+          coverage.txt
+
+    - name: 🎯 Test Specific Packages
+      run: |
+        echo "🔍 Testing individual packages..."
+        echo "📝 Config Package Tests:"
+        go test ./internal/config -v
+        echo "🗃️  Models Package Tests:"
+        go test ./internal/models -v
+        echo "🛡️  Middleware Package Tests:"
+        go test ./internal/middleware -v
+        echo "🔧 Utils Package Tests:"
+        go test ./internal/utils -v
+        echo "🗄️  Database Package Tests:"
+        go test ./internal/database -v
+
+    - name: ⚡ Performance Tests
+      run: |
+        echo "⚡ Running benchmark tests..."
+        go test ./internal/... -bench=. -benchmem
+
+    - name: 🔍 Race Condition Detection
+      run: |
+        echo "🔍 Checking for race conditions..."
+        go test ./internal/... -race
+
+    - name: 📊 Test Summary Report
+      run: |
+        echo "📊 TEST SUMMARY REPORT"
+        echo "====================="
+        echo "✅ All unit tests in internal/ folder executed"
+        echo "✅ Coverage report generated"
+        echo "✅ Race condition detection completed"
+        echo "✅ Performance benchmarks executed"
+        echo ""
+        echo "📈 Coverage Summary:"
+        cat coverage.txt | tail -1
+
+  lint:
+    name: 🔍 Code Quality & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: 1.22
+
+    - name: 🔍 Run golangci-lint
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+        args: --timeout=5m
+
+    - name: 🔧 Go Format Check
+      run: |
+        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
+          echo "❌ Code is not properly formatted. Run 'go fmt ./...' to fix."
+          gofmt -s -l .
+          exit 1
+        fi
+        echo "✅ Code is properly formatted"
+
+    - name: 🔍 Go Vet
+      run: go vet ./...
+
+    - name: 🛡️ Security Check
+      uses: securecodewarrior/github-action-gosec@master
+      with:
+        args: './...'
+
+  test-matrix:
+    name: 🌐 Cross-Platform Test Matrix
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        go-version: [1.21, 1.22]
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Set up Go ${{ matrix.go-version }}
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    - name: 🧪 Run Unit Tests
+      run: go test ./internal/... -v
+
+    - name: 📊 Platform Test Report
+      run: |
+        echo "✅ Tests passed on ${{ matrix.os }} with Go ${{ matrix.go-version }}"
+
+  notify:
+    name: 📢 Test Results Notification
+    runs-on: ubuntu-latest
+    needs: [test, lint, test-matrix]
+    if: always()
+
+    steps:
+    - name: 🎉 Success Notification
+      if: needs.test.result == 'success' && needs.lint.result == 'success' && needs.test-matrix.result == 'success'
+      run: |
+        echo "🎉 ALL TESTS PASSED!"
+        echo "✅ Comprehensive unit tests: PASSED"
+        echo "✅ Code quality checks: PASSED"
+        echo "✅ Cross-platform tests: PASSED"
+        echo "🚀 Ready for deployment!"
+
+    - name: ❌ Failure Notification
+      if: needs.test.result == 'failure' || needs.lint.result == 'failure' || needs.test-matrix.result == 'failure'
+      run: |
+        echo "❌ TESTS FAILED!"
+        echo "Test results: ${{ needs.test.result }}"
+        echo "Lint results: ${{ needs.lint.result }}"
+        echo "Matrix results: ${{ needs.test-matrix.result }}"
+        echo "🔧 Please fix issues before merging"
+        exit 1
