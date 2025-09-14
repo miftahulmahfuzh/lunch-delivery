@@ -7,10 +7,14 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
 	"github.com/lib/pq"
-	"github.com/miftahulmahfuzh/lunch-delivery/internal/testutils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// testDate returns a consistent test date to avoid importing testutils
+func testDate() time.Time {
+	return time.Date(2024, 1, 15, 10, 0, 0, 0, time.UTC)
+}
 
 func setupMockDB(t *testing.T) (*Repository, sqlmock.Sqlmock, func()) {
 	db, mock, err := sqlmock.New()
@@ -313,7 +317,7 @@ func TestRepository_OrderSessions(t *testing.T) {
 		repo, mock, cleanup := setupMockDB(t)
 		defer cleanup()
 
-		testDate := testutils.TestDate()
+		testDate := testDate()
 		mock.ExpectQuery(`INSERT INTO order_sessions`).
 			WithArgs(1, testDate.Format("2006-01-02"), StatusOpen).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "company_id", "date", "status", "created_at"}).
@@ -332,7 +336,7 @@ func TestRepository_OrderSessions(t *testing.T) {
 		repo, mock, cleanup := setupMockDB(t)
 		defer cleanup()
 
-		testDate := testutils.TestDate()
+		testDate := testDate()
 		mock.ExpectQuery(`SELECT \* FROM order_sessions WHERE company_id = \$1 AND date = \$2`).
 			WithArgs(1, testDate.Format("2006-01-02")).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "company_id", "date", "status", "created_at", "closed_at"}).
@@ -441,7 +445,7 @@ func TestRepository_DailyMenu(t *testing.T) {
 		repo, mock, cleanup := setupMockDB(t)
 		defer cleanup()
 
-		testDate := testutils.TestDate()
+		testDate := testDate()
 		menuItemIDs := []int64{1, 2, 3, 4, 5}
 
 		mock.ExpectQuery(`INSERT INTO daily_menus`).
@@ -462,7 +466,7 @@ func TestRepository_DailyMenu(t *testing.T) {
 		repo, mock, cleanup := setupMockDB(t)
 		defer cleanup()
 
-		testDate := testutils.TestDate()
+		testDate := testDate()
 		menuItemIDs := []int64{1, 2, 3}
 
 		mock.ExpectQuery(`SELECT \* FROM daily_menus WHERE date = \$1`).
@@ -483,7 +487,7 @@ func TestRepository_DailyMenu(t *testing.T) {
 		repo, mock, cleanup := setupMockDB(t)
 		defer cleanup()
 
-		testDate := testutils.TestDate()
+		testDate := testDate()
 		mock.ExpectQuery(`SELECT \* FROM daily_menus WHERE date = \$1`).
 			WithArgs(testDate.Format("2006-01-02")).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "date", "menu_item_ids", "nutritionist_reset", "created_at"}))
