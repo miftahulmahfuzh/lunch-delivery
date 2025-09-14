@@ -15,6 +15,9 @@ var _ interfaces.LLMClientInterface = (*LLMClientMock)(nil)
 
 func (m *LLMClientMock) GenerateContent(systemPrompt, userPrompt, temperature string) (string, error) {
 	args := m.Called(systemPrompt, userPrompt, temperature)
+	if args.Get(0) == nil {
+		return "", args.Error(1)
+	}
 	return args.String(0), args.Error(1)
 }
 

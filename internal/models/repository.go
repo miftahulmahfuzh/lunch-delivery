@@ -408,12 +408,12 @@ func (r *Repository) GetNutritionistSelectionByDate(date time.Time) (*Nutritioni
 	return &selection, err
 }
 
-func (r *Repository) CreateNutritionistSelection(date time.Time, menuItemIDs []int64) (*NutritionistSelection, error) {
+func (r *Repository) CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning string, nutritionalSummary string) (*NutritionistSelection, error) {
 	var selection NutritionistSelection
 	err := r.db.Get(&selection,
-		`INSERT INTO nutritionist_selections (date, menu_item_ids)
-         VALUES ($1, $2) RETURNING *`,
-		date.Format("2006-01-02"), pq.Array(menuItemIDs))
+		`INSERT INTO nutritionist_selections (date, menu_item_ids, selected_indices, reasoning, nutritional_summary)
+         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+		date.Format("2006-01-02"), pq.Array(menuItemIDs), pq.Array(selectedIndices), reasoning, nutritionalSummary)
 	return &selection, err
 }
 

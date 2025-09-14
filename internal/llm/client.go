@@ -3,6 +3,7 @@ package llm
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -24,7 +25,7 @@ func NewClient(cfg *config.Config) (*Client, error) {
 	var err error
 
 	if cfg.DeepseekTencentAPIKey == "" {
-		return nil, err
+		return nil, fmt.Errorf("DeepseekTencentAPIKey is required")
 	}
 
 	httpClient := &http.Client{

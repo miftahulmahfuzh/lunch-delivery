@@ -296,8 +296,8 @@ func (m *RepositoryMock) GetNutritionistSelectionByDate(date time.Time) (*models
 	return args.Get(0).(*models.NutritionistSelection), args.Error(1)
 }
 
-func (m *RepositoryMock) CreateNutritionistSelection(date time.Time, menuItemIDs []int64) (*models.NutritionistSelection, error) {
-	args := m.Called(date, menuItemIDs)
+func (m *RepositoryMock) CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning string, nutritionalSummary string) (*models.NutritionistSelection, error) {
+	args := m.Called(date, menuItemIDs, selectedIndices, reasoning, nutritionalSummary)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

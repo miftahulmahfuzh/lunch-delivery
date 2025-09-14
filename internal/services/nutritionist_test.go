@@ -263,8 +263,7 @@ func TestNutritionistService_GetNutritionistSelection(t *testing.T) {
 		}`)
 		mockLLM.On("GenerateContent", mock.Anything, mock.Anything, mock.Anything).Return(llmResponse, nil)
 
-		// Mock cache save (delete first to avoid constraint violation)
-		mockRepo.On("DeleteNutritionistSelection", testDate).Return(nil)
+		// Mock cache save
 		mockRepo.On("CreateNutritionistSelection", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
 
 		ctx := context.Background()
@@ -286,7 +285,7 @@ func TestNutritionistService_TrackUserSelection(t *testing.T) {
 		testDate := testutils.TestDate()
 		orderID := 123
 
-		mockRepo.On("CreateNutritionistUserSelection", 1, testDate, &orderID).Return(nil)
+		mockRepo.On("CreateNutritionistUserSelection", testDate, 1, []int64{123}).Return(nil, nil)
 
 		err := service.TrackUserSelection(1, testDate, &orderID)
 
@@ -299,7 +298,7 @@ func TestNutritionistService_TrackUserSelection(t *testing.T) {
 
 		testDate := testutils.TestDate()
 
-		mockRepo.On("CreateNutritionistUserSelection", 1, testDate, (*int)(nil)).Return(assert.AnError)
+		mockRepo.On("CreateNutritionistUserSelection", testDate, 1, []int64(nil)).Return(nil, assert.AnError)
 
 		err := service.TrackUserSelection(1, testDate, nil)
 

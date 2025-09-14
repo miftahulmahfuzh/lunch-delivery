@@ -416,6 +416,12 @@ func (s *NutritionistService) saveToCacheIfValid(date time.Time, menuItems []mod
 		selectedIndices = append(selectedIndices, int32(idx))
 	}
 
-	_, err := s.repo.CreateNutritionistSelection(date, menuItemIDs)
+	// Marshal nutritional summary to JSON
+	nutritionalSummaryJSON, err := json.Marshal(response.NutritionalSummary)
+	if err != nil {
+		return fmt.Errorf("failed to marshal nutritional summary: %w", err)
+	}
+
+	_, err = s.repo.CreateNutritionistSelection(date, menuItemIDs, selectedIndices, response.Reasoning, string(nutritionalSummaryJSON))
 	return err
 }

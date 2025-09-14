@@ -61,7 +61,7 @@ type RepositoryInterface interface {
 	GetDailyMenuByDate(date time.Time) (*models.DailyMenu, error)
 
 	// Nutritionist Selection
-	CreateNutritionistSelection(date time.Time, menuItemIDs []int64) (*models.NutritionistSelection, error)
+	CreateNutritionistSelection(date time.Time, menuItemIDs []int64, selectedIndices []int32, reasoning string, nutritionalSummary string) (*models.NutritionistSelection, error)
 	GetNutritionistSelectionByDate(date time.Time) (*models.NutritionistSelection, error)
 	DeleteNutritionistSelection(date time.Time) error
 
