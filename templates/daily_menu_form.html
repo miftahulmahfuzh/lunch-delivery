@@ -211,7 +211,7 @@
                             <!-- Menu Items Grid -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-32" id="menu-items-grid">
                                 {{range .items}}
-                                <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-105" data-id="{{.ID}}">
+                                <div class="menu-item group relative bg-gray-50 hover:bg-primary-50 rounded-xl p-4 cursor-pointer transition-all duration-300 border-2 border-transparent hover:border-primary-200 transform hover:scale-105" data-id="{{.ID}}" id="admin-menu-item-{{.ID}}">
                                     <div class="flex items-center justify-between">
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900 group-hover:text-primary-700 transition-colors">{{.Name}}</h3>
@@ -302,6 +302,28 @@
     </div>
 
     <script>
+    // Function to scroll to a specific menu item with smooth animation and highlight
+    function scrollToMenuItem(menuItem) {
+        // Calculate the offset position accounting for the sticky header and some padding
+        const headerHeight = 120; // Approximate header height + some padding
+        const elementPosition = menuItem.offsetTop;
+        const offsetPosition = elementPosition - headerHeight;
+
+        // Smooth scroll to the menu item
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+
+        // Add temporary highlight effect
+        menuItem.classList.add('ring-4', 'ring-primary-300', 'ring-opacity-75');
+
+        // Remove highlight after animation
+        setTimeout(() => {
+            menuItem.classList.remove('ring-4', 'ring-primary-300', 'ring-opacity-75');
+        }, 2000);
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         const existingIDs = new Set([{{if .existing}}{{range $i, $id := .existing.MenuItemIDs}}{{if $i}},{{end}}{{$id}}{{end}}{{end}}]);
         const menuItems = document.querySelectorAll('.menu-item');
@@ -331,9 +353,10 @@
                 selectedMenuItems.forEach(item => {
                     const itemName = item.querySelector('h3').textContent.trim();
                     const priceText = item.querySelector('.text-2xl').textContent.trim();
+                    const itemId = item.dataset.id;
 
                     itemsHtml += `
-                        <div class="bg-primary-50 rounded-lg border border-primary-200 transition-all duration-300">
+                        <div class="bg-primary-50 rounded-lg border border-primary-200 cursor-pointer hover:bg-primary-100 transition-all duration-300 admin-summary-item" data-item-id="${itemId}">
                             <div class="p-4">
                                 <p class="font-medium text-gray-900">${itemName}</p>
                                 <p class="text-sm text-primary-600 font-semibold">${priceText}</p>
@@ -344,6 +367,18 @@
 
                 itemsHtml += '</div>';
                 currentMenuContainer.innerHTML = itemsHtml;
+
+                // Add click handlers to summary items for scrolling to menu items
+                const summaryItems = document.querySelectorAll('.admin-summary-item');
+                summaryItems.forEach(summaryItem => {
+                    summaryItem.addEventListener('click', function() {
+                        const itemId = this.dataset.itemId;
+                        const menuItem = document.getElementById(`admin-menu-item-${itemId}`);
+                        if (menuItem) {
+                            scrollToMenuItem(menuItem);
+                        }
+                    });
+                });
             }
         }
 

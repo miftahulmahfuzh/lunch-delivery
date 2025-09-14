@@ -203,7 +203,7 @@
                             {{end}}
 
                             <div class="menu-item group relative {{if $isStockEmpty}}bg-gray-200 cursor-pointer opacity-60{{else}}bg-gray-50{{end}} hover:bg-primary-50 hover:border-primary-200 transform hover:scale-[1.02] hover:shadow-lg rounded-xl p-4 transition-all duration-300 border-2 border-transparent"
-                                 data-index="{{$index}}" {{if $isStockEmpty}}data-stock-empty="true"{{end}}>
+                                 data-index="{{$index}}" data-item-id="{{$item.ID}}" id="menu-item-{{$item.ID}}" {{if $isStockEmpty}}data-stock-empty="true"{{end}}>
                                 <div class="flex items-start justify-between">
                                     <div class="flex-1 pr-3">
                                         <h3 class="font-semibold {{if $isStockEmpty}}text-gray-500{{else}}text-gray-900 group-hover:text-primary-700{{end}} transition-colors leading-tight">
@@ -312,6 +312,28 @@
 </main>
 
 <script>
+// Function to scroll to a specific menu item with smooth animation and highlight
+function scrollToMenuItem(menuItem) {
+    // Calculate the offset position accounting for the sticky header and some padding
+    const headerHeight = 100; // Approximate header height + some padding
+    const elementPosition = menuItem.offsetTop;
+    const offsetPosition = elementPosition - headerHeight;
+
+    // Smooth scroll to the menu item
+    window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+    });
+
+    // Add temporary highlight effect
+    menuItem.classList.add('ring-4', 'ring-primary-300', 'ring-opacity-75');
+
+    // Remove highlight after animation
+    setTimeout(() => {
+        menuItem.classList.remove('ring-4', 'ring-primary-300', 'ring-opacity-75');
+    }, 2000);
+}
+
 function calculateTotal() {
     const checkboxes = document.querySelectorAll('input[name="menu_items"]:checked');
     let total = 0;
@@ -333,14 +355,15 @@ function calculateTotal() {
             const price = parseInt(checkbox.dataset.price, 10);
             const isOutOfStock = checkbox.dataset.outOfStock === 'true';
             const itemText = checkbox.parentElement.querySelector('h3').textContent.trim();
-            
+            const itemId = checkbox.value; // This is the menu item ID
+
             if (!isOutOfStock) {
                 total += price;
             }
-            
+
             if (isOutOfStock) {
                 itemsHtml += `
-                    <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-500">
+                    <div class="flex items-center justify-between p-3 bg-gray-100 rounded-lg border border-gray-300 text-gray-500 cursor-pointer hover:bg-gray-200 transition-colors summary-item" data-item-id="${itemId}">
                         <div class="flex-1">
                             <p class="font-medium text-gray-500 text-sm">${itemText.replace(/\s*Out of Stock.*$/, '')} - <span class="text-xs italic">Out of Stock</span></p>
                         </div>
@@ -351,7 +374,7 @@ function calculateTotal() {
                 `;
             } else {
                 itemsHtml += `
-                    <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200">
+                    <div class="flex items-center justify-between p-3 bg-primary-50 rounded-lg border border-primary-200 cursor-pointer hover:bg-primary-100 transition-colors summary-item" data-item-id="${itemId}">
                         <div class="flex-1">
                             <p class="font-medium text-gray-900 text-sm">${itemText}</p>
                         </div>
@@ -370,6 +393,18 @@ function calculateTotal() {
     }
 
     document.getElementById('totalPrice').textContent = total.toLocaleString('en-US');
+
+    // Add click handlers to summary items for scrolling to menu items
+    const summaryItems = document.querySelectorAll('.summary-item');
+    summaryItems.forEach(summaryItem => {
+        summaryItem.addEventListener('click', function() {
+            const itemId = this.dataset.itemId;
+            const menuItem = document.getElementById(`menu-item-${itemId}`);
+            if (menuItem) {
+                scrollToMenuItem(menuItem);
+            }
+        });
+    });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
