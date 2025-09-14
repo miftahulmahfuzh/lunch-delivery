@@ -87,6 +87,7 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 		admin.GET("/sessions/:id/orders", h.viewSessionOrders)
 		admin.POST("/orders/:id/paid", h.markOrderPaid)
 		admin.POST("/orders/:id/unpaid", h.markOrderUnpaid)
+		admin.POST("/orders/:id/status", h.updateOrderStatus)
 		admin.PUT("/companies/:id", h.updateCompany)
 		admin.DELETE("/companies/:id", h.deleteCompany)
 		admin.PUT("/employees/:id", h.updateEmployee)

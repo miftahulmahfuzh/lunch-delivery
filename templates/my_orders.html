@@ -130,7 +130,7 @@
                             <span>My Orders</span>
                         </a>
                         {{if .todaySession}}
-                            {{if and .todayOrder (not .todayOrder.Paid) (eq .todaySession.Status "OPEN")}}
+                            {{if and .todayOrder (not .todayOrder.Paid) (ne .todayOrder.Status "READY_FOR_DELIVERY") (eq .todaySession.Status "OPEN")}}
                                 <a href="/order/{{.company.ID}}/{{.todaySession.Date.Format "2006-01-02"}}" class="chrome-tab">
                                     <i class="fas fa-edit mr-2"></i>
                                     <span>Edit Orders</span>
@@ -142,14 +142,25 @@
                                 </a>
                             {{else}}
                                 <span class="chrome-tab chrome-tab-disabled">
-                                    <i class="fas fa-edit mr-2"></i>
-                                    <span>Edit Orders</span>
+                                    {{if and .todayOrder .todayOrder.Paid}}
+                                        <i class="fas fa-credit-card mr-2"></i>
+                                        <span>Cannot Edit (Paid Order)</span>
+                                    {{else if and .todayOrder (eq .todayOrder.Status "READY_FOR_DELIVERY")}}
+                                        <i class="fas fa-utensils mr-2"></i>
+                                        <span>Cannot Edit (Order is Prepared)</span>
+                                    {{else if ne .todaySession.Status "OPEN"}}
+                                        <i class="fas fa-lock mr-2"></i>
+                                        <span>Cannot Edit (Session Closed)</span>
+                                    {{else}}
+                                        <i class="fas fa-edit mr-2"></i>
+                                        <span>Edit Orders</span>
+                                    {{end}}
                                 </span>
                             {{end}}
                         {{else}}
                             <span class="chrome-tab chrome-tab-disabled">
-                                <i class="fas fa-edit mr-2"></i>
-                                <span>Edit Orders</span>
+                                <i class="fas fa-calendar-times mr-2"></i>
+                                <span>No Session Today</span>
                             </span>
                         {{end}}
                     </div>

@@ -150,6 +150,11 @@ func (h *Handler) orderForm(c *gin.Context) {
 	for _, order := range orders {
 		if order.EmployeeID == userID {
 			existingOrder = &order
+			// Check if order is ready for delivery and cannot be modified
+			if order.Status == models.OrderStatusReadyDelivery {
+				c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Your order is already prepared and ready for delivery"})
+				return
+			}
 			break
 		}
 	}
@@ -241,7 +246,7 @@ func (h *Handler) submitOrder(c *gin.Context) {
 		totalPrice += item.Price
 	}
 
-	// Check if user already has a paid order for this session
+	// Check if user already has a paid order or ready for delivery order for this session
 	orders, err := h.repo.GetOrdersBySession(sessionID)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
@@ -249,9 +254,15 @@ func (h *Handler) submitOrder(c *gin.Context) {
 	}
 
 	for _, order := range orders {
-		if order.EmployeeID == userID && order.Paid {
-			c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Payment has already been processed"})
-			return
+		if order.EmployeeID == userID {
+			if order.Paid {
+				c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Payment has already been processed"})
+				return
+			}
+			if order.Status == models.OrderStatusReadyDelivery {
+				c.HTML(http.StatusForbidden, "error.html", gin.H{"error": "Cannot modify order: Your order is already prepared and ready for delivery"})
+				return
+			}
 		}
 	}
 

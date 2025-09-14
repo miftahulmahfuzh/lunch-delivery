@@ -68,6 +68,7 @@ type IndividualOrder struct {
 	MenuItemIDs pq.Int64Array `json:"menu_item_ids" db:"menu_item_ids"`
 	TotalPrice  int           `json:"total_price" db:"total_price"`
 	Paid        bool          `json:"paid" db:"paid"`
+	Status      string        `json:"status" db:"status"`
 	CreatedAt   time.Time     `json:"created_at" db:"created_at"`
 }
 
@@ -121,6 +122,12 @@ const (
 	StatusDelivered      = "DELIVERED"
 	StatusPaymentPending = "PAYMENT_PENDING"
 	StatusCompleted      = "COMPLETED"
+)
+
+// Individual Order Status Constants
+const (
+	OrderStatusPending        = "PENDING"
+	OrderStatusReadyDelivery  = "READY_FOR_DELIVERY"
 )
 
 const (

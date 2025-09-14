@@ -193,12 +193,12 @@ func (r *Repository) CloseOrderSession(id int) error {
 func (r *Repository) CreateIndividualOrder(sessionID, employeeID int, menuItemIDs []int64, totalPrice int) (*IndividualOrder, error) {
 	var order IndividualOrder
 	err := r.db.Get(&order,
-		`INSERT INTO individual_orders (session_id, employee_id, menu_item_ids, total_price)
-         VALUES ($1, $2, $3, $4)
+		`INSERT INTO individual_orders (session_id, employee_id, menu_item_ids, total_price, status)
+         VALUES ($1, $2, $3, $4, $5)
          ON CONFLICT (session_id, employee_id)
-         DO UPDATE SET menu_item_ids = $3, total_price = $4
+         DO UPDATE SET menu_item_ids = $3, total_price = $4, status = $5
          RETURNING *`,
-		sessionID, employeeID, pq.Array(menuItemIDs), totalPrice)
+		sessionID, employeeID, pq.Array(menuItemIDs), totalPrice, OrderStatusPending)
 	return &order, err
 }
 
@@ -210,6 +210,16 @@ func (r *Repository) GetOrdersBySession(sessionID int) ([]IndividualOrder, error
 
 func (r *Repository) MarkOrderPaid(id int) error {
 	_, err := r.db.Exec(`UPDATE individual_orders SET paid = true WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) MarkOrderUnpaid(id int) error {
+	_, err := r.db.Exec(`UPDATE individual_orders SET paid = false WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) UpdateOrderStatus(id int, status string) error {
+	_, err := r.db.Exec(`UPDATE individual_orders SET status = $1 WHERE id = $2`, status, id)
 	return err
 }
 
@@ -294,11 +304,6 @@ func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualO
 	return orders, nil
 }
 
-// Add to internal/models/repository.go
-func (r *Repository) MarkOrderUnpaid(id int) error {
-	_, err := r.db.Exec(`UPDATE individual_orders SET paid = false WHERE id = $1`, id)
-	return err
-}
 
 func (r *Repository) GetOrderSessionWithCompany(id int) (*OrderSessionWithCompany, error) {
 	var session OrderSessionWithCompany

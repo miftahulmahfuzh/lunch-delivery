@@ -244,6 +244,7 @@
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Employee</th>
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Items</th>
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Total</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-gray-700">Preparation</th>
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Payment</th>
                                         <th class="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
                                     </tr>
@@ -269,6 +270,31 @@
                                         </td>
                                         <td class="py-4 px-4">
                                             <span class="font-semibold text-primary-600 text-lg">Rp {{.TotalPrice | divideBy100}}</span>
+                                        </td>
+                                        <td class="py-4 px-4">
+                                            <div class="flex items-center">
+                                                {{if eq .Status "READY_FOR_DELIVERY"}}
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-3">
+                                                        <i class="fas fa-check-circle mr-1"></i>
+                                                        READY
+                                                    </span>
+                                                    <button onclick="togglePreparationStatus({{.ID}}, 'PENDING')"
+                                                            class="inline-flex items-center px-3 py-1.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium text-sm">
+                                                        <i class="fas fa-undo mr-1.5"></i>
+                                                        Mark Pending
+                                                    </button>
+                                                {{else}}
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 mr-3">
+                                                        <i class="fas fa-clock mr-1"></i>
+                                                        PENDING
+                                                    </span>
+                                                    <button onclick="togglePreparationStatus({{.ID}}, 'READY_FOR_DELIVERY')"
+                                                            class="inline-flex items-center px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
+                                                        <i class="fas fa-check mr-1.5"></i>
+                                                        Mark Ready
+                                                    </button>
+                                                {{end}}
+                                            </div>
                                         </td>
                                         <td class="py-4 px-4">
                                             {{if .Paid}}
@@ -301,7 +327,7 @@
                                     </tr>
                                     <!-- Expandable Order Details Row -->
                                     <tr id="details-{{.ID}}" class="order-details hidden">
-                                        <td colspan="5" class="py-4 px-4 bg-gray-50">
+                                        <td colspan="6" class="py-4 px-4 bg-gray-50">
                                             <div class="bg-white rounded-lg p-4 border border-gray-200">
                                                 <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
                                                     <i class="fas fa-list mr-2 text-primary-500"></i>
@@ -512,6 +538,30 @@
                 location.reload();
             } else {
                 showModal('Error', 'Error marking order as unpaid. Please try again.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showModal('Network Error', 'Please check your connection and try again.', 'error');
+        });
+    }
+
+    function togglePreparationStatus(orderId, newStatus) {
+        fetch('/admin/orders/' + orderId + '/status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: newStatus
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                showModal('Error', 'Error updating preparation status. Please try again.', 'error');
             }
         })
         .catch(error => {
