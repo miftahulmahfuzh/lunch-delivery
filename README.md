@@ -9,13 +9,13 @@ This application manages a restaurant's lunch delivery service that operates on 
 ### Key Features
 - **Company Management**: Register and manage corporate clients
 - **Employee Self-Registration**: Company employees can create their own accounts
-- **🔐 Secure Authentication**: Complete login system with forgot password functionality
+- **Secure Authentication**: Complete login system with forgot password functionality
 - **Daily Menu Management**: Admin can set available menu items for each day
 - **Order Sessions**: Time-bound ordering windows for each company
 - **Individual Order Tracking**: Track each employee's order and payment status
 - **Real-time Order Management**: Close/reopen order sessions as needed
-- **🤖 AI Nutritionist**: AI-powered meal recommendations with nutritional analysis and intelligent caching
-- **📧 Email Integration**: SMTP-based email service for password resets and notifications
+- **AI Nutritionist**: AI-powered meal recommendations with nutritional analysis and intelligent caching
+- **Email Integration**: SMTP-based email service for password resets and notifications
 
 ## Architecture
 
