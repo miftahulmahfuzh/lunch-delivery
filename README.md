@@ -80,7 +80,7 @@ lunch-delivery/
 
 **employees**
 - Individual users who can place orders
-- Fields: id, company_id, name, email, wa_contact, password_hash, active, created_at
+- Fields: id, company_id, name, email, password_hash, active, created_at, wa_contact
 
 **password_reset_tokens**
 - Secure tokens for password reset functionality
@@ -103,11 +103,19 @@ lunch-delivery/
 
 **nutritionist_selections**
 - AI-generated nutritional recommendations cached by date
-- Fields: id, date, menu_item_ids (array), selected_indices (array), reasoning, nutritional_summary (JSONB), created_at
+- Fields: id, date, menu_item_ids (BIGINT[]), selected_indices (INTEGER[]), reasoning, nutritional_summary (JSONB), created_at
 
 **nutritionist_user_selections**
 - Tracks users who have used AI nutritionist recommendations
 - Fields: id, employee_id, date, order_id, created_at
+
+**user_notifications**
+- General notification system for employees
+- Fields: id, employee_id, notification_type, title, message, redirect_url, is_read, created_at
+
+**user_stock_empty_notifications**
+- Tracks notifications sent when menu items are out of stock
+- Fields: id, individual_order_id, menu_item_id, date, created_at
 
 ## Installation & Setup
 
@@ -235,6 +243,32 @@ CREATE TABLE password_reset_tokens (
 CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
 CREATE INDEX idx_password_reset_tokens_employee ON password_reset_tokens(employee_id);
 CREATE INDEX idx_password_reset_tokens_expires ON password_reset_tokens(expires_at);
+
+-- Add notification system tables
+CREATE TABLE user_notifications (
+    id SERIAL PRIMARY KEY,
+    employee_id INTEGER REFERENCES employees(id),
+    notification_type VARCHAR(50) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    redirect_url VARCHAR(255),
+    is_read BOOLEAN DEFAULT false,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_user_notifications_employee ON user_notifications(employee_id);
+CREATE INDEX idx_user_notifications_unread ON user_notifications(employee_id, is_read) WHERE is_read = false;
+
+CREATE TABLE user_stock_empty_notifications (
+    id SERIAL PRIMARY KEY,
+    individual_order_id INTEGER REFERENCES individual_orders(id),
+    menu_item_id INTEGER REFERENCES menu_items(id),
+    date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(individual_order_id, menu_item_id)
+);
+
+CREATE INDEX idx_user_stock_empty_notifications_order ON user_stock_empty_notifications(individual_order_id);
 ```
 
 ## Scripts Directory
