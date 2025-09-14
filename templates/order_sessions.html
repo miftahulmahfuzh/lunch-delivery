@@ -184,7 +184,7 @@
                         <h3 class="text-lg font-semibold">Create New Session</h3>
                     </div>
                     <p class="text-primary-100 text-sm mb-4">For {{.selectedDate.Format "January 2, 2006"}}</p>
-                    <form method="POST" action="/admin/sessions">
+                    <form id="createSessionForm" method="POST" action="/admin/sessions">
                         <input type="hidden" name="date" value="{{.date}}">
                         <div class="space-y-4">
                             <div>
@@ -197,7 +197,7 @@
                                     {{end}}
                                 </select>
                             </div>
-                            <button type="submit" 
+                            <button type="submit"
                                     class="w-full inline-flex items-center justify-center px-6 py-3 bg-accent-500 text-white rounded-lg hover:bg-accent-600 transition-colors font-semibold">
                                 <i class="fas fa-plus mr-2"></i>
                                 Create Order Session
@@ -314,6 +314,34 @@
         </div>
     </main>
 
+    <!-- Menu Empty Modal -->
+    <div id="menuEmptyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slide-up">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Daily Menu Not Set</h3>
+                </div>
+                <p id="menuEmptyMessage" class="text-gray-600 mb-6">
+                    <!-- Message will be populated by JavaScript -->
+                </p>
+                <div class="flex space-x-3">
+                    <button onclick="closeMenuModal()"
+                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+                        Cancel
+                    </button>
+                    <a href="/admin/daily-menu"
+                       class="flex-1 inline-flex items-center justify-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium">
+                        <i class="fas fa-calendar-day mr-2"></i>
+                        Set Daily Menu
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-900 text-white mt-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -387,6 +415,46 @@
             alert('Network error. Please check your connection and try again.');
         });
     }
+
+    function closeMenuModal() {
+        document.getElementById('menuEmptyModal').classList.add('hidden');
+    }
+
+    function showMenuEmptyModal(message) {
+        document.getElementById('menuEmptyMessage').textContent = message;
+        document.getElementById('menuEmptyModal').classList.remove('hidden');
+    }
+
+    // Handle create session form submission
+    document.getElementById('createSessionForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('/admin/sessions', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+                // Success - redirect occurred, reload the page
+                location.reload();
+            } else {
+                return response.json();
+            }
+        })
+        .then(data => {
+            if (data && data.error === 'menu_empty') {
+                showMenuEmptyModal(data.message);
+            } else if (data && data.error) {
+                alert('Error: ' + (data.message || data.error));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Network error. Please check your connection and try again.');
+        });
+    });
     </script>
 </body>
 </html>

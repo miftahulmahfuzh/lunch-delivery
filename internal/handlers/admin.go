@@ -333,6 +333,22 @@ func (h *Handler) createOrderSession(c *gin.Context) {
 		return
 	}
 
+	// Check if daily menu exists for the selected date
+	dailyMenu, err := h.repo.GetDailyMenuByDate(date)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	if dailyMenu == nil || len(dailyMenu.MenuItemIDs) == 0 {
+		// Return JSON response for AJAX handling
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "menu_empty",
+			"message": "No daily menu has been set for " + date.Format("January 2, 2006") + ". Please set up the daily menu first before creating an order session.",
+		})
+		return
+	}
+
 	_, err = h.repo.CreateOrderSession(companyID, date)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
