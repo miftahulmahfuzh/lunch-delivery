@@ -98,7 +98,8 @@ lunch-delivery/
 
 **individual_orders**
 - Individual employee orders within sessions
-- Fields: id, session_id, employee_id, menu_item_ids (array), total_price, paid, created_at
+- Fields: id, session_id, employee_id, menu_item_ids (array), total_price, paid, status, created_at
+- Status values: PENDING (default), READY_FOR_DELIVERY
 
 **nutritionist_selections**
 - AI-generated nutritional recommendations cached by date
@@ -181,6 +182,7 @@ CREATE TABLE individual_orders (
     menu_item_ids INTEGER[] NOT NULL,
     total_price INTEGER NOT NULL,
     paid BOOLEAN DEFAULT false,
+    status VARCHAR(50) DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(session_id, employee_id)
 );
@@ -390,9 +392,13 @@ The server will start on `http://localhost:8080`
 3. **View Orders**: Click "View Orders" to see individual employee orders
 
 **Delivery Preparation (11:30 AM):**
-1. **Close Sessions**: Close all order sessions to finalize orders
-2. **Generate Delivery List**: View session orders for packaging and delivery manifest
-3. **Update Status**: Change session status to DELIVERED after delivery
+1. **Granular Preparation Tagging**: Admin tags individual orders as ready using toggle switches in session orders view
+   - Toggle orders from "PENDING" to "READY_FOR_DELIVERY" as each order is prepared
+   - System automatically notifies employees when their order is ready
+   - Ready orders display with blue "READY" badge for visual tracking
+2. **Close Sessions**: Close all order sessions to finalize orders
+3. **Generate Delivery List**: View session orders for packaging and delivery manifest
+4. **Update Status**: Change session status to DELIVERED after delivery
 
 **Payment Tracking:**
 1. **Mark Payments**: Update individual order payment status as received
@@ -416,6 +422,8 @@ The server will start on `http://localhost:8080`
 5. **🤖 AI Nutritionist**: Click "AI Nutritionist" button for intelligent meal recommendations based on nutritional balance
 6. **Submit/Update**: Confirm order (can modify until session closes)
 7. **Track Status**: Monitor order and payment status on dashboard
+   - **Order Ready Notifications**: Receive automatic notifications when your order is ready for delivery
+   - **Order Lock**: Orders become uneditable once marked as "ready" by admin to prevent delivery confusion
 
 ## API Endpoints
 
@@ -460,6 +468,7 @@ The server will start on `http://localhost:8080`
 - `GET /admin/sessions/:id/orders` - View orders in session
 - `POST /admin/orders/:id/paid` - Mark order as paid
 - `POST /admin/orders/:id/unpaid` - Mark order as unpaid
+- `POST /admin/orders/:id/status` - Update order preparation status (PENDING/READY_FOR_DELIVERY)
 
 ## Features Details
 
@@ -591,6 +600,58 @@ The AI Nutritionist is an intelligent meal recommendation system that leverages 
 - Seamless integration with existing daily menu system
 - Automatic cache invalidation on menu modifications
 - Support for menu item additions/removals
+
+### 📦 Order Preparation Management
+
+The Order Preparation Management feature provides granular control over the lunch preparation workflow, allowing admin to track and communicate the preparation status of individual orders in real-time.
+
+#### How It Works
+
+**Granular Status Tracking:**
+- Each order has a preparation status: PENDING (default) or READY_FOR_DELIVERY
+- Admin can toggle individual orders using intuitive toggle switches in the session orders view
+- Visual indicators show preparation progress with color-coded badges
+
+**Real-Time Employee Notifications:**
+- When an order is marked as READY_FOR_DELIVERY, the system automatically sends a notification to the employee
+- Notification includes: "Your lunch order has been prepared and is ready for delivery!"
+- Notifications appear in the employee dashboard with purple notification icons
+
+**Order Protection:**
+- Orders marked as READY_FOR_DELIVERY are automatically locked from further editing
+- Employees see "Cannot Edit (Order is Prepared)" status in their dashboard
+- Prevents accidental order modifications during delivery preparation
+
+#### Admin Interface
+
+**Session Orders View:**
+- Toggle switches for each order allowing instant status updates
+- Blue "READY" badges for orders that are ready for delivery
+- Yellow "PENDING" badges for orders still being prepared
+- Integrated with existing payment status tracking
+
+**Workflow Integration:**
+- Seamless integration with existing session management
+- Works alongside payment tracking and session closure
+- Maintains audit trail of status changes
+
+#### Technical Implementation
+
+**Architecture:**
+- `internal/handlers/admin.go:updateOrderStatus()`: Core status update handler
+- Toggle switches with JavaScript `togglePreparationStatus()` function
+- Real-time status updates without page refresh
+- Notification system integration for employee communication
+
+**Database Schema:**
+- `individual_orders.status`: Stores preparation status (PENDING/READY_FOR_DELIVERY)
+- Notification tracking in existing notification system
+- Status validation ensures only valid transitions
+
+**Security & Validation:**
+- Server-side validation of status values
+- Admin authentication required for status updates
+- Graceful error handling for invalid requests
 
 ### Menu Management
 - **Master Menu**: Comprehensive list of all possible menu items with fixed prices
