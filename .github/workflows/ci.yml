@@ -138,7 +138,7 @@ jobs:
       run: go vet ./...
 
     - name: 🛡️ Security Check
-      uses: securecodewarrior/github-action-gosec@master
+      uses: securego/gosec@v2
       with:
         args: './...'
 
