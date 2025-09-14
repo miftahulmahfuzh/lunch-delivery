@@ -35,6 +35,15 @@ type Employee struct {
 	CreatedAt    time.Time `json:"created_at" db:"created_at"`
 }
 
+type PasswordResetToken struct {
+	ID         int       `json:"id" db:"id"`
+	EmployeeID int       `json:"employee_id" db:"employee_id"`
+	Token      string    `json:"token" db:"token"`
+	ExpiresAt  time.Time `json:"expires_at" db:"expires_at"`
+	Used       bool      `json:"used" db:"used"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+}
+
 type DailyMenu struct {
 	ID                int           `json:"id" db:"id"`
 	Date              time.Time     `json:"date" db:"date"`

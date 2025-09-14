@@ -42,6 +42,10 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 	r.POST("/login", h.login)
 	r.GET("/signup", h.signupForm)
 	r.POST("/signup", h.signup)
+	r.GET("/forgot-password", h.forgotPasswordForm)
+	r.POST("/forgot-password", h.forgotPassword)
+	r.GET("/reset-password", h.resetPasswordForm)
+	r.POST("/reset-password", h.resetPassword)
 
 	// Protected customer routes
 	customer := r.Group("/")

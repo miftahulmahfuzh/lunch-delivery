@@ -95,6 +95,41 @@ func (r *Repository) GetEmployeesByCompany(companyID int) ([]Employee, error) {
 	return employees, err
 }
 
+func (r *Repository) UpdateEmployeePassword(employeeID int, passwordHash string) error {
+	_, err := r.db.Exec(`UPDATE employees SET password_hash = $1 WHERE id = $2`, passwordHash, employeeID)
+	return err
+}
+
+// Password Reset Tokens
+func (r *Repository) CreatePasswordResetToken(employeeID int, token string, expiresAt time.Time) (*PasswordResetToken, error) {
+	var resetToken PasswordResetToken
+	err := r.db.Get(&resetToken,
+		`INSERT INTO password_reset_tokens (employee_id, token, expires_at) VALUES ($1, $2, $3) RETURNING *`,
+		employeeID, token, expiresAt)
+	return &resetToken, err
+}
+
+func (r *Repository) GetPasswordResetToken(token string) (*PasswordResetToken, error) {
+	var resetToken PasswordResetToken
+	err := r.db.Get(&resetToken,
+		`SELECT * FROM password_reset_tokens WHERE token = $1 AND used = false AND expires_at > NOW()`,
+		token)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &resetToken, err
+}
+
+func (r *Repository) MarkPasswordResetTokenAsUsed(id int) error {
+	_, err := r.db.Exec(`UPDATE password_reset_tokens SET used = true WHERE id = $1`, id)
+	return err
+}
+
+func (r *Repository) CleanupExpiredPasswordResetTokens() error {
+	_, err := r.db.Exec(`DELETE FROM password_reset_tokens WHERE expires_at < NOW() OR used = true`)
+	return err
+}
+
 // Daily Menu
 func (r *Repository) CreateDailyMenu(date time.Time, menuItemIDs []int64) (*DailyMenu, error) {
 	var menu DailyMenu
