@@ -4,19 +4,19 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/miftahulmahfuzh/lunch-delivery/internal/interfaces"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/middleware"
-	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/services"
 
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
-	repo                *models.Repository
+	repo                interfaces.RepositoryInterface
 	nutritionistService *services.NutritionistService
 }
 
-func NewHandler(repo *models.Repository, nutritionistService *services.NutritionistService) *Handler {
+func NewHandler(repo interfaces.RepositoryInterface, nutritionistService *services.NutritionistService) *Handler {
 	return &Handler{
 		repo:                repo,
 		nutritionistService: nutritionistService,
@@ -24,7 +24,7 @@ func NewHandler(repo *models.Repository, nutritionistService *services.Nutrition
 }
 
 // internal/handlers/handlers.go
-func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *services.NutritionistService) {
+func SetupRoutes(r *gin.Engine, repo interfaces.RepositoryInterface, nutritionistService *services.NutritionistService) {
 	h := NewHandler(repo, nutritionistService)
 
 	// Root redirect

@@ -10,15 +10,15 @@ import (
 	"time"
 
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/config"
+	"github.com/miftahulmahfuzh/lunch-delivery/internal/interfaces"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/llm"
 	"github.com/miftahulmahfuzh/lunch-delivery/internal/models"
 	"github.com/rs/zerolog/log"
-	"github.com/tmc/langchaingo/llms"
 )
 
 type NutritionistService struct {
-	llmClient *llm.Client
-	repo      *models.Repository
+	llmClient interfaces.LLMClientInterface
+	repo      interfaces.RepositoryInterface
 }
 
 type NutritionistResponse struct {
@@ -34,7 +34,7 @@ type NutritionalSummary struct {
 	OverallRating string `json:"overall_rating"`
 }
 
-func NewNutritionistService(cfg *config.Config, repo *models.Repository) (*NutritionistService, error) {
+func NewNutritionistService(cfg *config.Config, repo interfaces.RepositoryInterface) (*NutritionistService, error) {
 	llmClient, err := llm.NewClient(cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create LLM client: %w", err)
@@ -44,6 +44,14 @@ func NewNutritionistService(cfg *config.Config, repo *models.Repository) (*Nutri
 		llmClient: llmClient,
 		repo:      repo,
 	}, nil
+}
+
+// NewNutritionistServiceWithClients creates a service with provided clients (for testing)
+func NewNutritionistServiceWithClients(llmClient interfaces.LLMClientInterface, repo interfaces.RepositoryInterface) *NutritionistService {
+	return &NutritionistService{
+		llmClient: llmClient,
+		repo:      repo,
+	}
 }
 
 func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date time.Time, menuItems []models.MenuItem, employeeID int) (*NutritionistResponse, error) {
@@ -263,21 +271,10 @@ Available menu items (with their indices):`
 
 	userPrompt := menuDescription
 
-	messages := []llms.MessageContent{
-		llms.TextParts(llms.ChatMessageTypeSystem, systemPrompt),
-		llms.TextParts(llms.ChatMessageTypeHuman, userPrompt),
-	}
-
-	response, err := s.llmClient.GenerateContent(ctx, messages)
+	content, err := s.llmClient.GenerateContent(systemPrompt, userPrompt, "0.7")
 	if err != nil {
 		return nil, err
 	}
-
-	if len(response.Choices) == 0 {
-		return nil, fmt.Errorf("LLM returned no response")
-	}
-
-	content := response.Choices[0].Content
 	log.Info().Str("llm_response", content).Msg("LLM raw response")
 
 	// Parse the JSON response
