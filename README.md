@@ -35,35 +35,35 @@ lunch-delivery/
 │       └── main.go                 # Application entry point
 ├── internal/
 │   ├── models/
-│   │   ├── models.go              # Data structures & password reset tokens
-│   │   └── repository.go          # Database operations
+│   │   ├── models.go               # Data structures & password reset tokens
+│   │   └── repository.go           # Database operations
 │   ├── handlers/
-│   │   ├── handlers.go            # Route setup
-│   │   ├── admin.go               # Admin functionality
-│   │   ├── auth.go                # Authentication & password reset
-│   │   ├── orders.go              # Customer orders
-│   │   └── employees.go           # Employee management
+│   │   ├── handlers.go             # Route setup
+│   │   ├── admin.go                # Admin functionality
+│   │   ├── auth.go                 # Authentication & password reset
+│   │   ├── orders.go               # Customer orders
+│   │   └── employees.go            # Employee management
 │   ├── services/
-│   │   └── nutritionist.go        # AI nutritionist service
+│   │   └── nutritionist.go         # AI nutritionist service
 │   ├── utils/
-│   │   ├── token.go               # Secure token generation
-│   │   └── email.go               # SMTP email service
+│   │   ├── token.go                # Secure token generation
+│   │   └── email.go                # SMTP email service
 │   ├── middleware/
-│   │   └── auth.go                # Authentication middleware
+│   │   └── auth.go                 # Authentication middleware
 │   └── database/
-│       └── db.go                  # Database connection
+│       └── db.go                   # Database connection
 ├── scripts/
-│   ├── sql/                       # Organized SQL scripts
-│   │   ├── schema/                # Database structure & migrations
-│   │   ├── seeds/                 # Initial data & test data
-│   │   ├── updates/               # Data modifications
-│   │   └── deletions/             # Data cleanup scripts
-│   └── smtp/                      # Email testing tools
-│       ├── send.go                # SMTP configuration tester
+│   ├── sql/                        # Organized SQL scripts
+│   │   ├── schema/                 # Database structure & migrations
+│   │   ├── seeds/                  # Initial data & test data
+│   │   ├── updates/                # Data modifications
+│   │   └── deletions/              # Data cleanup scripts
+│   └── smtp/                       # Email testing tools
+│       ├── send.go                 # SMTP configuration tester
 │       ├── test-forgot-password.go # Password reset email tester
-│       └── setup-gmail.md         # Gmail setup guide
-├── templates/                     # HTML templates (includes password reset forms)
-└── static/                        # Static assets (CSS, JS, images)
+│       └── setup-gmail.md          # Gmail setup guide
+├── templates/                      # HTML templates (includes password reset forms)
+└── static/                         # Static assets (CSS, JS, images)
 ```
 
 ## Database Schema
