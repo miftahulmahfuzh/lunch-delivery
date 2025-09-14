@@ -333,6 +333,30 @@ func (h *Handler) createOrderSession(c *gin.Context) {
 		return
 	}
 
+	// Check if order session already exists for this company and date
+	existingSession, err := h.repo.GetOrderSession(companyID, date)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+		return
+	}
+
+	if existingSession != nil {
+		// Get company name for the message
+		company, err := h.repo.GetCompanyByID(companyID)
+		if err != nil {
+			c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": err.Error()})
+			return
+		}
+
+		// Return JSON response for AJAX handling
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "duplicate_session",
+			"message": "An order session for " + company.Name + " on " + date.Format("January 2, 2006") + " already exists.",
+			"session_id": existingSession.ID,
+		})
+		return
+	}
+
 	// Check if daily menu exists for the selected date
 	dailyMenu, err := h.repo.GetDailyMenuByDate(date)
 	if err != nil {
