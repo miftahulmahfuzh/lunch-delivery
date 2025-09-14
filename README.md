@@ -243,28 +243,28 @@ The `scripts/` directory contains organized tools and SQL scripts for database m
 
 ```
 scripts/
-├── sql/                           # SQL database scripts
-│   ├── schema/                    # Database structure & migrations
-│   │   ├── 001_initial.sql        # Core tables and relationships
-│   │   ├── 003_nutritionist_reset_flag.sql  # AI nutritionist feature
-│   │   ├── 005_stock_empty_and_notifications.sql  # Stock tracking
-│   │   ├── 008_nutritionist_selections.sql   # AI recommendations
-│   │   └── 009_password_reset_tokens.sql     # Forgot password feature
-│   ├── seeds/                     # Data population scripts
-│   │   ├── 002_menu_items_seed.sql          # Menu catalog data
-│   │   └── 007_test_data_order_history.sql  # Development test data
-│   ├── updates/                   # Schema and data modifications
-│   │   ├── 004_update_price_to_rupiah.sql   # Price format conversion
-│   │   └── 006_remove_global_stock_empty.sql # Schema cleanup
-│   └── deletions/                 # Data cleanup and testing
-│       ├── 007_delete_today_order_session.sql  # Session cleanup
-│       ├── 009_test_footer_edge_case.sql       # Edge case testing
-│       └── delete_test_order.sql               # Test data removal
-└── smtp/                          # Email testing and configuration
-    ├── send.go                    # SMTP configuration tester
-    ├── test-forgot-password.go    # Password reset email tester
-    ├── README.md                  # SMTP setup documentation
-    └── setup-gmail.md             # Gmail App Password guide
+├── sql/                                            # SQL database scripts
+│   ├── schema/                                     # Database structure & migrations
+│   │   ├── 001_initial.sql                         # Core tables and relationships
+│   │   ├── 003_nutritionist_reset_flag.sql         # AI nutritionist feature
+│   │   ├── 005_stock_empty_and_notifications.sql   # Stock tracking
+│   │   ├── 008_nutritionist_selections.sql         # AI recommendations
+│   │   └── 009_password_reset_tokens.sql           # Forgot password feature
+│   ├── seeds/                                      # Data population scripts
+│   │   ├── 002_menu_items_seed.sql                 # Menu catalog data
+│   │   └── 007_test_data_order_history.sql         # Development test data
+│   ├── updates/                                    # Schema and data modifications
+│   │   ├── 004_update_price_to_rupiah.sql          # Price format conversion
+│   │   └── 006_remove_global_stock_empty.sql       # Schema cleanup
+│   └── deletions/                                  # Data cleanup and testing
+│       ├── 007_delete_today_order_session.sql      # Session cleanup
+│       ├── 009_test_footer_edge_case.sql           # Edge case testing
+│       └── delete_test_order.sql                   # Test data removal
+└── smtp/                                           # Email testing and configuration
+    ├── send.go                                     # SMTP configuration tester
+    ├── test-forgot-password.go                     # Password reset email tester
+    ├── README.md                                   # SMTP setup documentation
+    └── setup-gmail.md                              # Gmail App Password guide
 ```
 
 ### Usage Guide
@@ -574,7 +574,7 @@ The AI Nutritionist is an intelligent meal recommendation system that leverages 
 **Nutritional Analysis:**
 - **Protein Assessment**: Evaluates protein content (high/moderate/low)
 - **Vegetable Content**: Assesses vegetable intake (high/moderate/low/none)
-- **Carbohydrate Balance**: Analyzes carbohydrate levels (high/moderate/low)  
+- **Carbohydrate Balance**: Analyzes carbohydrate levels (high/moderate/low)
 - **Overall Rating**: Provides overall nutritional rating (excellent/good/balanced/adequate)
 
 **Intelligent Caching System:**
@@ -712,27 +712,9 @@ This application was built with a focus on simplicity, reliability, and maintain
 
 ## License
 
-MIT License
+MIT License.
 
-Copyright (c) 2025 Lunch Delivery System
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+Copyright (c) 2025 Lunch Delivery System.
 
 ## Support
 
