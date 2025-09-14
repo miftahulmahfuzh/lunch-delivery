@@ -87,13 +87,13 @@ func sendWithTLS(config *SMTPConfig, serverAddr string, auth smtp.Auth, toEmail 
 	if err != nil {
 		return fmt.Errorf("TLS dial failed: %w", err)
 	}
-	defer conn.Close()
+	defer func() { _ = conn.Close() }()
 
 	client, err := smtp.NewClient(conn, config.Host)
 	if err != nil {
 		return fmt.Errorf("SMTP client creation failed: %w", err)
 	}
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	if auth != nil {
 		if ok, _ := client.Extension("AUTH"); !ok {
@@ -116,7 +116,7 @@ func sendWithTLS(config *SMTPConfig, serverAddr string, auth smtp.Auth, toEmail 
 	if err != nil {
 		return fmt.Errorf("DATA command failed: %w", err)
 	}
-	defer writer.Close()
+	defer func() { _ = writer.Close() }()
 
 	_, err = writer.Write(message)
 	if err != nil {

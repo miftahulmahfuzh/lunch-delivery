@@ -4,6 +4,7 @@ package models
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -544,7 +545,11 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			log.Printf("Error rolling back transaction: %v", err)
+		}
+	}()
 
 	// Get the order to find employee ID
 	order, err := r.GetOrderByID(orderID)

@@ -77,7 +77,7 @@ func TestNewConnection(t *testing.T) {
 
 				// Test that the function doesn't panic with the given parameters
 				assert.NotPanics(t, func() {
-					NewConnection(tt.host, tt.port, tt.user, tt.password, tt.dbname)
+					_, _ = NewConnection(tt.host, tt.port, tt.user, tt.password, tt.dbname)
 				})
 			}
 		})
@@ -131,7 +131,7 @@ func TestNewConnection_ConnectionString(t *testing.T) {
 			// Create a mock database
 			mockDB, mock, err := sqlmock.New()
 			require.NoError(t, err)
-			defer mockDB.Close()
+			defer func() { _ = mockDB.Close() }()
 
 			// We can't easily intercept the connection string in the current implementation,
 			// but we can test the behavior by expecting a connection attempt
@@ -159,7 +159,7 @@ func TestDB_Wrapper(t *testing.T) {
 		// Create a mock database
 		mockDB, mock, err := sqlmock.New()
 		require.NoError(t, err)
-		defer mockDB.Close()
+		defer func() { _ = mockDB.Close() }()
 
 		// Create sqlx.DB from mock
 		sqlxDB := sqlx.NewDb(mockDB, "postgres")
@@ -184,7 +184,7 @@ func TestDB_Wrapper(t *testing.T) {
 		// Create a mock database
 		mockDB, mock, err := sqlmock.New()
 		require.NoError(t, err)
-		defer mockDB.Close()
+		defer func() { _ = mockDB.Close() }()
 
 		// Create sqlx.DB from mock
 		sqlxDB := sqlx.NewDb(mockDB, "postgres")
@@ -200,7 +200,7 @@ func TestDB_Wrapper(t *testing.T) {
 		rows, err := db.Query("SELECT 1")
 		assert.NoError(t, err)
 		assert.NotNil(t, rows)
-		rows.Close()
+		_ = rows.Close()
 
 		// Test Exec method
 		mock.ExpectExec("INSERT INTO test").WillReturnResult(sqlmock.NewResult(1, 1))
@@ -261,7 +261,7 @@ func TestNewConnection_Integration(t *testing.T) {
 			assert.NoError(t, err)
 
 			// Clean up
-			db.Close()
+			_ = db.Close()
 		}
 	})
 }
@@ -277,6 +277,6 @@ func BenchmarkNewConnection(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		// Note: This will attempt actual connections in benchmark,
 		// so it may be slow and should be run with a test database
-		NewConnection(host, port, user, password, dbname)
+		_, _ = NewConnection(host, port, user, password, dbname)
 	}
 }

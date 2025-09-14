@@ -95,7 +95,9 @@ func AssertJSONResponse(t *testing.T, recorder *httptest.ResponseRecorder, expec
 
 		expectedJSON, _ := json.Marshal(expectedData)
 		var expectedParsed interface{}
-		json.Unmarshal(expectedJSON, &expectedParsed)
+		if err := json.Unmarshal(expectedJSON, &expectedParsed); err != nil {
+			t.Errorf("Failed to unmarshal expected data: %v", err)
+		}
 
 		assert.Equal(t, expectedParsed, actualData)
 	}
@@ -116,16 +118,16 @@ func SetTestEnv(envVars map[string]string) func() {
 	// Store original values and set test values
 	for key, value := range envVars {
 		originalVars[key] = os.Getenv(key)
-		os.Setenv(key, value)
+		_ = os.Setenv(key, value)
 	}
 
 	// Return cleanup function
 	return func() {
 		for key, originalValue := range originalVars {
 			if originalValue == "" {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key)
 			} else {
-				os.Setenv(key, originalValue)
+				_ = os.Setenv(key, originalValue)
 			}
 		}
 	}
@@ -139,7 +141,7 @@ func CreateTempDir(t *testing.T) (string, func()) {
 	assert.NoError(t, err)
 
 	return dir, func() {
-		os.RemoveAll(dir)
+		_ = os.RemoveAll(dir)
 	}
 }
 

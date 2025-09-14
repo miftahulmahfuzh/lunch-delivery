@@ -40,7 +40,7 @@ func (h *Handler) menuList(c *gin.Context) {
 	// Calculate statistics if we have items
 	templateData := gin.H{"items": items}
 	if len(items) > 0 {
-		var total int = 0
+		var total = 0
 		minPrice := items[0].Price
 		maxPrice := items[0].Price
 

@@ -88,8 +88,12 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 	resetFlag, err := s.repo.GetDailyMenuResetFlag(date)
 	if err == nil && resetFlag {
 		log.Info().Msg("Reset flag detected - invalidating cache and clearing flag")
-		s.repo.DeleteNutritionistSelection(date)
-		s.repo.SetDailyMenuResetFlag(date, false) // Clear the flag
+		if err := s.repo.DeleteNutritionistSelection(date); err != nil {
+			log.Warn().Err(err).Msg("Failed to delete nutritionist selection")
+		}
+		if err := s.repo.SetDailyMenuResetFlag(date, false); err != nil {
+			log.Warn().Err(err).Msg("Failed to clear daily menu reset flag")
+		}
 	}
 
 	// Check cache first by date
@@ -115,7 +119,9 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 				// Map the response indices back to original menu items and update cache
 				mappedResponse := s.mapIndicesToOriginalMenu(response, availableMenuItems, menuItems)
 				// Delete existing cache before saving new one to avoid constraint violation
-				s.repo.DeleteNutritionistSelection(date)
+				if err := s.repo.DeleteNutritionistSelection(date); err != nil {
+					log.Warn().Err(err).Msg("Failed to delete existing nutritionist selection")
+				}
 				if err := s.saveToCacheIfValid(date, menuItems, mappedResponse); err != nil {
 					log.Error().Err(err).Msg("Failed to update cache")
 				}
@@ -125,7 +131,9 @@ func (s *NutritionistService) GetNutritionistSelection(ctx context.Context, date
 		}
 		// Menu changed, invalidate cache
 		log.Info().Msg("Menu items changed - invalidating cache")
-		s.repo.DeleteNutritionistSelection(date)
+		if err := s.repo.DeleteNutritionistSelection(date); err != nil {
+			log.Warn().Err(err).Msg("Failed to delete nutritionist selection during cache invalidation")
+		}
 	}
 
 	log.Info().Msg("Cache miss or menu changed - calling LLM for nutritionist selection")

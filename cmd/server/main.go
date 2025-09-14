@@ -27,7 +27,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Database connection failed:", err)
 	}
-	defer db.Close()
+	defer func() { _ = db.Close() }()
 
 	repo := models.NewRepository(db.DB)
 
@@ -53,5 +53,7 @@ func main() {
 	handlers.SetupRoutes(r, repo, nutritionistService)
 
 	log.Println("Server starting on :8080")
-	r.Run(":8080")
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("Failed to start server:", err)
+	}
 }

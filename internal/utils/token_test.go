@@ -130,8 +130,12 @@ func TestGeneratePasswordResetToken(t *testing.T) {
 
 		// Timestamps should be different (or at least token2 >= token1)
 		var ts1, ts2 int64
-		fmt.Sscanf(timestamp1, "%d", &ts1)
-		fmt.Sscanf(timestamp2, "%d", &ts2)
+		if _, err := fmt.Sscanf(timestamp1, "%d", &ts1); err != nil {
+			t.Errorf("Failed to parse timestamp1: %v", err)
+		}
+		if _, err := fmt.Sscanf(timestamp2, "%d", &ts2); err != nil {
+			t.Errorf("Failed to parse timestamp2: %v", err)
+		}
 
 		assert.GreaterOrEqual(t, ts2, ts1, "Second token timestamp should be >= first token timestamp")
 	})
@@ -185,6 +189,9 @@ func TestGeneratePasswordResetToken_EdgeCases(t *testing.T) {
 	})
 
 	t.Run("token contains no spaces or invalid characters", func(t *testing.T) {
+		// Compile the regex once outside the loop for better performance
+		validPattern := regexp.MustCompile(`^[0-9a-f-]+$`)
+
 		for i := 0; i < 10; i++ {
 			token, err := GeneratePasswordResetToken()
 			require.NoError(t, err)
@@ -194,9 +201,7 @@ func TestGeneratePasswordResetToken_EdgeCases(t *testing.T) {
 			assert.NotContains(t, token, "\t", "Token should not contain tabs")
 
 			// Should only contain valid characters
-			validPattern := `^[0-9a-f-]+$`
-			matched, err := regexp.MatchString(validPattern, token)
-			require.NoError(t, err)
+			matched := validPattern.MatchString(token)
 			assert.True(t, matched, "Token should only contain hex characters and hyphens: %s", token)
 		}
 	})

@@ -24,7 +24,7 @@ func setupMockDB(t *testing.T) (*Repository, sqlmock.Sqlmock, func()) {
 	repo := NewRepository(sqlxDB)
 
 	cleanup := func() {
-		db.Close()
+		_ = db.Close()
 	}
 
 	return repo, mock, cleanup
@@ -34,7 +34,7 @@ func TestNewRepository(t *testing.T) {
 	t.Run("creates repository with valid database", func(t *testing.T) {
 		db, _, err := sqlmock.New()
 		require.NoError(t, err)
-		defer db.Close()
+		defer func() { _ = db.Close() }()
 
 		sqlxDB := sqlx.NewDb(db, "postgres")
 		repo := NewRepository(sqlxDB)

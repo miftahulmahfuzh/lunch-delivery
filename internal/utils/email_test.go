@@ -296,16 +296,16 @@ func TestGetEnvWithDefault(t *testing.T) {
 			originalValue := os.Getenv(tt.key)
 			defer func() {
 				if originalValue != "" {
-					os.Setenv(tt.key, originalValue)
+					_ = os.Setenv(tt.key, originalValue)
 				} else {
-					os.Unsetenv(tt.key)
+					_ = os.Unsetenv(tt.key)
 				}
 			}()
 
 			if tt.setEnv {
-				os.Setenv(tt.key, tt.envValue)
+				_ = os.Setenv(tt.key, tt.envValue)
 			} else {
-				os.Unsetenv(tt.key)
+				_ = os.Unsetenv(tt.key)
 			}
 
 			// Test getEnvWithDefault
@@ -438,7 +438,7 @@ func BenchmarkSendPasswordResetEmail(b *testing.B) {
 	service := NewEmailService()
 
 	for i := 0; i < b.N; i++ {
-		service.SendPasswordResetEmail(
+		_ = service.SendPasswordResetEmail(
 			"bench@example.com",
 			"bench-token",
 			"https://bench.com",

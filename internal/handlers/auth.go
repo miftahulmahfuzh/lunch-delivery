@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -324,6 +325,7 @@ func (h *Handler) resetPassword(c *gin.Context) {
 	err = h.repo.MarkPasswordResetTokenAsUsed(token)
 	if err != nil {
 		// Log error but don't fail the request since password was already updated
+		log.Printf("Failed to mark password reset token as used: %v", err)
 	}
 
 	c.HTML(http.StatusOK, "login.html", gin.H{

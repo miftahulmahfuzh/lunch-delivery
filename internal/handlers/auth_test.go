@@ -53,9 +53,10 @@ func TestHandler_Login(t *testing.T) {
 
 		var userIDCookie, companyIDCookie *http.Cookie
 		for _, cookie := range cookies {
-			if cookie.Name == "user_id" {
+			switch cookie.Name {
+			case "user_id":
 				userIDCookie = cookie
-			} else if cookie.Name == "company_id" {
+			case "company_id":
 				companyIDCookie = cookie
 			}
 		}

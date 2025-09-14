@@ -152,16 +152,16 @@ func TestGetEnv(t *testing.T) {
 			originalValue := os.Getenv(tt.key)
 			defer func() {
 				if originalValue != "" {
-					os.Setenv(tt.key, originalValue)
+					_ = os.Setenv(tt.key, originalValue)
 				} else {
-					os.Unsetenv(tt.key)
+					_ = os.Unsetenv(tt.key)
 				}
 			}()
 
 			if tt.setEnv {
-				os.Setenv(tt.key, tt.envValue)
+				_ = os.Setenv(tt.key, tt.envValue)
 			} else {
-				os.Unsetenv(tt.key)
+				_ = os.Unsetenv(tt.key)
 			}
 
 			// Test getEnv function
@@ -181,7 +181,11 @@ func TestLoadWithDotEnvFile(t *testing.T) {
 	// Change to temp directory
 	originalDir, err := os.Getwd()
 	require.NoError(t, err)
-	defer os.Chdir(originalDir)
+	defer func() {
+		if err := os.Chdir(originalDir); err != nil {
+			t.Errorf("Failed to change back to original directory: %v", err)
+		}
+	}()
 
 	err = os.Chdir(tempDir)
 	require.NoError(t, err)
@@ -207,12 +211,12 @@ DEEPSEEK_TENCENT_API_KEY=dotenv-api-key
 		assert.Equal(t, "dotenv-api-key", cfg.DeepseekTencentAPIKey)
 
 		// Cleanup
-		os.Remove(".env")
+		_ = os.Remove(".env")
 	})
 
 	t.Run("handles missing .env file gracefully", func(t *testing.T) {
 		// Ensure no .env file exists and clean environment
-		os.Remove(".env")
+		_ = os.Remove(".env")
 		cleanup := testutils.SetTestEnv(map[string]string{
 			"DB_HOST": "",
 			"DB_PORT": "",
@@ -257,7 +261,7 @@ DB_PORT=9999
 		assert.Equal(t, "env-user", cfg.DBUser)    // from env var
 
 		// Cleanup
-		os.Remove(".env")
+		_ = os.Remove(".env")
 	})
 }
 
@@ -284,7 +288,7 @@ func TestConfig_ValidationScenarios(t *testing.T) {
 
 	t.Run("config with minimal required fields", func(t *testing.T) {
 		// Remove any .env file
-		os.Remove(".env")
+		_ = os.Remove(".env")
 
 		// Clear all env vars explicitly
 		cleanup := testutils.SetTestEnv(map[string]string{
@@ -329,8 +333,8 @@ func BenchmarkLoad(b *testing.B) {
 }
 
 func BenchmarkGetEnv(b *testing.B) {
-	os.Setenv("BENCH_TEST_VAR", "bench_value")
-	defer os.Unsetenv("BENCH_TEST_VAR")
+	_ = os.Setenv("BENCH_TEST_VAR", "bench_value")
+	defer func() { _ = os.Unsetenv("BENCH_TEST_VAR") }()
 
 	for i := 0; i < b.N; i++ {
 		_ = getEnv("BENCH_TEST_VAR", "default")
