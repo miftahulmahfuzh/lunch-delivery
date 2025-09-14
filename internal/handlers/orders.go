@@ -27,6 +27,44 @@ func getEndOfWeek(date time.Time) time.Time {
 	return startOfWeek.AddDate(0, 0, 6) // Sunday as end of week
 }
 
+// orderRedirect handles the generic /order route and redirects to the proper order form
+func (h *Handler) orderRedirect(c *gin.Context) {
+	userIDStr, err := c.Cookie("user_id")
+	if err != nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+
+	// Get the employee to find their company
+	employee, err := h.repo.GetEmployeeByID(userID)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get employee")
+		c.HTML(http.StatusInternalServerError, "error.html", gin.H{"error": "Database error"})
+		return
+	}
+
+	// Get today's date
+	today := time.Now()
+	todayStr := today.Format("2006-01-02")
+
+	// Check if there's an order session for today
+	_, err = h.repo.GetOrderSession(employee.CompanyID, today)
+	if err != nil {
+		// No session for today, redirect to my-orders with an informational message
+		c.Redirect(http.StatusFound, "/my-orders")
+		return
+	}
+
+	// Redirect to the proper order form
+	c.Redirect(http.StatusFound, "/order/"+strconv.Itoa(employee.CompanyID)+"/"+todayStr)
+}
+
 // Update orderForm handler in internal/handlers/orders.go
 func (h *Handler) orderForm(c *gin.Context) {
 	userIDStr, err := c.Cookie("user_id")

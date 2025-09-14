@@ -48,6 +48,7 @@ func SetupRoutes(r *gin.Engine, repo *models.Repository, nutritionistService *se
 	customer.Use(middleware.RequireAuth())
 	{
 		customer.GET("/logout", h.logout)
+		customer.GET("/order", h.orderRedirect)
 		customer.GET("/order/:company/:date", h.orderForm)
 		customer.POST("/order", h.submitOrder)
 		customer.POST("/order/:company/:date/nutritionist-select", h.nutritionistSelect)
