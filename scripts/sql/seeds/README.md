@@ -22,13 +22,13 @@ This directory contains SQL scripts for data insertion - initial data, test data
 ### Production Setup
 After schema is created, seed the menu items:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f seeds/002_menu_items_seed.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f seeds/001_menu_items_seed.sql
 ```
 
 ### Test Environment Setup
 Add test data for development and testing:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f seeds/007_test_data_order_history.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f seeds/002_test_data_order_history.sql
 ```
 
 ### Verification

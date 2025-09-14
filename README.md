@@ -246,20 +246,20 @@ scripts/
 ├── sql/                                            # SQL database scripts
 │   ├── schema/                                     # Database structure & migrations
 │   │   ├── 001_initial.sql                         # Core tables and relationships
-│   │   ├── 003_nutritionist_reset_flag.sql         # AI nutritionist feature
-│   │   ├── 005_stock_empty_and_notifications.sql   # Stock tracking
-│   │   ├── 008_nutritionist_selections.sql         # AI recommendations
-│   │   └── 009_password_reset_tokens.sql           # Forgot password feature
+│   │   ├── 002_nutritionist_reset_flag.sql         # AI nutritionist feature
+│   │   ├── 003_stock_empty_and_notifications.sql   # Stock tracking
+│   │   ├── 004_nutritionist_selections.sql         # AI recommendations
+│   │   └── 005_password_reset_tokens.sql           # Forgot password feature
 │   ├── seeds/                                      # Data population scripts
-│   │   ├── 002_menu_items_seed.sql                 # Menu catalog data
-│   │   └── 007_test_data_order_history.sql         # Development test data
+│   │   ├── 001_menu_items_seed.sql                 # Menu catalog data
+│   │   └── 002_test_data_order_history.sql         # Development test data
 │   ├── updates/                                    # Schema and data modifications
-│   │   ├── 004_update_price_to_rupiah.sql          # Price format conversion
-│   │   └── 006_remove_global_stock_empty.sql       # Schema cleanup
+│   │   ├── 001_update_price_to_rupiah.sql          # Price format conversion
+│   │   └── 002_remove_global_stock_empty.sql       # Schema cleanup
 │   └── deletions/                                  # Data cleanup and testing
-│       ├── 007_delete_today_order_session.sql      # Session cleanup
-│       ├── 009_test_footer_edge_case.sql           # Edge case testing
-│       └── delete_test_order.sql                   # Test data removal
+│       ├── 001_delete_today_order_session.sql      # Session cleanup
+│       ├── 002_test_footer_edge_case.sql           # Edge case testing
+│       └── 003_delete_test_order.sql                   # Test data removal
 └── smtp/                                           # Email testing and configuration
     ├── send.go                                     # SMTP configuration tester
     ├── test-forgot-password.go                     # Password reset email tester

@@ -10,10 +10,10 @@ This directory contains SQL scripts for database schema management - table creat
   - Includes indexes for performance optimization
 
 ### Feature Extensions
-- **003_nutritionist_reset_flag.sql** - Adds nutritionist-related functionality
-- **005_stock_empty_and_notifications.sql** - Stock management system
+- **002_nutritionist_reset_flag.sql** - Adds nutritionist-related functionality
+- **003_stock_empty_and_notifications.sql** - Stock management system
   - Creates: `stock_empty_items`, `user_stock_empty_notifications`
-- **008_nutritionist_selections.sql** - Nutritionist selection features
+- **004_nutritionist_selections.sql** - Nutritionist selection features
 
 ## Usage
 
@@ -27,11 +27,11 @@ PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f sch
 Run feature-specific scripts in order:
 ```bash
 # Add nutritionist features
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/003_nutritionist_reset_flag.sql
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/008_nutritionist_selections.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/002_nutritionist_reset_flag.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/004_nutritionist_selections.sql
 
 # Add stock management
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/005_stock_empty_and_notifications.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f schema/003_stock_empty_and_notifications.sql
 ```
 
 ## Notes

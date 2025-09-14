@@ -25,19 +25,19 @@ This directory contains SQL scripts for data cleanup, removal, and testing scena
 ### Test Environment Cleanup
 Remove specific test orders:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/delete_test_order.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/003_delete_test_order.sql
 ```
 
 ### Session Reset
 Clear today's order session:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/007_delete_today_order_session.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/001_delete_today_order_session.sql
 ```
 
 ### UI Edge Case Testing
 Set up edge case scenarios:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/009_test_footer_edge_case.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f deletions/002_test_footer_edge_case.sql
 ```
 
 ## Safety Guidelines

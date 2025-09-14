@@ -20,12 +20,12 @@ This directory contains SQL scripts for data updates, modifications, and schema 
 ### Price Conversion
 **⚠️ IMPORTANT**: This is a one-time conversion script. Only run if prices are stored in cents format:
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f updates/004_update_price_to_rupiah.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f updates/001_update_price_to_rupiah.sql
 ```
 
 ### Stock Management Updates
 ```bash
-PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f updates/006_remove_global_stock_empty.sql
+PGPASSWORD=1234 psql -h localhost -p 5432 -U lunch_user -d lunch_delivery -f updates/002_remove_global_stock_empty.sql
 ```
 
 ## Before Running Updates
