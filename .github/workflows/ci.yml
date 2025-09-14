@@ -138,7 +138,7 @@ jobs:
       run: go vet ./...
 
     - name: 🛡️ Security Check
-      uses: securego/gosec@v2
+      uses: securego/gosec@v2.22.8
       with:
         args: './...'
 
