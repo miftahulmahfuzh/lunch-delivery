@@ -417,9 +417,12 @@ func (s *NutritionistService) saveToCacheIfValid(date time.Time, menuItems []mod
 		menuItemIDs = append(menuItemIDs, int64(item.ID))
 	}
 
-	// Convert indices to int32 for database
+	// Convert indices to int32 for database with overflow protection
 	var selectedIndices []int32
 	for _, idx := range response.SelectedIndices {
+		if idx > 2147483647 || idx < -2147483648 {
+			return fmt.Errorf("index value %d exceeds int32 range", idx)
+		}
 		selectedIndices = append(selectedIndices, int32(idx))
 	}
 
