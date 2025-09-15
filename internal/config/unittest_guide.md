@@ -55,7 +55,7 @@ This guide explains the unit tests for the `internal/config` package, which hand
 **Scenarios Tested**:
 - Configuration with all fields populated
 - Configuration with minimal required fields
-- Validates field types and constraints
+- Validates field population and basic requirements
 
 ### 5. Performance Tests
 
@@ -94,7 +94,7 @@ go test ./internal/config -cover
 
 - **Environment Management**: Uses `testutils.SetTestEnv()` to safely set and restore environment variables
 - **Temporary Directories**: Uses `testutils.CreateTempDir()` for `.env` file testing
-- **Mock Data**: Uses `testutils.MockEnvironment()` and `testutils.MockConfig()` for consistent test data
+- **Mock Data**: Uses `testutils.MockEnvironment()` for consistent test data
 
 ## Example Test Execution
 
