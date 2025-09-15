@@ -5,6 +5,97 @@ All notable changes to the Lunch Delivery System will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2025-09-15
+
+### Added
+- **🔄 Comprehensive CI/CD Pipeline Implementation**
+  - Complete GitHub Actions workflow for automated testing and CI/CD
+  - Automated unit test execution with coverage reporting
+  - Go formatting checks with gofmt validation
+  - golangci-lint integration for code quality enforcement
+  - Multi-step build verification process
+
+- **🧪 Comprehensive Unit Testing Suite**
+  - Complete test coverage for entire internal codebase
+  - Unit tests for all handlers (auth, admin, orders)
+  - Comprehensive middleware testing with authentication scenarios
+  - Database layer testing with mock implementations
+  - LLM client testing with mock interfaces
+  - Services layer testing for nutritionist functionality
+  - Models and repository testing with fixtures
+  - Utility functions testing (email, token, validation)
+
+- **📚 Extensive Testing Documentation**
+  - Master unittest guide (UNITTEST_MASTER_GUIDE.md) with comprehensive testing strategies
+  - Individual unittest guides for each internal package
+  - Detailed testing conventions and best practices
+  - Mock implementation patterns and usage guidelines
+  - Test fixture management and common utilities
+
+- **🏗️ Testing Infrastructure & Utilities**
+  - Centralized test utilities and helpers
+  - Mock implementations for LLM and repository interfaces
+  - Test fixtures for consistent data setup
+  - Common testing patterns and shared utilities
+  - Enhanced test database management
+
+### Fixed
+- **🔒 Security Vulnerabilities Resolution**
+  - Fixed all gosec security vulnerabilities
+  - Improved security posture across the codebase
+  - Enhanced input validation and sanitization
+  - Secure error handling improvements
+
+- **🔧 Code Quality & Compilation Issues**
+  - Resolved all golangci-lint issues and warnings
+  - Fixed circular import problems in test packages
+  - Resolved all unit test failures
+  - Fixed CI build compilation errors
+  - Enhanced error handling patterns
+
+- **🤖 AI Nutritionist Improvements**
+  - Fixed AI nutritionist caching null constraint violations
+  - Resolved repository method implementation gaps
+  - Enhanced nutritionist service reliability
+
+### Changed
+- **🎨 Template System Refactoring**
+  - Migrated all admin templates to shared styles system
+  - Consolidated template styling with reusable components
+  - Extracted shared styles into dedicated template
+  - Eliminated styling redundancy across templates
+
+- **📁 Project Structure Improvements**
+  - Removed duplicate favicon files
+  - Enhanced project organization and file structure
+  - Improved import paths and dependency management
+
+- **⚙️ CI/CD Infrastructure Updates**
+  - Updated deprecated GitHub Actions (upload-artifact v3 → v4)
+  - Fixed gosec action configuration with specific version v2.22.8
+  - Replaced invalid security scanning actions with proper alternatives
+  - Enhanced CI pipeline reliability and performance
+
+### Security
+- **🛡️ Enhanced Security Scanning**
+  - Integration of gosec static security analyzer
+  - Automated security vulnerability detection in CI
+  - Enhanced security best practices enforcement
+  - Improved secret and credential handling
+
+### Technical Infrastructure
+- **🧪 Testing Framework Enhancement**
+  - Comprehensive mock system for external dependencies
+  - Advanced testing utilities for database operations
+  - Enhanced test isolation and cleanup mechanisms
+  - Improved test performance and reliability
+
+- **📈 Code Quality Improvements**
+  - Standardized coding conventions across entire codebase
+  - Enhanced error handling and logging practices
+  - Improved code documentation and comments
+  - Better separation of concerns in testing
+
 ## [0.5.0] - 2025-01-14
 
 ### Added
@@ -331,6 +422,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **WhatsApp contact integration** for communication
 - **Flexible session management** with reopen capability
 
+[0.6.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.6.0
 [0.5.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.5.0
 [0.4.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.4.0
 [0.3.0]: https://github.com/miftahulmahfuzh/lunch-delivery/releases/tag/v0.3.0
