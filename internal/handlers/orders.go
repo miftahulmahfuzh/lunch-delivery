@@ -186,14 +186,14 @@ func (h *Handler) orderForm(c *gin.Context) {
 	}
 
 	c.HTML(http.StatusOK, "order_form.html", gin.H{
-		"title":                 "Place Your Order",
-		"menu_items":            menuItems,
-		"session":               session,
-		"company":               company,
-		"existing_order":        existingOrder,
-		"user_id":               userID,
+		"title":                   "Place Your Order",
+		"menu_items":              menuItems,
+		"session":                 session,
+		"company":                 company,
+		"existing_order":          existingOrder,
+		"user_id":                 userID,
 		"show_reset_notification": showResetNotification,
-		"stock_empty_items":     stockEmptyItems,
+		"stock_empty_items":       stockEmptyItems,
 	})
 }
 
@@ -342,14 +342,14 @@ func (h *Handler) myOrders(c *gin.Context) {
 				itemIDs = append(itemIDs, id)
 			}
 			allOrderItems, _ := h.repo.GetMenuItemsByIDs(itemIDs)
-			
+
 			// Get stock empty items for this user today
 			stockEmptyItemIDs, _ := h.repo.GetStockEmptyItemsForUser(userID, today)
 			stockEmptyMap := make(map[int]bool)
 			for _, itemID := range stockEmptyItemIDs {
 				stockEmptyMap[itemID] = true
 			}
-			
+
 			// Filter out stock empty items from display and calculate adjusted totals
 			adjustedTotalPrice = todayOrder.TotalPrice
 			stockReductionAmount = 0
@@ -369,12 +369,12 @@ func (h *Handler) myOrders(c *gin.Context) {
 	var recentOrders []models.RecentOrder
 	startDateStr := c.Query("start_date")
 	endDateStr := c.Query("end_date")
-	
+
 	if startDateStr != "" && endDateStr != "" {
 		// Parse dates from query parameters
 		startDate, err1 := time.Parse("2006-01-02", startDateStr)
 		endDate, err2 := time.Parse("2006-01-02", endDateStr)
-		
+
 		if err1 == nil && err2 == nil {
 			recentOrders, _ = h.repo.GetRecentOrdersByEmployee(userID, startDate, endDate)
 		}
@@ -478,9 +478,9 @@ func (h *Handler) nutritionistSelect(c *gin.Context) {
 		Msg("Nutritionist selection successful")
 
 	c.JSON(http.StatusOK, gin.H{
-		"success":           true,
-		"selected_indices":  selection.SelectedIndices,
-		"reasoning":         selection.Reasoning,
+		"success":             true,
+		"selected_indices":    selection.SelectedIndices,
+		"reasoning":           selection.Reasoning,
 		"nutritional_summary": selection.NutritionalSummary,
 	})
 }

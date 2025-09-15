@@ -84,10 +84,10 @@ func TestClient_GenerateContent(t *testing.T) {
 
 	t.Run("calls underlying LLM client", func(t *testing.T) {
 		cfg := &config.Config{
-			DeepseekTencentAPIKey:   "test-key",
-			DeepseekTencentModel:    "test-model",
-			DeepseekTencentBaseURL:  "https://test-api.com",
-			LLMRequestTimeout:       time.Second * 30,
+			DeepseekTencentAPIKey:  "test-key",
+			DeepseekTencentModel:   "test-model",
+			DeepseekTencentBaseURL: "https://test-api.com",
+			LLMRequestTimeout:      time.Second * 30,
 		}
 
 		client, err := NewClient(cfg)
@@ -104,10 +104,10 @@ func TestClient_GenerateContent(t *testing.T) {
 
 	t.Run("handles context cancellation", func(t *testing.T) {
 		cfg := &config.Config{
-			DeepseekTencentAPIKey:   "test-key",
-			DeepseekTencentModel:    "test-model",
-			DeepseekTencentBaseURL:  "https://test-api.com",
-			LLMRequestTimeout:       time.Second * 30,
+			DeepseekTencentAPIKey:  "test-key",
+			DeepseekTencentModel:   "test-model",
+			DeepseekTencentBaseURL: "https://test-api.com",
+			LLMRequestTimeout:      time.Second * 30,
 		}
 
 		client, err := NewClient(cfg)
@@ -122,10 +122,10 @@ func TestClient_GenerateContent(t *testing.T) {
 
 	t.Run("handles timeout", func(t *testing.T) {
 		cfg := &config.Config{
-			DeepseekTencentAPIKey:   "test-key",
-			DeepseekTencentModel:    "test-model",
-			DeepseekTencentBaseURL:  "https://test-api.com",
-			LLMRequestTimeout:       1 * time.Millisecond, // Very short timeout
+			DeepseekTencentAPIKey:  "test-key",
+			DeepseekTencentModel:   "test-model",
+			DeepseekTencentBaseURL: "https://test-api.com",
+			LLMRequestTimeout:      1 * time.Millisecond, // Very short timeout
 		}
 
 		client, err := NewClient(cfg)
@@ -140,8 +140,9 @@ func TestClient_GenerateContent(t *testing.T) {
 
 func TestNewClient_ConfigurationEdgeCases(t *testing.T) {
 	t.Run("handles nil config", func(t *testing.T) {
-		_, err := NewClient(nil)
+		client, err := NewClient(nil)
 		assert.Error(t, err)
+		assert.Nil(t, client)
 	})
 
 	t.Run("handles empty base URL", func(t *testing.T) {
@@ -189,10 +190,10 @@ func TestNewClient_ConfigurationEdgeCases(t *testing.T) {
 func TestClient_Integration(t *testing.T) {
 	t.Run("client wraps LLM correctly", func(t *testing.T) {
 		cfg := &config.Config{
-			DeepseekTencentAPIKey:   "test-key",
-			DeepseekTencentModel:    "test-model",
-			DeepseekTencentBaseURL:  "https://test-api.com",
-			LLMRequestTimeout:       time.Second * 30,
+			DeepseekTencentAPIKey:  "test-key",
+			DeepseekTencentModel:   "test-model",
+			DeepseekTencentBaseURL: "https://test-api.com",
+			LLMRequestTimeout:      time.Second * 30,
 		}
 		cfg.DeepseekTencentAPIKey = "integration-test-key"
 
@@ -287,10 +288,10 @@ func TestClient_ErrorHandling(t *testing.T) {
 // Benchmark tests
 func BenchmarkNewClient(b *testing.B) {
 	cfg := &config.Config{
-		DeepseekTencentAPIKey:   "benchmark-key",
-		DeepseekTencentModel:    "test-model",
-		DeepseekTencentBaseURL:  "https://test-api.com",
-		LLMRequestTimeout:       time.Second * 30,
+		DeepseekTencentAPIKey:  "benchmark-key",
+		DeepseekTencentModel:   "test-model",
+		DeepseekTencentBaseURL: "https://test-api.com",
+		LLMRequestTimeout:      time.Second * 30,
 	}
 
 	for i := 0; i < b.N; i++ {
@@ -306,10 +307,10 @@ func BenchmarkNewClient(b *testing.B) {
 
 func BenchmarkGenerateContent(b *testing.B) {
 	cfg := &config.Config{
-		DeepseekTencentAPIKey:   "benchmark-key",
-		DeepseekTencentModel:    "test-model",
-		DeepseekTencentBaseURL:  "https://test-api.com",
-		LLMRequestTimeout:       time.Second * 30,
+		DeepseekTencentAPIKey:  "benchmark-key",
+		DeepseekTencentModel:   "test-model",
+		DeepseekTencentBaseURL: "https://test-api.com",
+		LLMRequestTimeout:      time.Second * 30,
 	}
 
 	client, err := NewClient(cfg)

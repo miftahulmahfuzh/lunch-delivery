@@ -22,9 +22,9 @@ type NutritionistService struct {
 }
 
 type NutritionistResponse struct {
-	SelectedIndices     []int               `json:"selected_menu_items"`
-	Reasoning          string              `json:"reasoning"`
-	NutritionalSummary NutritionalSummary  `json:"nutritional_summary"`
+	SelectedIndices    []int              `json:"selected_menu_items"`
+	Reasoning          string             `json:"reasoning"`
+	NutritionalSummary NutritionalSummary `json:"nutritional_summary"`
 }
 
 type NutritionalSummary struct {
@@ -182,7 +182,6 @@ func (s *NutritionistService) cachedSelectionHasStockEmptyItems(response *Nutrit
 	return false
 }
 
-
 // Map indices from available items back to original menu items
 func (s *NutritionistService) mapIndicesToOriginalMenu(response *NutritionistResponse, availableItems []models.MenuItem, originalItems []models.MenuItem) *NutritionistResponse {
 	// Create a map from available item ID to original menu index
@@ -237,7 +236,7 @@ func (s *NutritionistService) convertCachedToResponse(cached *models.Nutritionis
 		log.Warn().Err(err).Msg("Failed to parse cached nutritional summary")
 		summary = NutritionalSummary{
 			Protein:       "unknown",
-			Vegetables:    "unknown", 
+			Vegetables:    "unknown",
 			Carbohydrates: "unknown",
 			OverallRating: "balanced",
 		}
@@ -259,7 +258,7 @@ func (s *NutritionistService) convertCachedToResponse(cached *models.Nutritionis
 func (s *NutritionistService) callLLMForSelection(ctx context.Context, menuItems []models.MenuItem) (*NutritionistResponse, error) {
 	// Build menu items description for LLM
 	menuDescription := s.buildMenuDescription(menuItems)
-	
+
 	systemPrompt := `You are a highly experienced nutritionist. Your task is to select the most healthy and balanced meal combination from the available menu items.
 
 CRITICAL REQUIREMENTS:
@@ -325,7 +324,7 @@ func (s *NutritionistService) fallbackParseResponse(content string, maxIndex int
 	// Look for array-like patterns in the content
 	// This is a simple fallback - you can make it more sophisticated
 	var indices []int
-	
+
 	// Try to find numbers in brackets or array-like format
 	lines := strings.Split(content, "\n")
 	for _, line := range lines {

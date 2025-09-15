@@ -35,14 +35,14 @@ func TestLoad(t *testing.T) {
 		{
 			name: "uses environment variables when set",
 			envVars: map[string]string{
-				"DB_HOST":                  "custom-host",
-				"DB_PORT":                  "3306",
-				"DB_USER":                  "custom_user",
-				"DB_PASSWORD":              "custom_pass",
-				"DB_NAME":                  "custom_db",
-				"LLM_TYPE":                 "CUSTOM_LLM",
-				"DEEPSEEK_TENCENT_API_KEY": "test-api-key",
-				"DEEPSEEK_TENCENT_MODEL":   "custom-model",
+				"DB_HOST":                   "custom-host",
+				"DB_PORT":                   "3306",
+				"DB_USER":                   "custom_user",
+				"DB_PASSWORD":               "custom_pass",
+				"DB_NAME":                   "custom_db",
+				"LLM_TYPE":                  "CUSTOM_LLM",
+				"DEEPSEEK_TENCENT_API_KEY":  "test-api-key",
+				"DEEPSEEK_TENCENT_MODEL":    "custom-model",
 				"DEEPSEEK_TENCENT_BASE_URL": "https://custom-api.com/v1",
 			},
 			expected: &Config{
@@ -218,11 +218,11 @@ DEEPSEEK_TENCENT_API_KEY=dotenv-api-key
 		// Ensure no .env file exists and clean environment
 		_ = os.Remove(".env")
 		cleanup := testutils.SetTestEnv(map[string]string{
-			"DB_HOST": "",
-			"DB_PORT": "",
-			"DB_USER": "",
+			"DB_HOST":     "",
+			"DB_PORT":     "",
+			"DB_USER":     "",
 			"DB_PASSWORD": "",
-			"DB_NAME": "",
+			"DB_NAME":     "",
 		})
 		defer cleanup()
 
@@ -257,8 +257,8 @@ DB_PORT=9999
 
 		// Assertions - env vars should override .env file
 		assert.Equal(t, "env-override", cfg.DBHost) // from env var
-		assert.Equal(t, "9999", cfg.DBPort)        // from .env file
-		assert.Equal(t, "env-user", cfg.DBUser)    // from env var
+		assert.Equal(t, "9999", cfg.DBPort)         // from .env file
+		assert.Equal(t, "env-user", cfg.DBUser)     // from env var
 
 		// Cleanup
 		_ = os.Remove(".env")
@@ -292,20 +292,20 @@ func TestConfig_ValidationScenarios(t *testing.T) {
 
 		// Clear all env vars explicitly
 		cleanup := testutils.SetTestEnv(map[string]string{
-			"DB_HOST":                     "",
-			"DB_PORT":                     "",
-			"DB_USER":                     "",
-			"DB_PASSWORD":                 "",
-			"DB_NAME":                     "",
-			"LLM_TYPE":                    "",
-			"DEEPSEEK_TENCENT_API_KEY":    "",
-			"DEEPSEEK_TENCENT_MODEL":      "",
-			"DEEPSEEK_TENCENT_BASE_URL":   "",
-			"SMTP_HOST":                   "",
-			"SMTP_PORT":                   "",
-			"SMTP_USERNAME":               "",
-			"SMTP_PASSWORD":               "",
-			"SMTP_FROM":                   "",
+			"DB_HOST":                   "",
+			"DB_PORT":                   "",
+			"DB_USER":                   "",
+			"DB_PASSWORD":               "",
+			"DB_NAME":                   "",
+			"LLM_TYPE":                  "",
+			"DEEPSEEK_TENCENT_API_KEY":  "",
+			"DEEPSEEK_TENCENT_MODEL":    "",
+			"DEEPSEEK_TENCENT_BASE_URL": "",
+			"SMTP_HOST":                 "",
+			"SMTP_PORT":                 "",
+			"SMTP_USERNAME":             "",
+			"SMTP_PASSWORD":             "",
+			"SMTP_FROM":                 "",
 		})
 		defer cleanup()
 

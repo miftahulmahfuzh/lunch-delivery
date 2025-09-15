@@ -239,7 +239,6 @@ func (r *Repository) GetMenuItemsByIDs(ids []int64) ([]MenuItem, error) {
 	return items, err
 }
 
-
 func (r *Repository) GetOrderSessionsByDateWithCompany(date time.Time) ([]OrderSessionWithCompany, error) {
 	var sessions []OrderSessionWithCompany
 	err := r.db.Select(&sessions, `
@@ -297,7 +296,6 @@ func (r *Repository) GetOrdersBySessionWithDetails(sessionID int) ([]IndividualO
 	return orders, nil
 }
 
-
 func (r *Repository) GetOrderSessionWithCompany(id int) (*OrderSessionWithCompany, error) {
 	var session OrderSessionWithCompany
 	err := r.db.Get(&session, `
@@ -345,15 +343,14 @@ func (r *Repository) GetEmployeeByID(id int) (*Employee, error) {
 	return &employee, err
 }
 
-
 func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDate time.Time) ([]RecentOrder, error) {
 	type OrderRow struct {
-		Date        time.Time      `db:"date"`
-		TotalPrice  int            `db:"total_price"`
-		Paid        bool           `db:"paid"`
-		MenuItemIDs pq.Int64Array  `db:"menu_item_ids"`
+		Date        time.Time     `db:"date"`
+		TotalPrice  int           `db:"total_price"`
+		Paid        bool          `db:"paid"`
+		MenuItemIDs pq.Int64Array `db:"menu_item_ids"`
 	}
-	
+
 	var orderRows []OrderRow
 	err := r.db.Select(&orderRows, `
         SELECT os.date, io.total_price, io.paid, io.menu_item_ids
@@ -361,11 +358,11 @@ func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDat
         JOIN order_sessions os ON io.session_id = os.id
         WHERE io.employee_id = $1 AND os.date >= $2 AND os.date <= $3
         ORDER BY os.date DESC`, employeeID, startDate, endDate)
-	
+
 	if err != nil {
 		return nil, err
 	}
-	
+
 	var orders []RecentOrder
 
 	// Get menu item names for each order
@@ -395,7 +392,7 @@ func (r *Repository) GetRecentOrdersByEmployee(employeeID int, startDate, endDat
 		}
 		orders = append(orders, order)
 	}
-	
+
 	return orders, nil
 }
 
@@ -455,14 +452,14 @@ func (r *Repository) GetNutritionistUsersByDateAndUnpaid(date time.Time) ([]Nutr
 
 // Daily Menu Reset Flag Methods
 func (r *Repository) SetDailyMenuResetFlag(date time.Time, reset bool) error {
-	_, err := r.db.Exec(`UPDATE daily_menus SET nutritionist_reset = $1 WHERE date = $2`, 
+	_, err := r.db.Exec(`UPDATE daily_menus SET nutritionist_reset = $1 WHERE date = $2`,
 		reset, date.Format("2006-01-02"))
 	return err
 }
 
 func (r *Repository) GetDailyMenuResetFlag(date time.Time) (bool, error) {
 	var resetFlag bool
-	err := r.db.Get(&resetFlag, `SELECT nutritionist_reset FROM daily_menus WHERE date = $1`, 
+	err := r.db.Get(&resetFlag, `SELECT nutritionist_reset FROM daily_menus WHERE date = $1`,
 		date.Format("2006-01-02"))
 	return resetFlag, err
 }
@@ -525,7 +522,6 @@ func (r *Repository) GetOrderSessionByID(id int) (*OrderSession, error) {
 	}
 	return &session, err
 }
-
 
 func (r *Repository) GetEmployeeWithCompany(id int) (*EmployeeWithCompany, error) {
 	var employee EmployeeWithCompany
@@ -601,7 +597,6 @@ func (r *Repository) MarkItemsStockEmpty(itemIDs []int, date time.Time, orderID 
 	return tx.Commit()
 }
 
-
 func (r *Repository) GetUserNotifications(employeeID int, limit int) ([]UserNotification, error) {
 	var notifications []UserNotification
 	query := `SELECT * FROM user_notifications WHERE employee_id = $1 ORDER BY created_at DESC`
@@ -659,7 +654,7 @@ func (r *Repository) UnmarkItemStockEmpty(itemID int, date time.Time, orderID in
 		DELETE FROM user_stock_empty_notifications 
 		WHERE individual_order_id = $1 AND menu_item_id = $2`,
 		orderID, itemID)
-	
+
 	return err
 }
 
@@ -669,7 +664,7 @@ func (r *Repository) DeleteAllUserNotifications(employeeID int) error {
 }
 
 func (r *Repository) DeleteUserNotificationsByType(employeeID int, notificationType string) error {
-	_, err := r.db.Exec(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type = $2`, 
+	_, err := r.db.Exec(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type = $2`,
 		employeeID, notificationType)
 	return err
 }
@@ -678,20 +673,20 @@ func (r *Repository) DeleteUserNotificationsByTypes(employeeID int, notification
 	if len(notificationTypes) == 0 {
 		return nil
 	}
-	
+
 	// Build placeholders for the IN clause
 	placeholders := make([]string, len(notificationTypes))
 	args := make([]interface{}, len(notificationTypes)+1)
 	args[0] = employeeID
-	
+
 	for i, notificationType := range notificationTypes {
 		placeholders[i] = fmt.Sprintf("$%d", i+2)
 		args[i+1] = notificationType
 	}
-	
-	query := fmt.Sprintf(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type IN (%s)`, 
+
+	query := fmt.Sprintf(`DELETE FROM user_notifications WHERE employee_id = $1 AND notification_type IN (%s)`,
 		strings.Join(placeholders, ","))
-	
+
 	_, err := r.db.Exec(query, args...)
 	return err
 }

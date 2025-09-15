@@ -21,6 +21,10 @@ type Client struct {
 }
 
 func NewClient(cfg *config.Config) (*Client, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("config cannot be nil")
+	}
+
 	var llm llms.Model
 	var err error
 

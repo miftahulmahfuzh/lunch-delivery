@@ -240,7 +240,7 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 	// Get employees with existing unpaid orders for this date to notify them
 	sessions, _ := h.repo.GetOrderSessionsByDate(date)
 	employeesToNotify := make(map[int]bool)
-	
+
 	for _, session := range sessions {
 		orders, _ := h.repo.GetOrdersBySession(session.ID)
 		for _, order := range orders {
@@ -264,7 +264,7 @@ func (h *Handler) createDailyMenu(c *gin.Context) {
 			log.Warn().Err(err).Int("employee_id", employeeID).Msg("Failed to get employee for notification")
 			continue
 		}
-		
+
 		redirectURL := fmt.Sprintf("/order/%d/%s", employee.CompanyID, date.Format("2006-01-02"))
 		err = h.repo.CreateUserNotification(
 			employeeID,
@@ -349,8 +349,8 @@ func (h *Handler) createOrderSession(c *gin.Context) {
 
 		// Return JSON response for AJAX handling
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "duplicate_session",
-			"message": "An order session for " + company.Name + " on " + date.Format("January 2, 2006") + " already exists.",
+			"error":      "duplicate_session",
+			"message":    "An order session for " + company.Name + " on " + date.Format("January 2, 2006") + " already exists.",
 			"session_id": existingSession.ID,
 		})
 		return
@@ -366,7 +366,7 @@ func (h *Handler) createOrderSession(c *gin.Context) {
 	if dailyMenu == nil || len(dailyMenu.MenuItemIDs) == 0 {
 		// Return JSON response for AJAX handling
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "menu_empty",
+			"error":   "menu_empty",
 			"message": "No daily menu has been set for " + date.Format("January 2, 2006") + ". Please set up the daily menu first before creating an order session.",
 		})
 		return

@@ -126,8 +126,8 @@ const (
 
 // Individual Order Status Constants
 const (
-	OrderStatusPending        = "PENDING"
-	OrderStatusReadyDelivery  = "READY_FOR_DELIVERY"
+	OrderStatusPending       = "PENDING"
+	OrderStatusReadyDelivery = "READY_FOR_DELIVERY"
 )
 
 // Extended models for joins
@@ -156,9 +156,9 @@ type RecentOrder struct {
 }
 
 const (
-	NotificationStockEmpty  = "STOCK_EMPTY"
-	NotificationPaid        = "PAID"
-	NotificationSessionClosed = "SESSION_CLOSED"
-	NotificationMenuUpdated = "MENU_UPDATED"
+	NotificationStockEmpty       = "STOCK_EMPTY"
+	NotificationPaid             = "PAID"
+	NotificationSessionClosed    = "SESSION_CLOSED"
+	NotificationMenuUpdated      = "MENU_UPDATED"
 	NotificationReadyForDelivery = "READY_FOR_DELIVERY"
 )

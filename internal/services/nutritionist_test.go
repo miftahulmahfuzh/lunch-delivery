@@ -370,9 +370,9 @@ func TestNutritionistService_HelperMethods(t *testing.T) {
 		}{
 			{[]int{0, 1, 2}, 5, true},
 			{[]int{0, 4}, 5, true},
-			{[]int{0, 5}, 5, false}, // 5 is out of bounds for maxIndex 5
-			{[]int{-1, 1}, 5, false}, // negative index
-			{[]int{}, 5, false}, // empty
+			{[]int{0, 5}, 5, false},                // 5 is out of bounds for maxIndex 5
+			{[]int{-1, 1}, 5, false},               // negative index
+			{[]int{}, 5, false},                    // empty
 			{[]int{0, 1, 2, 3, 4, 5, 6}, 5, false}, // too many indices
 		}
 

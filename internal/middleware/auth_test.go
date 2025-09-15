@@ -14,76 +14,76 @@ func TestRequireAuth(t *testing.T) {
 	testutils.SetupGinTest()
 
 	tests := []struct {
-		name               string
-		userIDCookie       string
-		expectedStatus     int
-		expectedLocation   string
-		expectUserIDInCtx  bool
+		name                string
+		userIDCookie        string
+		expectedStatus      int
+		expectedLocation    string
+		expectUserIDInCtx   bool
 		expectedUserIDInCtx int
-		expectAbort        bool
+		expectAbort         bool
 	}{
 		{
-			name:               "valid user ID cookie allows access",
-			userIDCookie:       "123",
-			expectedStatus:     http.StatusOK,
-			expectedLocation:   "",
-			expectUserIDInCtx:  true,
+			name:                "valid user ID cookie allows access",
+			userIDCookie:        "123",
+			expectedStatus:      http.StatusOK,
+			expectedLocation:    "",
+			expectUserIDInCtx:   true,
 			expectedUserIDInCtx: 123,
-			expectAbort:        false,
+			expectAbort:         false,
 		},
 		{
-			name:               "another valid user ID",
-			userIDCookie:       "456",
-			expectedStatus:     http.StatusOK,
-			expectedLocation:   "",
-			expectUserIDInCtx:  true,
+			name:                "another valid user ID",
+			userIDCookie:        "456",
+			expectedStatus:      http.StatusOK,
+			expectedLocation:    "",
+			expectUserIDInCtx:   true,
 			expectedUserIDInCtx: 456,
-			expectAbort:        false,
+			expectAbort:         false,
 		},
 		{
-			name:               "missing user ID cookie redirects to login",
-			userIDCookie:       "",
-			expectedStatus:     http.StatusFound,
-			expectedLocation:   "/login",
-			expectUserIDInCtx:  false,
+			name:                "missing user ID cookie redirects to login",
+			userIDCookie:        "",
+			expectedStatus:      http.StatusFound,
+			expectedLocation:    "/login",
+			expectUserIDInCtx:   false,
 			expectedUserIDInCtx: 0,
-			expectAbort:        true,
+			expectAbort:         true,
 		},
 		{
-			name:               "invalid user ID cookie redirects to login",
-			userIDCookie:       "invalid",
-			expectedStatus:     http.StatusFound,
-			expectedLocation:   "/login",
-			expectUserIDInCtx:  false,
+			name:                "invalid user ID cookie redirects to login",
+			userIDCookie:        "invalid",
+			expectedStatus:      http.StatusFound,
+			expectedLocation:    "/login",
+			expectUserIDInCtx:   false,
 			expectedUserIDInCtx: 0,
-			expectAbort:        true,
+			expectAbort:         true,
 		},
 		{
-			name:               "non-numeric user ID cookie redirects to login",
-			userIDCookie:       "abc123",
-			expectedStatus:     http.StatusFound,
-			expectedLocation:   "/login",
-			expectUserIDInCtx:  false,
+			name:                "non-numeric user ID cookie redirects to login",
+			userIDCookie:        "abc123",
+			expectedStatus:      http.StatusFound,
+			expectedLocation:    "/login",
+			expectUserIDInCtx:   false,
 			expectedUserIDInCtx: 0,
-			expectAbort:        true,
+			expectAbort:         true,
 		},
 		{
-			name:               "zero user ID is valid",
-			userIDCookie:       "0",
-			expectedStatus:     http.StatusOK,
-			expectedLocation:   "",
-			expectUserIDInCtx:  true,
+			name:                "zero user ID is valid",
+			userIDCookie:        "0",
+			expectedStatus:      http.StatusOK,
+			expectedLocation:    "",
+			expectUserIDInCtx:   true,
 			expectedUserIDInCtx: 0,
-			expectAbort:        false,
+			expectAbort:         false,
 		},
 		{
-			name:               "negative user ID is valid (edge case)",
-			userIDCookie:       "-1",
-			expectedStatus:     http.StatusOK,
-			expectedLocation:   "",
-			expectUserIDInCtx:  true,
+			name:                "negative user ID is valid (edge case)",
+			userIDCookie:        "-1",
+			expectedStatus:      http.StatusOK,
+			expectedLocation:    "",
+			expectUserIDInCtx:   true,
 			expectedUserIDInCtx: -1,
-			expectAbort:        false,
+			expectAbort:         false,
 		},
 	}
 

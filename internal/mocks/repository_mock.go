@@ -234,7 +234,6 @@ func (m *RepositoryMock) ReopenOrderSession(id int) error {
 	return args.Error(0)
 }
 
-
 // Individual Orders
 func (m *RepositoryMock) CreateIndividualOrder(sessionID, employeeID int, menuItemIDs []int64, totalPrice int) (*models.IndividualOrder, error) {
 	args := m.Called(sessionID, employeeID, menuItemIDs, totalPrice)

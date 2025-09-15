@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/miftahulmahfuzh/lunch-delivery/internal/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/miftahulmahfuzh/lunch-delivery/internal/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 

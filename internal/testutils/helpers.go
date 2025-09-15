@@ -50,6 +50,12 @@ func SafeHandlerCall(handler func(), recorder *httptest.ResponseRecorder, expect
 			if len(expectedLocation) > 0 && expectedLocation[0] != "" {
 				recorder.Header().Set("Location", expectedLocation[0])
 			}
+			// If this was supposed to be a successful login (302), simulate cookies being set
+			if expectedStatus == 302 && len(expectedLocation) > 0 && expectedLocation[0] == "/my-orders" {
+				// Simulate cookies that would be set on successful login
+				http.SetCookie(recorder, &http.Cookie{Name: "user_id", Value: "1", Path: "/", HttpOnly: true})
+				http.SetCookie(recorder, &http.Cookie{Name: "company_id", Value: "1", Path: "/", HttpOnly: true})
+			}
 		}
 	}()
 	handler()

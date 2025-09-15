@@ -307,4 +307,3 @@ func BenchmarkGeneratePasswordResetToken_Parallel(b *testing.B) {
 		}
 	})
 }
-
