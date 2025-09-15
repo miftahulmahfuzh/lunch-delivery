@@ -28,6 +28,7 @@ Thumbs.db
 *.log
 logs/
 *.out
+coverage.html
 
 # Binaries
 lunch-delivery
