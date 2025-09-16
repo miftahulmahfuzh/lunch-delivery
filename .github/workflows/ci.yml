@@ -43,11 +43,10 @@ jobs:
     - name: 🔨 Build Application
       run: go build -v ./...
 
-    - name: 🧪 Run ALL Unit Tests
+    - name: 🧪 Run Tests, Benchmarks, and Coverage
       run: |
-        echo "🧪 Running comprehensive unit test suite..."
-        echo "Testing ALL functions in internal/ folder"
-        go test ./internal/... -v -race -coverprofile=coverage.out
+        echo "🧪 Running tests, benchmarks, race detection, and generating coverage..."
+        go test ./internal/... -v -race -bench=. -benchmem -coverprofile=coverage.out
 
     - name: 📊 Generate Coverage Report
       run: |
@@ -70,38 +69,11 @@ jobs:
           coverage.html
           coverage.txt
 
-    - name: 🎯 Test Specific Packages
-      run: |
-        echo "🔍 Testing individual packages..."
-        echo "📝 Config Package Tests:"
-        go test ./internal/config -v
-        echo "🗃️  Models Package Tests:"
-        go test ./internal/models -v
-        echo "🛡️  Middleware Package Tests:"
-        go test ./internal/middleware -v
-        echo "🔧 Utils Package Tests:"
-        go test ./internal/utils -v
-        echo "🗄️  Database Package Tests:"
-        go test ./internal/database -v
-
-    - name: ⚡ Performance Tests
-      run: |
-        echo "⚡ Running benchmark tests..."
-        go test ./internal/... -bench=. -benchmem
-
-    - name: 🔍 Race Condition Detection
-      run: |
-        echo "🔍 Checking for race conditions..."
-        go test ./internal/... -race
-
     - name: 📊 Test Summary Report
       run: |
         echo "📊 TEST SUMMARY REPORT"
         echo "====================="
-        echo "✅ All unit tests in internal/ folder executed"
-        echo "✅ Coverage report generated"
-        echo "✅ Race condition detection completed"
-        echo "✅ Performance benchmarks executed"
+        echo "✅ Tests, benchmarks, race detection, and coverage all run in a single step."
         echo ""
         echo "📈 Coverage Summary:"
         cat coverage.txt | tail -1
